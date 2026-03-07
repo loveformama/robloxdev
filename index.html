@@ -625,6 +625,7 @@
                 if(t.status === 'Выполняется') div.style.borderColor = 'var(--warning)';
 
                 const canEditDelete = window.currentUserRole === 'Yono';
+                const canChangeStatus = window.currentUserRole === 'Yono' || window.currentUserRole === 'Turbik';
 
                 div.innerHTML = `
                     <span class="task-status-label">Статус: ${t.status}</span>
@@ -632,8 +633,8 @@
                     <div style="font-weight:600; margin-bottom:10px;">${t.text}</div>
                     <div class="timer ${t.status === 'Выполнено' ? 'paused' : ''}" id="timer-${t.id}">00:00</div>
                     <div class="task-actions">
-                        <button class="icon-btn btn-green" title="Готово" onclick="handleTaskBtn('${t.id}', 'done'); playClickSound();"><i data-lucide="check"></i></button>
-                        ${canEditDelete ? `<button class="icon-btn btn-yellow" title="В работу" onclick="handleTaskBtn('${t.id}', 'doing'); playClickSound();"><i data-lucide="play"></i></button>` : ''}
+                        ${canChangeStatus ? `<button class="icon-btn btn-green" title="Готово" onclick="handleTaskBtn('${t.id}', 'done'); playClickSound();"><i data-lucide="check"></i></button>` : ''}
+                        ${canChangeStatus ? `<button class="icon-btn btn-yellow" title="В работу" onclick="handleTaskBtn('${t.id}', 'doing'); playClickSound();"><i data-lucide="play"></i></button>` : ''}
                         ${canEditDelete ? `<button class="icon-btn" title="Редактировать" onclick="editTask('${t.id}'); playClickSound();"><i data-lucide="edit-2"></i></button>` : ''}
                         ${canEditDelete ? `<button class="icon-btn btn-red" title="Удалить" onclick="askDelete(event, 'tasks/${t.id}'); playClickSound();"><i data-lucide="trash-2"></i></button>` : ''}
                     </div>
@@ -690,28 +691,42 @@
         }, {onlyOnce: true});
     };
 
+    let timerIntervals = {}; // Track all timer intervals to clear them properly
+
     function startTimer(id, end, status) {
+        // Clear any existing timer for this task
+        if(timerIntervals[id]) clearInterval(timerIntervals[id]);
+        
         const updateTimer = () => {
             const el = document.getElementById(`timer-${id}`);
-            if(!el) return;
-            if(status === 'Выполнено') return; 
+            if(!el) {
+                if(timerIntervals[id]) clearInterval(timerIntervals[id]);
+                delete timerIntervals[id];
+                return;
+            }
+            
+            // Check if timer element has paused class
+            if(el.classList.contains('paused')) {
+                if(timerIntervals[id]) clearInterval(timerIntervals[id]);
+                delete timerIntervals[id];
+                return;
+            }
+            
             const diff = end - Date.now();
             if(diff <= 0) { el.innerText = "ВРЕМЯ ВЫШЛО"; return; }
             const totalMinutes = Math.floor(diff/60000);
             const seconds = Math.floor((diff%60000)/1000);
             el.innerText = `${totalMinutes}:${seconds.toString().padStart(2,'0')}`;
         };
+        
         updateTimer();
-        if(status !== 'Выполнено') setInterval(updateTimer, 1000);
+        if(status !== 'Выполнено') {
+            timerIntervals[id] = setInterval(updateTimer, 1000);
+        }
     }
 
     window.handleTaskBtn = (id, action) => {
-        // Only Yono can change task status
-        if(window.currentUserRole !== 'Yono') {
-            alert('Только Yono может менять статус задач');
-            return;
-        }
-        
+        // Both Yono and Turbik can change task status via buttons
         onValue(ref(db, `tasks/${id}`), s => {
             const data = s.val();
             if(!data) return;
