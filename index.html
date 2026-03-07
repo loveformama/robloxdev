@@ -44,6 +44,33 @@
         .spinner { width: 40px; height: 40px; border: 2px solid #111; border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        #login-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg); z-index: 9000; display: flex; align-items: center; justify-content: center;
+            flex-direction: column; text-align: center;
+        }
+        .login-card {
+            background: var(--card-bg); padding: 50px; border-radius: 32px; border: 1px solid var(--border);
+            box-shadow: 0 0 40px rgba(59, 130, 246, 0.1); max-width: 400px; width: 90%;
+            backdrop-filter: blur(10px); background: rgba(15, 15, 15, 0.8);
+        }
+        .login-card h1 {
+            background: linear-gradient(90deg, #fff, #666);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .login-btn {
+            background: white; color: black; border: none; padding: 14px 28px; border-radius: 12px;
+            font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 12px;
+            margin: 25px auto; transition: 0.3s; width: 100%; justify-content: center;
+        }
+        .login-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(255,255,255,0.2); }
+        .remember-me {
+            display: flex; align-items: center; gap: 8px; font-size: 14px; color: #888; cursor: pointer;
+            justify-content: center; margin-top: 10px;
+        }
+        .remember-me input { cursor: pointer; }
+
         nav {
             position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
             background: rgba(15, 15, 15, 0.7); backdrop-filter: blur(20px);
@@ -121,6 +148,20 @@
 
 <div id="loader"><div class="spinner"></div></div>
 
+<div id="login-screen">
+    <div class="login-card">
+        <h1 style="margin: 0 0 10px 0; font-weight: 800; font-size: 32px; letter-spacing: -1px;">DevHub <span style="color:var(--accent)">Alpha</span></h1>
+        <p style="color:#666; margin-bottom: 30px;">Авторизуйтесь для доступа к панели управления</p>
+        <button class="login-btn" onclick="loginWithGoogle()">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" alt="Google">
+            Войти через Google
+        </button>
+        <label class="remember-me">
+            <input type="checkbox" id="rememberMeCheckbox" checked> Запомнить меня на 30 дней
+        </label>
+    </div>
+</div>
+
 <div id="customConfirm">
     <h3 style="margin-top:0">Удалить?</h3>
     <p style="color:#888; font-size: 14px;">Действие необратимо.</p>
@@ -135,6 +176,8 @@
     <button class="nav-btn" onclick="switchTab('tab-tasks', this)"><i data-lucide="check-square"></i> Задачи</button>
     <button class="nav-btn" onclick="switchTab('tab-progress', this)"><i data-lucide="bar-chart-3"></i> Прогресс</button>
     <button class="nav-btn" onclick="switchTab('tab-success', this)"><i data-lucide="trending-up"></i> Успехи</button>
+    <div style="width: 1px; background: #222; margin: 5px 10px;"></div>
+    <button class="nav-btn" id="login-btn-nav" onclick="toggleAuth()"><i data-lucide="log-in"></i> Войти</button>
 </nav>
 
 <div class="container">
@@ -238,6 +281,16 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, set, onValue, push, remove, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { 
+        getAuth, 
+        signInWithPopup, 
+        GoogleAuthProvider, 
+        onAuthStateChanged, 
+        signOut, 
+        setPersistence, 
+        browserLocalPersistence, 
+        browserSessionPersistence 
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBeh9td4w8tt2AYwEo4PMTE14459zolJV0",
@@ -251,9 +304,25 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+    window.currentUserRole = null; 
     const refreshIcons = () => lucide.createIcons();
 
     let chartInstance = null;
+    
+    // ПРОВЕРКА 30 ДНЕЙ
+    const checkAuthExpiry = () => {
+        const loginDate = localStorage.getItem('loginDate');
+        if (loginDate) {
+            const daysPassed = (Date.now() - parseInt(loginDate)) / (1000 * 60 * 60 * 24);
+            if (daysPassed > 30) {
+                signOut(auth);
+                localStorage.removeItem('loginDate');
+            }
+        }
+    };
+
     const requestNotificationPermission = () => {
         if ("Notification" in window) {
             Notification.requestPermission();
@@ -266,6 +335,59 @@
         }
     };
 
+    // ГЛОБАЛЬНЫЙ ВХОД
+    window.loginWithGoogle = async () => {
+        const remember = document.getElementById('rememberMeCheckbox').checked;
+        try {
+            await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
+            const result = await signInWithPopup(auth, provider);
+            if (remember) {
+                localStorage.setItem('loginDate', Date.now().toString());
+            } else {
+                localStorage.removeItem('loginDate');
+            }
+        } catch (error) {
+            alert("Ошибка входа: " + error.message);
+        }
+    };
+
+    // Слежка за тем, кто залогинился
+    onAuthStateChanged(auth, (user) => {
+        const loginScreen = document.getElementById('login-screen');
+        const loginBtn = document.getElementById('login-btn-nav');
+        
+        if (user) {
+            checkAuthExpiry();
+            console.log("В системе:", user.email);
+            
+            if (user.email === "seniorturbik@gmail.com") {
+                window.currentUserRole = "Turbik";
+            } else if (user.email === "glebushkameet@gmail.com") {
+                window.currentUserRole = "Yono";
+            } else {
+                window.currentUserRole = "Guest";
+            }
+
+            loginScreen.style.display = 'none';
+            if(loginBtn) loginBtn.innerHTML = `<i data-lucide="log-out"></i> ${window.currentUserRole}`;
+        } else {
+            window.currentUserRole = null;
+            loginScreen.style.display = 'flex';
+            if(loginBtn) loginBtn.innerHTML = `<i data-lucide="log-in"></i> Войти`;
+        }
+        refreshIcons();
+    });
+
+    window.toggleAuth = () => {
+        if (auth.currentUser) {
+            signOut(auth).then(() => {
+                localStorage.removeItem('loginDate');
+                window.location.reload();
+            }).catch(err => console.error(err));
+        } else {
+            window.loginWithGoogle();
+        }
+    };
     window.onload = () => {
         refreshIcons();
         requestNotificationPermission();
