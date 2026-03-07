@@ -742,6 +742,31 @@
         }, {onlyOnce: true});
     };
 
+    // ЗАЩИТА ОТ СПАМА УВЕДОМЛЕНИЙ
+    let lastNotificationTime = 0;
+    const NOTIFICATION_THROTTLE = 2000; // Минимум 2 секунды между уведомлениями
+    const shownNotifications = new Set();
+
+    const canSendNotification = (notifId) => {
+        const now = Date.now();
+        // Проверяем: не было ли это уведомление уже показано
+        if(shownNotifications.has(notifId)) return false;
+        // Проверяем: прошло ли достаточно времени
+        if(now - lastNotificationTime < NOTIFICATION_THROTTLE) return false;
+        return true;
+    };
+
+    const recordNotification = (notifId) => {
+        shownNotifications.add(notifId);
+        lastNotificationTime = Date.now();
+        // Ограничиваем размер Set (удаляем, если больше 100)
+        if(shownNotifications.size > 100) {
+            const arr = Array.from(shownNotifications);
+            shownNotifications.clear();
+            arr.slice(-50).forEach(id => shownNotifications.add(id));
+        }
+    };
+
     // СЛУШАТЕЛЬ УВЕДОМЛЕНИЙ О НОВЫХ ЗАДАЧАХ
     onValue(ref(db, 'notifications'), (snap) => {
         const notifs = snap.val() || {};
@@ -750,9 +775,12 @@
         Object.keys(notifs).forEach(key => {
             const notif = notifs[key];
             if(notif.timestamp > parseInt(lastCheck) && notif.type === 'newTask') {
-                // Отправляем толкс "уведомление всем
+                // Отправляем уведомление всем с защитой от спама
                 if (window.currentUserRole && window.currentUserRole !== 'Guest') {
-                    sendNotify("Новое задание!", `${notif.text}\nВыполнить до: ${notif.deadline}`);
+                    if(canSendNotification(key)) {
+                        sendNotify("Новое задание!", `${notif.text}\nВыполнить до: ${notif.deadline}`);
+                        recordNotification(key);
+                    }
                 }
             }
         });
