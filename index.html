@@ -6,6 +6,7 @@
     <title>DevHub Alpha | Premium</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --bg: #050505;
@@ -69,6 +70,16 @@
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 30px; }
         .stat-card { background: var(--card-bg); padding: 24px; border-radius: 18px; border: 1px solid var(--border); transition: 0.3s; position: relative; overflow: hidden; }
         .stat-value { font-size: 26px; font-weight: 800; margin-top: 8px; color: var(--text); }
+        .stat-value.deadline { 
+            color: var(--danger); 
+            text-shadow: 0 0 15px rgba(239, 68, 68, 0.6); 
+            animation: pulse-red 2s infinite;
+        }
+        @keyframes pulse-red {
+            0% { text-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+            50% { text-shadow: 0 0 25px rgba(239, 68, 68, 0.8); }
+            100% { text-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+        }
 
         /* СКРИПТЫ И ЗАДАЧИ */
         .search-bar { background: var(--card-bg); border: 1px solid var(--border); padding: 14px 20px; border-radius: 12px; width: 100%; color: white; box-sizing: border-box; font-size: 14px; transition: 0.2s; }
@@ -81,8 +92,8 @@
         .task-card { border-left: 4px solid var(--accent); }
         .task-status-label { font-size: 10px; color: var(--accent); font-weight: 800; text-transform: uppercase; margin-bottom: 5px; display: block; }
         .task-type { font-size: 10px; padding: 4px 8px; border-radius: 6px; background: #222; margin-bottom: 10px; display: inline-block; text-transform: uppercase; font-weight: bold;}
-        .timer { color: var(--danger); font-weight: 800; font-family: monospace; font-size: 18px; margin: 10px 0; }
-        .timer.paused { text-decoration: line-through; opacity: 0.6; color: #555; }
+        .timer { color: var(--danger); font-weight: 800; font-family: monospace; font-size: 18px; margin: 10px 0; text-shadow: 0 0 10px rgba(239, 68, 68, 0.3); }
+        .timer.paused { text-decoration: line-through; opacity: 0.6; color: #555; text-shadow: none; }
         .task-actions { display: flex; gap: 10px; margin-top: 15px; }
 
         .icon-btn { 
@@ -123,6 +134,7 @@
     <button class="nav-btn active" onclick="switchTab('tab-templates', this)"><i data-lucide="layout"></i> Шаблоны</button>
     <button class="nav-btn" onclick="switchTab('tab-tasks', this)"><i data-lucide="check-square"></i> Задачи</button>
     <button class="nav-btn" onclick="switchTab('tab-progress', this)"><i data-lucide="bar-chart-3"></i> Прогресс</button>
+    <button class="nav-btn" onclick="switchTab('tab-success', this)"><i data-lucide="trending-up"></i> Успехи</button>
 </nav>
 
 <div class="container">
@@ -147,6 +159,12 @@
         </div>
         <div class="stats-grid" id="statsGrid"></div>
     </div>
+
+    <div id="tab-success" class="content">
+        <div class="card" style="padding: 20px;">
+            <canvas id="successChart" style="max-height: 400px;"></canvas>
+        </div>
+    </div>
 </div>
 
 <div class="overlay" id="overlay" onclick="closeAdmin()"></div>
@@ -157,8 +175,16 @@
     </div>
     <div id="adm-stats-form">
         <input type="number" id="adm-days" class="search-bar" style="margin-bottom:10px" placeholder="Дней до релиза">
-        <input type="text" id="adm-stab" class="search-bar" style="margin-bottom:10px" placeholder="Стабильность">
-        <input type="text" id="adm-perf" class="search-bar" style="margin-bottom:10px" placeholder="Успеваемость">
+        <select id="adm-stab" class="search-bar" style="margin-bottom:10px; background:#111;">
+            <option value="Низкая">Низкая</option>
+            <option value="Средняя">Средняя</option>
+            <option value="Высокая">Высокая</option>
+        </select>
+        <select id="adm-perf" class="search-bar" style="margin-bottom:10px; background:#111;">
+            <option value="Плохая">Плохая</option>
+            <option value="Средняя">Средняя</option>
+            <option value="Отличная">Отличная</option>
+        </select>
         <input type="number" id="adm-t" class="search-bar" style="margin-bottom:10px" placeholder="Turbik %">
         <input type="number" id="adm-y" class="search-bar" style="margin-bottom:20px" placeholder="Yono %">
         <button onclick="updateProjectData()" class="icon-btn" style="width:100%; height:50px; background:var(--accent); color:white;">Обновить</button>
@@ -194,6 +220,21 @@
     </div>
 </div>
 
+<div id="editTaskModal" class="overlay">
+    <div class="modal-content" style="width:450px; padding:30px; margin-top:100px;">
+        <h3 style="margin-top:0">Редактировать задачу</h3>
+        <input type="hidden" id="editTaskId">
+        <textarea id="editTaskText" class="search-bar" rows="3" placeholder="Описание задачи..." style="margin-bottom:10px"></textarea>
+        <select id="editTaskType" class="search-bar" style="margin-bottom:10px; background:#111;">
+            <option value="Легкое">Легкое</option>
+            <option value="Среднее">Среднее</option>
+            <option value="Сложное">Сложное</option>
+        </select>
+        <input type="number" id="editTaskHours" class="search-bar" placeholder="Добавить времени (часов)" style="margin-bottom:20px">
+        <button onclick="saveEditTask()" class="icon-btn" style="width:100%; height:50px; background:var(--accent); color:white;">Сохранить изменения</button>
+    </div>
+</div>
+
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, set, onValue, push, remove, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
@@ -212,12 +253,57 @@
     const db = getDatabase(app);
     const refreshIcons = () => lucide.createIcons();
 
+    let chartInstance = null;
+    const requestNotificationPermission = () => {
+        if ("Notification" in window) {
+            Notification.requestPermission();
+        }
+    };
+
+    const sendNotify = (title, body) => {
+        if ("Notification" in window && Notification.permission === "granted") {
+            new Notification(title, { body, icon: 'https://cdn-icons-png.flaticon.com/512/1827/1827347.png' });
+        }
+    };
+
     window.onload = () => {
         refreshIcons();
+        requestNotificationPermission();
+        initChart();
         setTimeout(() => {
             document.getElementById('loader').style.opacity = '0';
             setTimeout(() => document.getElementById('loader').style.display = 'none', 800);
         }, 1000);
+    };
+
+    const initChart = () => {
+        const ctx = document.getElementById('successChart').getContext('2d');
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: { labels: [], datasets: [
+                { label: 'Turbik', data: [], borderColor: '#3b82f6', tension: 0.4, fill: false },
+                { label: 'Yono', data: [], borderColor: '#ef4444', tension: 0.4, fill: false }
+            ]},
+            options: { responsive: true, scales: { y: { min: 0, max: 100, grid: { color: '#222' } }, x: { grid: { color: '#222' } } } }
+        });
+        loadChartData();
+    };
+
+    const loadChartData = () => {
+        onValue(ref(db, 'history'), (snap) => {
+            const data = snap.val() || {};
+            const labels = [], turbik = [], yono = [];
+            const sortedDates = Object.keys(data).sort();
+            sortedDates.forEach(date => {
+                labels.push(date.split('-').slice(2).join('.'));
+                turbik.push(data[date].t);
+                yono.push(data[date].y);
+            });
+            chartInstance.data.labels = labels;
+            chartInstance.data.datasets[0].data = turbik;
+            chartInstance.data.datasets[1].data = yono;
+            chartInstance.update();
+        });
     };
 
     window.switchTab = (id, btn) => {
@@ -225,6 +311,7 @@
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         btn.classList.add('active');
+        if(id === 'tab-success' && chartInstance) chartInstance.update();
         refreshIcons();
     };
 
@@ -233,15 +320,31 @@
         document.getElementById('adm-task-form').style.display = type === 'task' ? 'block' : 'none';
         document.getElementById('btn-adm-stats').style.color = type === 'stats' ? 'white' : '#555';
         document.getElementById('btn-adm-task').style.color = type === 'task' ? 'white' : '#555';
+        if(type === 'stats') prefillStats();
+    };
+
+    const prefillStats = () => {
+        onValue(ref(db, 'projectStats'), (snapshot) => {
+            const data = snapshot.val();
+            if(data) {
+                const daysLeft = data.releaseTimestamp ? Math.ceil((data.releaseTimestamp - Date.now()) / 86400000) : 0;
+                document.getElementById('adm-days').value = daysLeft;
+                document.getElementById('adm-stab').value = data.stab || 'Средняя';
+                document.getElementById('adm-perf').value = data.perf || 'Средняя';
+                document.getElementById('adm-t').value = data.t || 0;
+                document.getElementById('adm-y').value = data.y || 0;
+            }
+        }, { onlyOnce: true });
     };
 
     onValue(ref(db, 'projectStats'), (snapshot) => {
         const data = snapshot.val() || { days: 0, stab: '?', perf: '?', t: 0, y: 0 };
+        const daysLeft = data.releaseTimestamp ? Math.max(0, Math.ceil((data.releaseTimestamp - Date.now()) / 86400000)) : data.days;
         const total = Math.min(100, Math.round((parseInt(data.t) + parseInt(data.y)) / 2));
         document.getElementById('totalProgressBar').style.width = total + '%';
         document.getElementById('totalProgressText').innerText = total + '%';
         document.getElementById('statsGrid').innerHTML = `
-            <div class="stat-card"><div>Релиз через</div><div class="stat-value">${data.days} д</div></div>
+            <div class="stat-card"><div>Релиз через</div><div class="stat-value deadline">${daysLeft} д</div></div>
             <div class="stat-card"><div>Стабильность</div><div class="stat-value">${data.stab}</div></div>
             <div class="stat-card"><div>Успеваемость</div><div class="stat-value">${data.perf}</div></div>
             <div class="stat-card"><div>Turbik</div><div class="stat-value">${data.t}%</div></div>
@@ -250,13 +353,21 @@
     });
 
     window.updateProjectData = () => {
-        set(ref(db, 'projectStats'), {
-            days: document.getElementById('adm-days').value,
+        const t = document.getElementById('adm-t').value;
+        const y = document.getElementById('adm-y').value;
+        const days = document.getElementById('adm-days').value;
+        const releaseTimestamp = Date.now() + (days * 86400000);
+        const stats = {
+            releaseTimestamp,
             stab: document.getElementById('adm-stab').value,
             perf: document.getElementById('adm-perf').value,
-            t: document.getElementById('adm-t').value,
-            y: document.getElementById('adm-y').value
-        });
+            t, y
+        };
+        set(ref(db, 'projectStats'), stats);
+        
+        const today = new Date().toISOString().split('T')[0];
+        set(ref(db, `history/${today}`), { t, y });
+        
         closeAdmin();
     };
 
@@ -296,16 +407,27 @@
         const hours = document.getElementById('taskHours').value;
         if(text && hours) {
             const endTime = Date.now() + (hours * 3600000);
-            push(ref(db, 'tasks'), { text, type, endTime, status: 'В очереди' });
+            const deadlineDate = new Date(endTime).toLocaleString();
+            push(ref(db, 'tasks'), { text, type, endTime, status: 'В очереди', createdAt: Date.now() });
+            sendNotify("Новая задача!", `Выполнить до: ${deadlineDate}`);
             closeAdmin();
         }
     };
 
+    let lastTasksState = {};
     onValue(ref(db, 'tasks'), (snapshot) => {
         const list = document.getElementById('taskList');
         list.innerHTML = '';
+        const currentTasks = snapshot.val() || {};
+        
         snapshot.forEach(child => {
             const t = child.val(); t.id = child.key;
+            
+            // Notification for status change to Done
+            if (lastTasksState[t.id] && lastTasksState[t.id].status !== 'Выполнено' && t.status === 'Выполнено') {
+                sendNotify("Задача выполнена", `Задача "${t.text}" выполнена!`);
+            }
+
             const div = document.createElement('div');
             div.className = 'card task-card';
             if(t.status === 'Выполнено') div.style.borderColor = 'var(--success)';
@@ -317,16 +439,48 @@
                 <div style="font-weight:600; margin-bottom:10px;">${t.text}</div>
                 <div class="timer ${t.status === 'Выполнено' ? 'paused' : ''}" id="timer-${t.id}">00:00:00</div>
                 <div class="task-actions">
-                    <button class="icon-btn btn-green" onclick="handleTaskBtn('${t.id}', 'done')"><i data-lucide="check"></i></button>
-                    <button class="icon-btn btn-yellow" onclick="handleTaskBtn('${t.id}', 'doing')"><i data-lucide="edit-3"></i></button>
-                    <button class="icon-btn btn-red" onclick="handleTaskBtn('${t.id}', 'later')"><i data-lucide="x"></i></button>
+                    <button class="icon-btn btn-green" title="Готово" onclick="handleTaskBtn('${t.id}', 'done')"><i data-lucide="check"></i></button>
+                    <button class="icon-btn btn-yellow" title="В работу" onclick="handleTaskBtn('${t.id}', 'doing')"><i data-lucide="play"></i></button>
+                    <button class="icon-btn" title="Редактировать" onclick="editTask('${t.id}')"><i data-lucide="edit-2"></i></button>
+                    <button class="icon-btn btn-red" title="Удалить" onclick="askDelete(event, 'tasks/${t.id}')"><i data-lucide="trash-2"></i></button>
                 </div>
             `;
             list.append(div);
             startTimer(t.id, t.endTime, t.status);
         });
+        lastTasksState = currentTasks;
         refreshIcons();
     });
+
+    window.editTask = (id) => {
+        onValue(ref(db, `tasks/${id}`), (s) => {
+            const t = s.val();
+            if(t) {
+                document.getElementById('editTaskId').value = id;
+                document.getElementById('editTaskText').value = t.text;
+                document.getElementById('editTaskType').value = t.type;
+                document.getElementById('editTaskHours').value = '';
+                document.getElementById('editTaskModal').style.display = 'flex';
+            }
+        }, {onlyOnce: true});
+    };
+
+    window.saveEditTask = () => {
+        const id = document.getElementById('editTaskId').value;
+        const text = document.getElementById('editTaskText').value;
+        const type = document.getElementById('editTaskType').value;
+        const addHours = document.getElementById('editTaskHours').value;
+        
+        onValue(ref(db, `tasks/${id}`), (s) => {
+            const t = s.val();
+            if(t) {
+                const updates = { text, type };
+                if(addHours) updates.endTime = t.endTime + (addHours * 3600000);
+                update(ref(db, `tasks/${id}`), updates);
+                document.getElementById('editTaskModal').style.display = 'none';
+            }
+        }, {onlyOnce: true});
+    };
 
     function startTimer(id, end, status) {
         const updateTimer = () => {
