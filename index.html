@@ -624,7 +624,7 @@
                 if(t.status === 'Выполнено') div.style.borderColor = 'var(--success)';
                 if(t.status === 'Выполняется') div.style.borderColor = 'var(--warning)';
 
-                const canEditDelete = window.currentUserRole === 'Turbik';
+                const canEditDelete = window.currentUserRole === 'Yono';
 
                 div.innerHTML = `
                     <span class="task-status-label">Статус: ${t.status}</span>
@@ -647,6 +647,12 @@
     };
     
     window.editTask = (id) => {
+        // Only Yono can edit tasks
+        if(window.currentUserRole !== 'Yono') {
+            alert('Только Yono может редактировать задачи');
+            return;
+        }
+        
         playClickSound();
         onValue(ref(db, `tasks/${id}`), (s) => {
             const t = s.val();
@@ -661,6 +667,12 @@
     };
 
     window.saveEditTask = () => {
+        // Only Yono can edit tasks
+        if(window.currentUserRole !== 'Yono') {
+            alert('Только Yono может редактировать задачи');
+            return;
+        }
+        
         const id = document.getElementById('editTaskId').value;
         const text = document.getElementById('editTaskText').value;
         const type = document.getElementById('editTaskType').value;
@@ -694,6 +706,12 @@
     }
 
     window.handleTaskBtn = (id, action) => {
+        // Only Yono can change task status
+        if(window.currentUserRole !== 'Yono') {
+            alert('Только Yono может менять статус задач');
+            return;
+        }
+        
         onValue(ref(db, `tasks/${id}`), s => {
             const data = s.val();
             if(!data) return;
@@ -739,7 +757,12 @@
 
     let deletePath = '';
     window.askDelete = (e, path) => {
-        e.stopPropagation(); 
+        e.stopPropagation();
+        // Only Yono can delete tasks
+        if(path.includes('tasks/') && window.currentUserRole !== 'Yono') {
+            alert('Только Yono может удалять задачи');
+            return;
+        }
         playClickSound();
         deletePath = path;
         document.getElementById('customConfirm').style.display = 'block';
