@@ -313,8 +313,8 @@
 
     let chartInstance = null;
     
-    // ЗВУК КЛИКА
-    const playClickSound = () => {
+    // ЗВУК КЛИКА - ДЕЛАЕМ ГЛОБАЛЬНОЙ ФУНКЦИЕЙ
+    window.playClickSound = () => {
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         const oscillator = audioContext.createOscillator();
         const gain = audioContext.createGain();
