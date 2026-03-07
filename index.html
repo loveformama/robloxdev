@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevHub Alpha | Premium</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg: #050505;
+            --card-bg: #0f0f0f;
+            --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.4);
+            --text: #f3f4f6;
+            --border: #1e1e1e;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Лоадер */
+        #loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center;
+            transition: opacity 0.8s ease;
+        }
+        .spinner { width: 40px; height: 40px; border: 2px solid #111; border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Навигация */
+        nav {
+            position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
+            background: rgba(15, 15, 15, 0.7); backdrop-filter: blur(20px);
+            padding: 5px; border-radius: 14px; border: 1px solid var(--border);
+            display: flex; gap: 4px; z-index: 100;
+        }
+        .nav-btn {
+            padding: 10px 22px; border-radius: 10px; border: none; background: transparent;
+            color: #666; cursor: pointer; transition: 0.2s; font-weight: 600; font-size: 13px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .nav-btn.active { background: #1a1a1a; color: var(--accent); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .nav-btn i { width: 16px; height: 16px; }
+
+        .container { max-width: 1100px; margin: 120px auto 50px; padding: 0 25px; }
+        .content { display: none; animation: fadeIn 0.4s ease-out forwards; }
+        .content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Шкала прогресса */
+        .main-progress {
+            background: #0a0a0a; height: 50px; border-radius: 25px; position: relative;
+            margin: 40px 0; border: 1px solid var(--border); overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%; background: linear-gradient(90deg, #2563eb, #60a5fa);
+            width: 0%; transition: width 1.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative; box-shadow: 0 0 25px var(--accent-glow);
+        }
+        .progress-text { position: absolute; width: 100%; text-align: center; line-height: 50px; font-weight: 800; font-size: 18px; z-index: 2; color: #fff; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 30px; }
+        .stat-card { background: var(--card-bg); padding: 24px; border-radius: 18px; border: 1px solid var(--border); transition: 0.3s; position: relative; overflow: hidden; }
+        .stat-card:hover { border-color: #333; transform: translateY(-3px); }
+        .stat-label { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+        .stat-value { font-size: 26px; font-weight: 800; margin-top: 8px; color: var(--text); }
+        .stat-icon { position: absolute; right: -10px; bottom: -10px; color: rgba(255,255,255,0.03); width: 80px; height: 80px; }
+
+        /* Скрипты */
+        .search-bar { background: var(--card-bg); border: 1px solid var(--border); padding: 14px 20px; border-radius: 12px; width: 100%; color: white; margin-bottom: 25px; box-sizing: border-box; font-size: 14px; transition: 0.2s; }
+        .search-bar:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        
+        .script-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .script-card {
+            background: var(--card-bg); border: 1px solid var(--border); padding: 22px; border-radius: 20px;
+            cursor: pointer; transition: 0.3s; position: relative;
+        }
+        .script-card:hover { background: #121212; border-color: #444; }
+        .script-card h4 { margin: 0 0 15px 0; font-size: 17px; font-weight: 600; display: flex; align-items: center; gap: 10px; color: var(--accent); }
+        .card-actions { display: flex; gap: 8px; }
+        
+        .icon-btn { 
+            background: #1a1a1a; border: 1px solid var(--border); width: 38px; height: 38px; border-radius: 10px; 
+            cursor: pointer; color: #ccc; display: flex; align-items: center; justify-content: center; transition: 0.2s; 
+        }
+        .icon-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+        .icon-btn i { width: 18px; height: 18px; }
+        .delete-btn:hover { background: #ef4444; border-color: #ef4444; }
+
+        /* Модалки */
+        #scriptView, .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 1000; padding: 40px; box-sizing: border-box; }
+        .modal-content { background: var(--card-bg); max-width: 900px; margin: auto; border-radius: 24px; border: 1px solid var(--border); height: 80vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+        .modal-header { padding: 20px 30px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #141414; }
+        pre { flex: 1; margin: 0; padding: 25px; overflow: auto; background: #080808; color: #9cdcfe; font-family: 'Consolas', 'Monaco', monospace; line-height: 1.5; font-size: 14px; }
+
+        #adminPanel { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #111; padding: 32px; border-radius: 28px; border: 1px solid var(--accent); z-index: 2000; width: 380px; box-shadow: 0 0 60px rgba(0,0,0,0.8); }
+        .admin-input label { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #777; margin-bottom: 8px; text-transform: uppercase; font-weight: 700; }
+    </style>
+</head>
+<body>
+
+<div id="loader"><div class="spinner"></div></div>
+
+<nav>
+    <button class="nav-btn active" onclick="switchTab('tab-templates', this)"><i data-lucide="layout"></i> Шаблоны</button>
+    <button class="nav-btn" onclick="switchTab('tab-progress', this)"><i data-lucide="bar-chart-3"></i> Прогресс</button>
+</nav>
+
+<div class="container">
+    <div id="tab-templates" class="content active">
+        <div style="display: flex; gap: 12px; margin-bottom: 30px;">
+            <input type="text" id="search" class="search-bar" style="margin:0" placeholder="Поиск в хранилище..." oninput="filterScripts()">
+            <button class="icon-btn" style="width: 140px; height: 50px; border-radius: 12px; gap: 8px;" onclick="showAddModal()">
+                <i data-lucide="plus"></i> Добавить
+            </button>
+        </div>
+        <div id="scriptList" class="script-grid"></div>
+    </div>
+
+    <div id="tab-progress" class="content">
+        <div class="main-progress">
+            <div id="totalProgressText" class="progress-text">0%</div>
+            <div id="totalProgressBar" class="progress-fill"></div>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label"><i data-lucide="clock" style="width:12px"></i> Релиз через</div>
+                <div id="val-days" class="stat-value">--</div>
+                <i data-lucide="clock" class="stat-icon"></i>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label"><i data-lucide="shield-check" style="width:12px"></i> Стабильность</div>
+                <div id="val-stab" class="stat-value">--</div>
+                <i data-lucide="shield-check" class="stat-icon"></i>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label"><i data-lucide="zap" style="width:12px"></i> Успеваемость</div>
+                <div id="val-perf" class="stat-value">--</div>
+                <i data-lucide="zap" class="stat-icon"></i>
+            </div>
+        </div>
+        
+        <div class="stats-grid" style="margin-top: 16px;">
+            <div class="stat-card">
+                <div class="stat-label"><i data-lucide="user" style="width:12px"></i> Вклад Turbik</div>
+                <div id="val-t" class="stat-value">0%</div>
+                <i data-lucide="user" class="stat-icon"></i>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label"><i data-lucide="user" style="width:12px"></i> Вклад Yono</div>
+                <div id="val-y" class="stat-value">0%</div>
+                <i data-lucide="user" class="stat-icon"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="scriptView" onclick="this.style.display='none'">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h3 id="viewTitle" style="margin:0; font-weight:600;">Название</h3>
+            <button class="icon-btn" onclick="document.getElementById('scriptView').style.display='none'"><i data-lucide="x"></i></button>
+        </div>
+        <pre id="viewCode"></pre>
+    </div>
+</div>
+
+<div class="overlay" id="overlay" onclick="closeAdmin()"></div>
+<div id="adminPanel">
+    <h3 style="margin: 0 0 24px 0; font-weight:800; display:flex; align-items:center; gap:10px;">
+        <i data-lucide="settings" style="color:var(--accent)"></i> Конфиг
+    </h3>
+    <div class="admin-input"><label><i data-lucide="calendar"></i> Дни</label><input type="number" id="adm-days" class="search-bar"></div>
+    <div class="admin-input"><label><i data-lucide="activity"></i> Стабильность</label><input type="text" id="adm-stab" class="search-bar"></div>
+    <div class="admin-input"><label><i data-lucide="trending-up"></i> Успеваемость</label><input type="text" id="adm-perf" class="search-bar"></div>
+    <div class="admin-input"><label><i data-lucide="user"></i> Turbik (%)</label><input type="number" id="adm-t" class="search-bar"></div>
+    <div class="admin-input"><label><i data-lucide="user"></i> Yono (%)</label><input type="number" id="adm-y" class="search-bar"></div>
+    <button onclick="updateProjectData()" style="width: 100%; height: 50px; font-weight:600; gap:10px;" class="icon-btn">
+        <i data-lucide="save"></i> Обновить
+    </button>
+</div>
+
+<div id="addModal" class="overlay" style="display: none; align-items: center; justify-content: center;">
+    <div class="modal-content" style="height: auto; width: 450px; padding: 30px; border-radius: 30px;">
+        <h3 style="margin-top:0; display:flex; align-items:center; gap:10px;"><i data-lucide="code-2"></i> Новый скрипт</h3>
+        <input type="text" id="newName" class="search-bar" placeholder="Название шаблона">
+        <textarea id="newCode" class="search-bar" rows="8" placeholder="Lua code здесь..." style="font-family:monospace; resize:none;"></textarea>
+        <button onclick="saveNewScript()" class="icon-btn" style="width: 100%; height: 50px; background:var(--accent); color:white; font-weight:700;">Создать</button>
+        <button onclick="document.getElementById('addModal').style.display='none'" style="background:none; border:none; color:#444; margin-top:15px; cursor:pointer; font-weight:600;">Отмена</button>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, set, onValue, push, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBeh9td4w8tt2AYwEo4PMTE14459zolJV0",
+        authDomain: "math-project-8195b.firebaseapp.com",
+        databaseURL: "https://math-project-8195b-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "math-project-8195b",
+        storageBucket: "math-project-8195b.firebasestorage.app",
+        messagingSenderId: "947622423521",
+        appId: "1:947622423521:web:fbaa98fddad1cf99f740a0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const clickSound = new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3');
+
+    // Обновление иконок Lucide
+    const refreshIcons = () => lucide.createIcons();
+
+    window.onload = () => {
+        refreshIcons();
+        setTimeout(() => {
+            document.getElementById('loader').style.opacity = '0';
+            setTimeout(() => document.getElementById('loader').style.display = 'none', 800);
+        }, 1000);
+    };
+
+    window.switchTab = (id, btn) => {
+        clickSound.play();
+        document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    onValue(ref(db, 'projectStats'), (snapshot) => {
+        const data = snapshot.val() || { days: 0, stab: '?', perf: '?', t: 0, y: 0 };
+        document.getElementById('val-days').innerText = data.days + ' д';
+        document.getElementById('val-stab').innerText = data.stab;
+        document.getElementById('val-perf').innerText = data.perf;
+        document.getElementById('val-t').innerText = data.t + '%';
+        document.getElementById('val-y').innerText = data.y + '%';
+        
+        const total = Math.min(100, Math.round((parseInt(data.t) + parseInt(data.y)) / 2));
+        document.getElementById('totalProgressBar').style.width = total + '%';
+        document.getElementById('totalProgressText').innerText = total + '%';
+    });
+
+    window.updateProjectData = () => {
+        clickSound.play();
+        const data = {
+            days: document.getElementById('adm-days').value,
+            stab: document.getElementById('adm-stab').value,
+            perf: document.getElementById('adm-perf').value,
+            t: document.getElementById('adm-t').value,
+            y: document.getElementById('adm-y').value
+        };
+        set(ref(db, 'projectStats'), data);
+        closeAdmin();
+    };
+
+    let allScripts = [];
+    window.saveNewScript = () => {
+        clickSound.play();
+        const name = document.getElementById('newName').value;
+        const code = document.getElementById('newCode').value;
+        if(name && code) {
+            push(ref(db, 'scripts'), { name, code });
+            document.getElementById('addModal').style.display='none';
+            document.getElementById('newName').value = '';
+            document.getElementById('newCode').value = '';
+        }
+    };
+
+    onValue(ref(db, 'scripts'), (snapshot) => {
+        const list = document.getElementById('scriptList');
+        list.innerHTML = '';
+        allScripts = [];
+        snapshot.forEach(child => {
+            const s = child.val();
+            s.id = child.key;
+            allScripts.push(s);
+            renderCard(s);
+        });
+        refreshIcons();
+    });
+
+    function renderCard(s) {
+        const div = document.createElement('div');
+        div.className = 'script-card';
+        div.onclick = () => showScript(s.name, s.code);
+        div.innerHTML = `
+            <h4><i data-lucide="file-code" style="width:18px"></i> ${s.name}</h4>
+            <div class="card-actions">
+                <button class="icon-btn" onclick="copyCode(event, \`${s.code.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)"><i data-lucide="copy"></i></button>
+                <button class="icon-btn delete-btn" onclick="deleteScript(event, '${s.id}')"><i data-lucide="trash-2"></i></button>
+            </div>
+        `;
+        document.getElementById('scriptList').prepend(div);
+    }
+
+    window.copyCode = (e, code) => {
+        e.stopPropagation();
+        navigator.clipboard.writeText(code);
+        clickSound.play();
+    };
+
+    window.deleteScript = (e, id) => {
+        e.stopPropagation();
+        clickSound.play();
+        if(confirm('Удалить скрипт навсегда?')) {
+            remove(ref(db, `scripts/${id}`));
+        }
+    };
+
+    window.showScript = (name, code) => {
+        clickSound.play();
+        document.getElementById('viewTitle').innerText = name;
+        document.getElementById('viewCode').innerText = code;
+        document.getElementById('scriptView').style.display = 'block';
+    };
+
+    window.filterScripts = () => {
+        const term = document.getElementById('search').value.toLowerCase();
+        document.getElementById('scriptList').innerHTML = '';
+        allScripts.filter(s => s.name.toLowerCase().includes(term)).forEach(renderCard);
+        refreshIcons();
+    };
+
+    window.addEventListener('keydown', (e) => {
+        if(e.key.toLowerCase() === 'f' || e.key.toLowerCase() === 'а') {
+            if(document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+                document.getElementById('adminPanel').style.display = 'block';
+                document.getElementById('overlay').style.display = 'block';
+                refreshIcons();
+            }
+        }
+    });
+
+    window.closeAdmin = () => {
+        document.getElementById('adminPanel').style.display = 'none';
+        document.getElementById('overlay').style.display = 'none';
+    };
+
+    window.showAddModal = () => {
+        clickSound.play();
+        document.getElementById('addModal').style.display = 'flex';
+        refreshIcons();
+    };
+</script>
+
+</body>
+</html>
