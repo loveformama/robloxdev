@@ -10,43 +10,29 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%233b82f6' width='100' height='100'/%3E%3Ctext x='50' y='60' font-size='70' font-weight='bold' fill='white' text-anchor='middle'%3ED%3C/text%3E%3C/svg%3E">
     <script src="config.js"></script>
 <script>
-    // 🔒 ЗАЩИТА ОТ КОНСОЛИ И DEVTOOLS
+    // 🔒 ЛЕГКАЯ ЗАЩИТА ОТ DEVTOOLS (БЕЗ БЛОКИРОВКИ ЗАГРУЗКИ)
     (function() {
-        const isDevToolsOpen = () => {
-            const start = performance.now();
-            debugger;
-            return performance.now() - start > 100;
-        };
-
-        // Отключаем консоль
-        const noop = () => {};
-        window.console = {
-            log: noop, warn: noop, error: noop, info: noop, debug: noop,
-            table: noop, dir: noop, time: noop, timeEnd: noop
-        };
-
-        // Проверяем DevTools при загрузке и в интервале
-        if (isDevToolsOpen()) {
-            document.body.innerHTML = '<div style="display:flex; align-items:center; justify-content:center; height:100vh; background:#050505; color:#ef4444; font-family:monospace; font-size:20px; text-align:center;">⚠️ DevTools не допускаются<br>❌ Доступ запрещён</div>';
-            throw new Error('DevTools blocked');
-        }
-
-        setInterval(() => {
-            if (isDevToolsOpen()) {
-                document.body.innerHTML = '<div style="display:flex; align-items:center; justify-content:center; height:100vh; background:#050505; color:#ef4444; font-family:monospace; font-size:20px; text-align:center;">⚠️ DevTools не допускаются<br>❌ Доступ запрещён</div>';
-            }
-        }, 500);
-
         // Блокируем контекстное меню (правый клик)
         document.addEventListener('contextmenu', e => e.preventDefault());
         
-        // Блокируем горячие клавиши
+        // Блокируем горячие клавиши для devtools
         document.addEventListener('keydown', e => {
-            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || 
-                (e.ctrlKey && e.shiftKey && e.key === 'J') || (e.ctrlKey && e.shiftKey && e.key === 'C')) {
+            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C'))) {
                 e.preventDefault();
             }
         });
+
+        // Переопределяем console (но не полностью - оставляем для отладки разработчиков)
+        if (typeof window.console !== 'undefined') {
+            const originalLog = window.console.log;
+            window.console.log = function(...args) {
+                // Логируем только важные сообщения
+                if (args[0] && args[0].toString().includes('В системе:')) {
+                    return;
+                }
+                return originalLog.apply(console, args);
+            };
+        }
     })();
 </script>
     <style>
