@@ -1989,17 +1989,32 @@ ${lines2.slice(0, 30).join('\n')}
         const lines1 = code1.split('\n');
         const lines2 = code2.split('\n');
         
-        const gradient1 = createHighlightGradient(lines1, differentLineNumbers);
-        const gradient2 = createHighlightGradient(lines2, differentLineNumbers);
-        
         const code1Elem = document.getElementById('compareCode1');
         const code2Elem = document.getElementById('compareCode2');
+        const container1 = code1Elem.parentElement;
+        const container2 = code2Elem.parentElement;
         
-        code1Elem.style.background = gradient1;
-        code2Elem.style.background = gradient2;
-        
-        updateBorderHighlight(code1Elem, differentLineNumbers.size > 0);
-        updateBorderHighlight(code2Elem, differentLineNumbers.size > 0);
+        // Если есть отличающиеся строки - применяем красную подсветку к границам
+        if(differentLineNumbers.size > 0) {
+            container1.style.borderColor = '#ef4444';
+            container1.style.boxShadow = '0 0 25px rgba(239, 68, 68, 0.25), inset 0 0 15px rgba(239, 68, 68, 0.1)';
+            
+            container2.style.borderColor = '#ef4444';
+            container2.style.boxShadow = '0 0 25px rgba(239, 68, 68, 0.25), inset 0 0 15px rgba(239, 68, 68, 0.1)';
+            
+            code1Elem.style.background = '#0a0a0a';
+            code2Elem.style.background = '#0a0a0a';
+        } else {
+            // Если коды полностью одинаковые - зелёная подсветка границ
+            container1.style.borderColor = '#22c55e';
+            container1.style.boxShadow = '0 0 25px rgba(34, 197, 94, 0.2), inset 0 0 15px rgba(34, 197, 94, 0.05)';
+            
+            container2.style.borderColor = '#22c55e';
+            container2.style.boxShadow = '0 0 25px rgba(34, 197, 94, 0.2), inset 0 0 15px rgba(34, 197, 94, 0.05)';
+            
+            code1Elem.style.background = '#0a0a0a';
+            code2Elem.style.background = '#0a0a0a';
+        }
         
         const identicalCount = lines1.length - differentLineNumbers.size;
         const differentCount = differentLineNumbers.size;
@@ -2184,7 +2199,7 @@ ${lines2.slice(0, 30).join('\n')}
 
 <!-- ВЕРСИЯ ПРИЛОЖЕНИЯ -->
 <div style="position: fixed; bottom: 0; right: 0; padding: 12px 16px; font-size: 10px; color: #666; background: rgba(0,0,0,0.3); border-radius: 8px 0 0 0; font-family: monospace; z-index: 100;">
-    version dev: 1.3
+    version dev: 1.4
 </div>
 
 </body>
