@@ -517,7 +517,7 @@
             grid-template-columns: 1fr 1fr;
             gap: 20px;
             height: calc(100vh - 300px);
-            min-height: 400px;
+            min-height: 600px;
         }
 
         .compare-box {
@@ -528,6 +528,7 @@
             overflow: hidden;
             display: flex;
             transition: 0.3s;
+            box-shadow: inset 0 0 1px rgba(59, 130, 246, 0.1);
         }
 
         .line-numbers {
@@ -565,7 +566,7 @@
             white-space: pre;
             pointer-events: none;
             z-index: 1;
-            overflow: hidden;
+            overflow: auto;
         }
 
         .diff-line-bg {
@@ -581,16 +582,21 @@
             height: 100%;
             padding: 16px;
             background: transparent !important;
-            color: #fff;
+            color: #e0e0e0;
             border: none;
             font-family: 'Courier New', monospace;
-            font-size: 12px;
-            line-height: 1.7;
+            font-size: 13px;
+            line-height: 1.8;
             resize: none;
             outline: none;
             z-index: 2;
             white-space: pre;
             overflow: auto;
+            tab-size: 4;
+        }
+        
+        #compareCode1::placeholder, #compareCode2::placeholder {
+            color: #555;
         }
 
         .compare-box:focus-within {
@@ -690,20 +696,20 @@
                 <i data-lucide="git-diff" style="color: white; width: 22px; height: 22px;"></i>
             </div>
             <div>
-                <h2 style="margin: 0; font-size: 20px; font-weight: 800;">Smart Compare <span style="font-size: 12px; color: #555; font-weight: 400; margin-left: 5px;">v1.5</span></h2>
+                <h2 style="margin: 0; font-size: 20px; font-weight: 800;">Умное Сравнение <span style="font-size: 12px; color: #555; font-weight: 400; margin-left: 5px;">v1.5</span></h2>
                 <div style="display: flex; gap: 10px; margin-top: 4px;">
-                    <div id="statMatch" style="color: var(--accent); font-size: 11px; font-weight: 700; text-transform: uppercase;">0% Match</div>
+                    <div id="statMatch" style="color: var(--accent); font-size: 11px; font-weight: 700; text-transform: uppercase;">0% совпадений</div>
                     <div style="color: #444; font-size: 11px;">•</div>
-                    <div id="statDiffCount" style="color: #ef4444; font-size: 11px; font-weight: 700; text-transform: uppercase;">0 Diffs</div>
+                    <div id="statDiffCount" style="color: #ef4444; font-size: 11px; font-weight: 700; text-transform: uppercase;">0 различий</div>
                 </div>
             </div>
             
             <div style="display: flex; gap: 8px; margin-left: auto;">
-                <button title="Копировать 1" class="icon-btn" onclick="copyCompareCode1(); playClickSound();"><i data-lucide="copy" style="width: 18px;"></i></button>
-                <button title="Копировать 2" class="icon-btn" onclick="copyCompareCode2(); playClickSound();"><i data-lucide="copy" style="width: 18px;"></i></button>
+                <button title="Копировать код 1" class="icon-btn" onclick="copyCompareCode1(); playClickSound();"><i data-lucide="copy" style="width: 18px;"></i></button>
+                <button title="Копировать код 2" class="icon-btn" onclick="copyCompareCode2(); playClickSound();"><i data-lucide="copy" style="width: 18px;"></i></button>
                 <div style="width: 1px; background: #222; margin: 5px 2px;"></div>
                 <button title="Поменять местами" class="icon-btn btn-yellow" onclick="swapCompareCode(); playClickSound();"><i data-lucide="arrow-left-right" style="width: 18px;"></i></button>
-                <button title="Очистить" class="icon-btn btn-red" onclick="clearCompareCode(); playClickSound();"><i data-lucide="trash-2" style="width: 18px;"></i></button>
+                <button title="Очистить все" class="icon-btn btn-red" onclick="clearCompareCode(); playClickSound();"><i data-lucide="trash-2" style="width: 18px;"></i></button>
             </div>
         </div>
 
@@ -714,7 +720,7 @@
                 <div class="line-numbers" id="lines1">1</div>
                 <div class="editor-container">
                     <div class="highlight-layer" id="hl1"></div>
-                    <textarea id="compareCode1" placeholder="Original code..." spellcheck="false" onscroll="syncScroll(1)"></textarea>
+                    <textarea id="compareCode1" placeholder="Оригинальный код..." spellcheck="false" onscroll="syncScroll(1)"></textarea>
                 </div>
             </div>
 
@@ -723,7 +729,7 @@
                 <div class="line-numbers" id="lines2">1</div>
                 <div class="editor-container">
                     <div class="highlight-layer" id="hl2"></div>
-                    <textarea id="compareCode2" placeholder="Modified code..." spellcheck="false" onscroll="syncScroll(2)"></textarea>
+                    <textarea id="compareCode2" placeholder="Измененный код..." spellcheck="false" onscroll="syncScroll(2)"></textarea>
                 </div>
             </div>
         </div>
@@ -731,10 +737,10 @@
         <!-- QUICK TOOLS -->
         <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
             <div class="stat-badge" style="background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2);">
-                <i data-lucide="check-circle-2" style="width: 14px;"></i> <span id="statSame">0</span> Same lines
+                <i data-lucide="check-circle-2" style="width: 14px;"></i> <span id="statSame">0</span> совпадающих строк
             </div>
             <div class="stat-badge" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2);">
-                <i data-lucide="alert-circle" style="width: 14px;"></i> <span id="statDiff">0</span> Differences
+                <i data-lucide="alert-circle" style="width: 14px;"></i> <span id="statDiff">0</span> различий
             </div>
         </div>
     </div>
@@ -1988,8 +1994,8 @@
 
         // Stats
         const matchPercent = maxLines > 0 ? Math.round(((maxLines - diffsCount) / maxLines) * 100) : 0;
-        document.getElementById('statMatch').innerText = `${matchPercent}% Match`;
-        document.getElementById('statDiffCount').innerText = `${diffsCount} Diffs`;
+        document.getElementById('statMatch').innerText = `${matchPercent}% совпадений`;
+        document.getElementById('statDiffCount').innerText = `${diffsCount} различий`;
         document.getElementById('statSame').innerText = samesCount;
         document.getElementById('statDiff').innerText = diffsCount;
 
@@ -2007,12 +2013,12 @@
 
     window.copyCompareCode1 = () => {
         const code = document.getElementById('compareCode1').value;
-        if(code) { navigator.clipboard.writeText(code); playClickSound(); }
+        if(code) { navigator.clipboard.writeText(code); playClickSound(); alert('Скопировано в буфер обмена!'); }
     };
     
     window.copyCompareCode2 = () => {
         const code = document.getElementById('compareCode2').value;
-        if(code) { navigator.clipboard.writeText(code); playClickSound(); }
+        if(code) { navigator.clipboard.writeText(code); playClickSound(); alert('Скопировано в буфер обмена!'); }
     };
     
     window.swapCompareCode = () => {
@@ -2025,7 +2031,7 @@
     };
     
     window.clearCompareCode = () => {
-        if(confirm('Очистить окна?')) {
+        if(confirm('Вы уверены? Очистить оба окна?')) {
             document.getElementById('compareCode1').value = '';
             document.getElementById('compareCode2').value = '';
             updateCompareHighlight();
@@ -2073,9 +2079,8 @@
 
 <!-- ВЕРСИЯ ПРИЛОЖЕНИЯ -->
 <div style="position: fixed; bottom: 0; right: 0; padding: 12px 16px; font-size: 10px; color: #666; background: rgba(0,0,0,0.3); border-radius: 8px 0 0 0; font-family: monospace; z-index: 100;">
-    version dev: 1.6
+    version dev: 1.7
 </div>
 
 </body>
 </html>
-
