@@ -605,7 +605,7 @@
         <!-- HEADER -->
         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border);">
             <i data-lucide="git-compare" style="width: 28px; height: 28px; color: var(--accent);"></i>
-            <h2 style="margin: 0; flex: 1; font-size: 22px; font-weight: 700;">Сравнение скриптов</h2>
+            <h2 style="margin: 0; flex: 1; font-size: 22px; font-weight: 700;">Сравнение скриптов <span style="font-size: 12px; color: #666; margin-left: 8px; font-weight: 500;">• Анализ ИИ Groq</span></h2>
             <div style="display: flex; gap: 8px;">
                 <button title="Копировать всё из окна 1" class="icon-btn" style="width: 44px; height: 44px; padding: 0;" onclick="copyCompareCode1(); playClickSound();">
                     <i data-lucide="copy" style="width: 20px; height: 20px;"></i>
@@ -622,10 +622,15 @@
             </div>
         </div>
 
+        <!-- ИНСТРУКЦИЯ -->
+        <div style="background: rgba(59, 130, 246, 0.1); padding: 12px 16px; border-radius: 8px; border-left: 3px solid var(--accent); margin-bottom: 20px; font-size: 12px; color: #aaa;">
+            💡 Вставьте два скрипта в окна ниже. Groq AI автоматически найдёт все различия, даже если строки похожи.
+        </div>
+
         <!-- MAIN COMPARE AREA -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: calc(100vh - 220px);">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: calc(100vh - 280px);">
             <!-- СКРИПТ 1 -->
-            <div style="display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--card-bg);">
+            <div style="display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--card-bg); transition: 0.3s;">
                 <div style="padding: 12px 16px; background: rgba(59, 130, 246, 0.1); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px;">
                     <i data-lucide="file-code" style="width: 18px; height: 18px; color: var(--accent);"></i>
                     <span style="font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase;">Скрипт 1</span>
@@ -637,7 +642,7 @@
             </div>
 
             <!-- СКРИПТ 2 -->
-            <div style="display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--card-bg);">
+            <div style="display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--card-bg); transition: 0.3s;">
                 <div style="padding: 12px 16px; background: rgba(59, 130, 246, 0.1); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px;">
                     <i data-lucide="file-code" style="width: 18px; height: 18px; color: var(--accent);"></i>
                     <span style="font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase;">Скрипт 2</span>
@@ -1940,16 +1945,31 @@ ${code2}
                 })
             });
 
-            if(!response.ok) throw new Error('Ошибка Groq API');
+            if(!response.ok) {
+                const error = await response.json();
+                console.error('Groq API Error:', error);
+                throw new Error(`API ошибка: ${response.status}`);
+            }
             
             const data = await response.json();
-            const analysis = JSON.parse(data.choices[0].message.content);
             
+            if(!data.choices || !data.choices[0]) {
+                throw new Error('Неожиданный формат ответа от Groq');
+            }
+            
+            let content = data.choices[0].message.content;
+            
+            // Удаляем markdown код если есть
+            content = content.replace(/```json\n?/, '').replace(/\n?```/, '').trim();
+            
+            const analysis = JSON.parse(content);
             applyCompareResults(code1, code2, analysis);
         } catch(error) {
             console.error('Ошибка сравнения:', error);
             document.getElementById('statMatch').textContent = '❌ Ошибка';
-            setTimeout(() => resetCompareStats(), 2000);
+            setTimeout(() => {
+                document.getElementById('statMatch').textContent = '0%';
+            }, 3000);
         }
     };
 
