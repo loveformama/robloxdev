@@ -472,11 +472,11 @@
             border-radius: 12px;
             padding: 20px;
             margin-top: 20px;
-            display: none;
+            display: none !important;
         }
         
         .compare-result.active {
-            display: block;
+            display: block !important;
         }
         
         .diff-line {
@@ -610,7 +610,7 @@
                 <i data-lucide="copy"></i> Копировать 2
             </button>
         </div>
-        <div id="compareResult" style="margin-top: 20px; display: none; background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border);">
+        <div id="compareResult" style="margin-top: 20px; background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border);">
             <h3 style="margin-top: 0; color: var(--accent);">Результат сравнения</h3>
             <div id="compareOutput" style="font-family: monospace; font-size: 13px; white-space: pre-wrap; word-break: break-all; max-height: 400px; overflow: auto;"></div>
         </div>
@@ -1926,7 +1926,7 @@
 
 <!-- ВЕРСИЯ ПРИЛОЖЕНИЯ -->
 <div style="position: fixed; bottom: 0; right: 0; padding: 12px 16px; font-size: 10px; color: #666; background: rgba(0,0,0,0.3); border-radius: 8px 0 0 0; font-family: monospace; z-index: 100;">
-    version dev: 1.1
+    version dev: 1.2
 </div>
 
 </body>
