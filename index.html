@@ -421,13 +421,14 @@
             padding: 16px;
             background: #0a0a0a;
             border: 1px solid #222;
-            border-radius: 12px;
+            border-radius: 8px;
             color: #fff;
             font-family: 'Courier New', monospace;
-            font-size: 13px;
-            line-height: 1.6;
-            resize: vertical;
-            transition: 0.2s border;
+            font-size: 12px;
+            line-height: 1.7;
+            resize: none;
+            transition: 0.3s border, 0.3s box-shadow;
+            box-sizing: border-box;
         }
         
         .compare-textarea:focus {
@@ -503,6 +504,17 @@
         
         .diff-same {
             color: #999;
+        }
+
+        /* НОВЫЙ ДИЗАЙН КОМПАРАТОРА */
+        #compareCode1, #compareCode2 {
+            background-color: #0a0a0a !important;
+            color: #fff;
+        }
+
+        #tab-compare > div:first-of-type > div > div:nth-child(1),
+        #tab-compare > div:first-of-type > div > div:nth-child(2) {
+            transition: all 0.3s ease;
         }
         
         @media (max-width: 1200px) {
@@ -586,30 +598,67 @@
     </div>
 
     <div id="tab-compare" class="content">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: calc(100vh - 200px);">
-            <div style="display: flex; flex-direction: column;">
-                <label style="font-size:12px; color:#888; text-transform:uppercase; font-weight:600; margin-bottom:10px;">Скрипт 1</label>
-                <textarea id="compareCode1" class="search-bar" placeholder="Вставьте первый скрипт..." style="flex:1; font-family:monospace; font-size:13px;"></textarea>
-            </div>
-            <div style="display: flex; flex-direction: column;">
-                <label style="font-size:12px; color:#888; text-transform:uppercase; font-weight:600; margin-bottom:10px;">Скрипт 2</label>
-                <textarea id="compareCode2" class="search-bar" placeholder="Вставьте второй скрипт..." style="flex:1; font-family:monospace; font-size:13px;"></textarea>
+        <!-- HEADER -->
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border);">
+            <i data-lucide="git-compare" style="width: 28px; height: 28px; color: var(--accent);"></i>
+            <h2 style="margin: 0; flex: 1; font-size: 22px; font-weight: 700;">Сравнение скриптов</h2>
+            <div style="display: flex; gap: 8px;">
+                <button title="Копировать всё из окна 1" class="icon-btn" style="width: 44px; height: 44px; padding: 0;" onclick="copyCompareCode1(); playClickSound();">
+                    <i data-lucide="copy" style="width: 20px; height: 20px;"></i>
+                </button>
+                <button title="Копировать всё из окна 2" class="icon-btn" style="width: 44px; height: 44px; padding: 0;" onclick="copyCompareCode2(); playClickSound();">
+                    <i data-lucide="copy" style="width: 20px; height: 20px;"></i>
+                </button>
+                <button title="Поменять местами" class="icon-btn" style="width: 44px; height: 44px; padding: 0;" onclick="swapCompareCode(); playClickSound();">
+                    <i data-lucide="shuffle" style="width: 20px; height: 20px;"></i>
+                </button>
+                <button title="Очистить оба окна" class="icon-btn" style="width: 44px; height: 44px; padding: 0;" onclick="clearCompareCode(); playClickSound();">
+                    <i data-lucide="trash-2" style="width: 20px; height: 20px;"></i>
+                </button>
             </div>
         </div>
-        <div style="margin-top: 20px; display: flex; gap: 10px;">
-            <button class="icon-btn" style="flex:1; height:50px; background:var(--accent); color:white;" onclick="compareScripts(); playClickSound();">
-                <i data-lucide="git-compare"></i> Сравнить
-            </button>
-            <button class="icon-btn" style="flex:1; height:50px;" onclick="copyCompareCode1(); playClickSound();">
-                <i data-lucide="copy"></i> Копировать 1
-            </button>
-            <button class="icon-btn" style="flex:1; height:50px;" onclick="copyCompareCode2(); playClickSound();">
-                <i data-lucide="copy"></i> Копировать 2
-            </button>
+
+        <!-- MAIN COMPARE AREA -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: calc(100vh - 220px);">
+            <!-- СКРИПТ 1 -->
+            <div style="display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--card-bg);">
+                <div style="padding: 12px 16px; background: rgba(59, 130, 246, 0.1); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="file-code" style="width: 18px; height: 18px; color: var(--accent);"></i>
+                    <span style="font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase;">Скрипт 1</span>
+                    <span id="compareCount1" style="font-size: 11px; color: #666; margin-left: auto;"></span>
+                </div>
+                <textarea id="compareCode1" placeholder="Вставьте первый скрипт..." 
+                    style="flex:1; padding: 16px; border: none; background: #0a0a0a; color: #fff; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.7; resize: none; outline: none;">
+                </textarea>
+            </div>
+
+            <!-- СКРИПТ 2 -->
+            <div style="display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--card-bg);">
+                <div style="padding: 12px 16px; background: rgba(59, 130, 246, 0.1); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="file-code" style="width: 18px; height: 18px; color: var(--accent);"></i>
+                    <span style="font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase;">Скрипт 2</span>
+                    <span id="compareCount2" style="font-size: 11px; color: #666; margin-left: auto;"></span>
+                </div>
+                <textarea id="compareCode2" placeholder="Вставьте второй скрипт..." 
+                    style="flex:1; padding: 16px; border: none; background: #0a0a0a; color: #fff; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.7; resize: none; outline: none;">
+                </textarea>
+            </div>
         </div>
-        <div id="compareResult" style="margin-top: 20px; background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border);">
-            <h3 style="margin-top: 0; color: var(--accent);">Результат сравнения</h3>
-            <div id="compareOutput" style="font-family: monospace; font-size: 13px; white-space: pre-wrap; word-break: break-all; max-height: 400px; overflow: auto;"></div>
+
+        <!-- STATS -->
+        <div style="margin-top: 15px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+            <div style="background: rgba(34, 197, 94, 0.1); padding: 12px; border-radius: 8px; border-left: 3px solid #22c55e;">
+                <div style="font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 4px;">✓ Одинаковых строк</div>
+                <div id="statSame" style="font-size: 18px; font-weight: 700; color: #22c55e;">0</div>
+            </div>
+            <div style="background: rgba(239, 68, 68, 0.1); padding: 12px; border-radius: 8px; border-left: 3px solid #ef4444;">
+                <div style="font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 4px;">✗ Различных строк</div>
+                <div id="statDiff" style="font-size: 18px; font-weight: 700; color: #ef4444;">0</div>
+            </div>
+            <div style="background: rgba(59, 130, 246, 0.1); padding: 12px; border-radius: 8px; border-left: 3px solid var(--accent);">
+                <div style="font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 4px;">📊 Совпадение</div>
+                <div id="statMatch" style="font-size: 18px; font-weight: 700; color: var(--accent);">0%</div>
+            </div>
         </div>
     </div>
 
@@ -1783,96 +1832,13 @@
         }
     };
 
-    // ============= СРАВНЕНИЕ =============
-    
-    const escapeHtml = (text) => {
-        const map = {
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#039;'
-        };
-        return text.replace(/[&<>"']/g, m => map[m]);
-    };
-    
-    const diffStrings = (str1, str2) => {
-        let result = '';
-        let i = 0, j = 0;
-        
-        const maxLen = Math.max(str1.length, str2.length);
-        
-        while(i < str1.length || j < str2.length) {
-            if(str1[i] === str2[j]) {
-                result += `<span style="color: #22c55e; font-weight: 600;">${escapeHtml(str1[i])}</span>`;
-                i++;
-                j++;
-            } else {
-                if(i < str1.length && j < str2.length) {
-                    result += `<span style="color: #ef4444; font-weight: 600; background: rgba(239, 68, 68, 0.15); padding: 2px 4px; border-radius: 2px;">${escapeHtml(str1[i])}</span>`;
-                    result += `<span style="color: #10b981; font-weight: 600; background: rgba(16, 185, 129, 0.15); padding: 2px 4px; border-radius: 2px;">${escapeHtml(str2[j])}</span>`;
-                    i++;
-                    j++;
-                } else if(i < str1.length) {
-                    result += `<span style="color: #ef4444; font-weight: 600; background: rgba(239, 68, 68, 0.15); padding: 2px 4px; border-radius: 2px;">${escapeHtml(str1[i])}</span>`;
-                    i++;
-                } else {
-                    result += `<span style="color: #10b981; font-weight: 600; background: rgba(16, 185, 129, 0.15); padding: 2px 4px; border-radius: 2px;">${escapeHtml(str2[j])}</span>`;
-                    j++;
-                }
-            }
-        }
-        
-        return result;
-    };
-    
-    window.compareScripts = () => {
-        const code1 = document.getElementById('compareCode1').value;
-        const code2 = document.getElementById('compareCode2').value;
-        const resultDiv = document.getElementById('compareResult');
-        const outputDiv = document.getElementById('compareOutput');
-        
-        if(!code1.trim() || !code2.trim()) {
-            alert('Добавьте код в оба окна');
-            resultDiv.classList.remove('active');
-            return;
-        }
-        
-        const lines1 = code1.split('\n');
-        const lines2 = code2.split('\n');
-        
-        let html = '<div style="font-size: 12px; color: #888; margin-bottom: 16px;">🟢 Зелёные символы = одинаковые | 🔴 Красные/Зелёные = разные</div>';
-        
-        const maxLines = Math.max(lines1.length, lines2.length);
-        
-        for(let i = 0; i < maxLines; i++) {
-            const line1 = lines1[i] || '';
-            const line2 = lines2[i] || '';
-            
-            if(line1 === line2) {
-                html += `<div class="diff-line" style="padding: 8px 12px; margin-bottom: 4px; border-radius: 4px; background: rgba(34, 197, 94, 0.1); color: #22c55e;">`;
-                html += `<span style="opacity: 0.7; margin-right: 8px;">${i + 1}:</span>`;
-                html += `<span style="color: #22c55e;">${escapeHtml(line1 || '(пусто)')}</span>`;
-                html += `</div>`;
-            } else {
-                html += `<div class="diff-line" style="padding: 8px 12px; margin-bottom: 4px; border-radius: 4px; background: rgba(50, 50, 50, 0.5);">`;
-                html += `<span style="opacity: 0.7; margin-right: 8px;">${i + 1}:</span>`;
-                html += diffStrings(line1, line2);
-                html += `</div>`;
-            }
-        }
-        
-        outputDiv.innerHTML = html;
-        resultDiv.style.display = 'block';
-        resultDiv.classList.add('active');
-    };
+    // ============= СРАВНЕНИЕ СКРИПТОВ =============
     
     window.copyCompareCode1 = () => {
         const code = document.getElementById('compareCode1').value;
         if(code) {
             navigator.clipboard.writeText(code);
             playClickSound();
-            alert('✅ Первый скрипт скопирован в буфер обмена');
         }
     };
     
@@ -1881,11 +1847,156 @@
         if(code) {
             navigator.clipboard.writeText(code);
             playClickSound();
-            alert('✅ Второй скрипт скопирован в буфер обмена');
+        }
+    };
+    
+    window.swapCompareCode = () => {
+        const temp = document.getElementById('compareCode1').value;
+        document.getElementById('compareCode1').value = document.getElementById('compareCode2').value;
+        document.getElementById('compareCode2').value = temp;
+        updateCompareHighlight();
+        playClickSound();
+    };
+    
+    window.clearCompareCode = () => {
+        if(confirm('Очистить оба окна скриптов?')) {
+            document.getElementById('compareCode1').value = '';
+            document.getElementById('compareCode2').value = '';
+            updateCompareHighlight();
+            playClickSound();
+        }
+    };
+    
+    const updateCompareHighlight = () => {
+        const code1 = document.getElementById('compareCode1');
+        const code2 = document.getElementById('compareCode2');
+        const lines1 = code1.value.split('\n');
+        const lines2 = code2.value.split('\n');
+        
+        // Сравнение построчно
+        let sameCount = 0, diffCount = 0;
+        const maxLines = Math.max(lines1.length, lines2.length);
+        
+        for(let i = 0; i < maxLines; i++) {
+            if(lines1[i] === lines2[i]) {
+                sameCount++;
+            } else {
+                diffCount++;
+            }
+        }
+        
+        const totalLines = Math.max(sameCount + diffCount, 1);
+        const matchPercent = Math.round((sameCount / totalLines) * 100);
+        
+        document.getElementById('statSame').textContent = sameCount;
+        document.getElementById('statDiff').textContent = diffCount;
+        document.getElementById('statMatch').textContent = matchPercent + '%';
+        
+        document.getElementById('compareCount1').textContent = lines1.length + ' строк';
+        document.getElementById('compareCount2').textContent = lines2.length + ' строк';
+        
+        // Подсветка с use linear-gradient
+        const gradient1 = createGradient(lines1, lines2);
+        const gradient2 = createGradient(lines2, lines1);
+        
+        code1.style.background = gradient1;
+        code2.style.background = gradient2;
+        
+        // Border для выделения разных строк
+        highlightDifferentLines(code1, lines1, lines2);
+        highlightDifferentLines(code2, lines2, lines1);
+    };
+    
+    const createGradient = (currentLines, compareLines) => {
+        if(currentLines.length === 0) return '#0a0a0a';
+        
+        let colors = [];
+        for(let i = 0; i < currentLines.length; i++) {
+            const isSame = currentLines[i] === compareLines[i];
+            colors.push(isSame ? '#0a0a0a' : 'rgba(239, 68, 68, 0.25)');
+        }
+        
+        if(colors.length === 0) return '#0a0a0a';
+        
+        // Построить градиент для каждой строки
+        let gradientStops = [];
+        const lineHeight = 1.7;
+        const fontSize = 12;
+        const pxPerLine = fontSize * lineHeight; // ~20.4px
+        const totalHeight = currentLines.length * pxPerLine;
+        
+        let currentPos = 0;
+        
+        for(let i = 0; i < colors.length; i++) {
+            const startPercent = (currentPos / totalHeight) * 100;
+            currentPos += pxPerLine;
+            const endPercent = (currentPos / totalHeight) * 100;
+            
+            gradientStops.push(`${colors[i]} ${startPercent}%`);
+            gradientStops.push(`${colors[i]} ${endPercent}%`);
+        }
+        
+        return `linear-gradient(to bottom, ${gradientStops.join(', ')})`;
+    };
+    
+    const highlightDifferentLines = (textarea, currentLines, compareLines) => {
+        // Найти родительский контейнер
+        const container = textarea.parentElement;
+        if(!container) return;
+        
+        // Проверяем есть ли различия
+        let hasDifferences = false;
+        for(let i = 0; i < currentLines.length; i++) {
+            if(currentLines[i] !== compareLines[i]) {
+                hasDifferences = true;
+                break;
+            }
+        }
+        
+        // Обновляем стиль границы контейнера
+        if(hasDifferences) {
+            container.style.borderColor = '#ef4444';
+            container.style.boxShadow = '0 0 20px rgba(239, 68, 68, 0.15)';
+        } else if(currentLines.length > 0 && currentLines[0] !== '') {
+            container.style.borderColor = '#22c55e';
+            container.style.boxShadow = '0 0 20px rgba(34, 197, 94, 0.15)';
+        } else {
+            container.style.borderColor = 'var(--border)';
+            container.style.boxShadow = 'none';
         }
     };
     
     // ============= ОБРАБОТЧИКИ МОДАЛЬНЫХ ОКОН =============
+    
+    // ============= ИНИЦИАЛИЗАЦИЯ КОМПАРАТОРА =============
+    
+    const initCompare = () => {
+        const compareCode1 = document.getElementById('compareCode1');
+        const compareCode2 = document.getElementById('compareCode2');
+        
+        if(compareCode1) {
+            ['input', 'paste', 'change'].forEach(event => {
+                compareCode1.addEventListener(event, () => {
+                    setTimeout(updateCompareHighlight, 10);
+                });
+            });
+        }
+        
+        if(compareCode2) {
+            ['input', 'paste', 'change'].forEach(event => {
+                compareCode2.addEventListener(event, () => {
+                    setTimeout(updateCompareHighlight, 10);
+                });
+            });
+        }
+    };
+    
+    // Инициализируем при загрузке DOM
+    if(document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initCompare);
+    } else {
+        initCompare();
+    }
     
     document.addEventListener('click', (e) => {
         const noteModal = document.getElementById('noteModal');
@@ -1921,7 +2032,7 @@
 
 <!-- ВЕРСИЯ ПРИЛОЖЕНИЯ -->
 <div style="position: fixed; bottom: 0; right: 0; padding: 12px 16px; font-size: 10px; color: #666; background: rgba(0,0,0,0.3); border-radius: 8px 0 0 0; font-family: monospace; z-index: 100;">
-    version dev: 1.2
+    version dev: 1.3
 </div>
 
 </body>
