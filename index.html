@@ -752,10 +752,16 @@
             </div>
             <div>
                 <h2 style="margin: 0; font-size: 20px; font-weight: 800;">Умное Сравнение <span style="font-size: 12px; color: #555; font-weight: 400; margin-left: 5px;">v1.5</span></h2>
-                <div style="display: flex; gap: 10px; margin-top: 4px;">
-                    <div id="statMatch" style="color: var(--accent); font-size: 11px; font-weight: 700; text-transform: uppercase;">0% совпадений</div>
+                <div style="display: flex; gap: 10px; margin-top: 4px; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 4px; color: var(--accent); font-size: 11px; font-weight: 700; text-transform: uppercase;">
+                        <i data-lucide="check-circle-2" style="width: 14px; height: 14px;"></i>
+                        <span id="statMatch">0% совпадений</span>
+                    </div>
                     <div style="color: #444; font-size: 11px;">•</div>
-                    <div id="statDiffCount" style="color: #ef4444; font-size: 11px; font-weight: 700; text-transform: uppercase;">0 различий</div>
+                    <div style="display: flex; align-items: center; gap: 4px; color: #ef4444; font-size: 11px; font-weight: 700; text-transform: uppercase;">
+                        <i data-lucide="alert-circle" style="width: 14px; height: 14px;"></i>
+                        <span id="statDiffCount">0 различий</span>
+                    </div>
                 </div>
             </div>
             
@@ -2082,10 +2088,15 @@
         if(id === 1) compareSync.code1 = code;
         if(id === 2) compareSync.code2 = code;
         
-        // Сохранить в Firebase с задержкой
+        // Сохранить в Firebase с задержкой (ОБЩИЙ PATH для обоих пользователей)
         syncTimeout = setTimeout(() => {
-            const syncRef = ref(db, `compareSync/${window.currentUserEmail || 'anon'}/code${id}`);
-            set(syncRef, { code, cursor, timestamp: Date.now() });
+            const syncRef = ref(db, `compareSync/code${id}`);
+            set(syncRef, { 
+                code, 
+                cursor, 
+                userId: window.currentUserEmail || 'Anonymous',
+                timestamp: Date.now() 
+            });
         }, 200);
         
         // Обновить подсветку в реальном времени
@@ -2099,35 +2110,56 @@
         }, 2000);
     };
     
-    // Слушатель для обновления кода с другого устройства
-    onValue(ref(db, `compareSync`), (snapshot) => {
-        const data = snapshot.val();
-        if(!data) return;
-        
-        const entries = Object.entries(data);
-        entries.forEach(([email, userSync]) => {
-            // Не обновляем свой код
-            if(email === (window.currentUserEmail || 'anon')) return;
+    // Слушатель для обновления кода с другого устройства (ОБЩИЕ ПУТИ)
+    let compareSyncListener1 = null;
+    let compareSyncListener2 = null;
+    
+    const setupCompareSyncListeners = () => {
+        // Слушаем общий код 1
+        compareSyncListener1 = onValue(ref(db, `compareSync/code1`), (snapshot) => {
+            const data = snapshot.val();
+            if(!data) return;
             
-            // Обновляем код 1 с другого пользователя
-            if(userSync.code1) {
-                const textarea1 = document.getElementById('compareCode1');
-                textarea1.value = userSync.code1.code;
-                compareSync.code1 = userSync.code1.code;
+            const textarea1 = document.getElementById('compareCode1');
+            if(data.code && textarea1.value !== data.code) {
+                textarea1.value = data.code;
+                compareSync.code1 = data.code;
                 updateCompareHighlight();
-                updateCursorDisplay(1, userSync.code1.cursor || 0, email);
-            }
-            
-            // Обновляем код 2 с другого пользователя
-            if(userSync.code2) {
-                const textarea2 = document.getElementById('compareCode2');
-                textarea2.value = userSync.code2.code;
-                compareSync.code2 = userSync.code2.code;
-                updateCompareHighlight();
-                updateCursorDisplay(2, userSync.code2.cursor || 0, email);
+                
+                // Показываем курсор другого пользователя
+                if(data.userId !== (window.currentUserEmail || 'Anonymous')) {
+                    const userName = data.userId.split('@')[0] || 'Собеседник';
+                    updateCursorDisplay(1, data.cursor || 0, userName);
+                }
             }
         });
-    });
+        
+        // Слушаем общий код 2
+        compareSyncListener2 = onValue(ref(db, `compareSync/code2`), (snapshot) => {
+            const data = snapshot.val();
+            if(!data) return;
+            
+            const textarea2 = document.getElementById('compareCode2');
+            if(data.code && textarea2.value !== data.code) {
+                textarea2.value = data.code;
+                compareSync.code2 = data.code;
+                updateCompareHighlight();
+                
+                // Показываем курсор другого пользователя
+                if(data.userId !== (window.currentUserEmail || 'Anonymous')) {
+                    const userName = data.userId.split('@')[0] || 'Собеседник';
+                    updateCursorDisplay(2, data.cursor || 0, userName);
+                }
+            }
+        });
+    };
+    
+    // Инициализируем слушатели при загрузке
+    if(document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setupCompareSyncListeners);
+    } else {
+        setupCompareSyncListeners();
+    }
     
     // Отобразить курсор пользователя
     const updateCursorDisplay = (id, position, userName = 'Собеседник') => {
@@ -2170,6 +2202,8 @@
         const temp = t1.value;
         t1.value = t2.value;
         t2.value = temp;
+        syncLiveCode(1);
+        syncLiveCode(2);
         updateCompareHighlight();
     };
     
@@ -2177,6 +2211,8 @@
         if(confirm('Вы уверены? Очистить оба окна?')) {
             document.getElementById('compareCode1').value = '';
             document.getElementById('compareCode2').value = '';
+            syncLiveCode(1);
+            syncLiveCode(2);
             updateCompareHighlight();
         }
     };
@@ -2189,6 +2225,7 @@
         [c1, c2].forEach((el, index) => {
             const id = index + 1;
             el.addEventListener('input', () => {
+                syncLiveCode(id);
                 updateCompareHighlight();
                 syncScroll(id);
             });
@@ -2222,7 +2259,7 @@
 
 <!-- ВЕРСИЯ ПРИЛОЖЕНИЯ -->
 <div style="position: fixed; bottom: 0; right: 0; padding: 12px 16px; font-size: 10px; color: #666; background: rgba(0,0,0,0.3); border-radius: 8px 0 0 0; font-family: monospace; z-index: 100;">
-    version dev: 1.8
+    version dev: 1.9
 </div>
 
 </body>
