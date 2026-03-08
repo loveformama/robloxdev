@@ -187,6 +187,105 @@
         #scriptView, .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 1000; padding: 40px; box-sizing: border-box; }
         .modal-content { background: var(--card-bg); max-width: 900px; margin: auto; border-radius: 24px; border: 1px solid var(--border); max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; }
         pre { flex: 1; margin: 0; padding: 25px; overflow: auto; background: #080808; color: #9cdcfe; font-family: 'Consolas', monospace; font-size: 14px; }
+
+        /* ЗАМЕТКИ */
+        .note-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+            transition: 0.3s;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .note-card:hover {
+            border-color: #444;
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.15);
+        }
+        
+        .note-card.pinned {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.25);
+        }
+        
+        .note-card.red { border-left: 4px solid #ef4444; }
+        .note-card.yellow { border-left: 4px solid #f59e0b; }
+        .note-card.green { border-left: 4px solid #10b981; }
+        .note-card.blue { border-left: 4px solid #3b82f6; }
+        .note-card.purple { border-left: 4px solid #a855f7; }
+        
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+        
+        .note-title {
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--accent);
+            word-break: break-word;
+            flex: 1;
+        }
+        
+        .note-pin-badge {
+            font-size: 12px;
+            background: var(--accent);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 6px;
+            margin-left: 8px;
+        }
+        
+        .note-content {
+            flex: 1;
+            font-size: 14px;
+            color: #ccc;
+            line-height: 1.5;
+            word-break: break-word;
+            margin-bottom: 12px;
+            white-space: pre-wrap;
+        }
+        
+        .note-footer {
+            display: flex;
+            gap: 8px;
+            border-top: 1px solid #222;
+            padding-top: 12px;
+        }
+        
+        .note-btn {
+            flex: 1;
+            padding: 8px;
+            border-radius: 8px;
+            border: none;
+            background: #1a1a1a;
+            color: #ccc;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 12px;
+        }
+        
+        .note-btn:hover {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .note-btn.pinned {
+            background: var(--accent);
+            color: white;
+        }
+    
     </style>
 </head>
 <body>
@@ -219,6 +318,7 @@
 <nav>
     <button class="nav-btn active" onclick="switchTab('tab-templates', this); playClickSound();"><i data-lucide="layout"></i> Шаблоны</button>
     <button class="nav-btn" onclick="switchTab('tab-tasks', this); playClickSound();"><i data-lucide="check-square"></i> Задачи</button>
+    <button class="nav-btn" onclick="switchTab('tab-notes', this); playClickSound();"><i data-lucide="sticky-note"></i> Заметки</button>
     <button class="nav-btn" onclick="switchTab('tab-progress', this); playClickSound();"><i data-lucide="bar-chart-3"></i> Прогресс</button>
     <button class="nav-btn" onclick="switchTab('tab-success', this); playClickSound();"><i data-lucide="trending-up"></i> Успехи</button>
     <div style="width: 1px; background: #222; margin: 5px 10px;"></div>
@@ -238,6 +338,15 @@
 
     <div id="tab-tasks" class="content">
         <div id="taskList" class="task-grid"></div>
+    </div>
+
+    <div id="tab-notes" class="content">
+        <div style="display: flex; gap: 12px; margin-bottom: 30px;">
+            <button class="icon-btn" style="width: 140px; height: 50px; border-radius: 12px; gap: 8px;" onclick="showNoteModal(); playClickSound();">
+                <i data-lucide="plus"></i> Заметка
+            </button>
+        </div>
+        <div id="notesList" class="script-grid"></div>
     </div>
 
     <div id="tab-progress" class="content">
@@ -323,6 +432,27 @@
     </div>
 </div>
 
+<div id="noteModal" class="overlay">
+    <div class="modal-content" style="width:500px; padding:30px; margin-top:100px;">
+        <h3 style="margin-top:0" id="noteModalTitle">Новая заметка</h3>
+        <input type="hidden" id="noteModalId">
+        <input type="text" id="noteModalTitle2" class="search-bar" placeholder="Заголовок заметки..." style="margin-bottom:10px">
+        <textarea id="noteModalText" class="search-bar" rows="6" placeholder="Содержание заметки..." style="margin-bottom:20px"></textarea>
+        <select id="noteModalColor" class="search-bar" style="margin-bottom:20px; background:#111;">
+            <option value="default">Стандартная</option>
+            <option value="red">Красная</option>
+            <option value="yellow">Жёлтая</option>
+            <option value="green">Зелёная</option>
+            <option value="blue">Синяя</option>
+            <option value="purple">Фиолетовая</option>
+        </select>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="saveNote(); playClickSound();" class="icon-btn" style="flex:1; height:50px; background:var(--accent); color:white;">Сохранить</button>
+            <button onclick="closeNoteModal(); playClickSound();" class="icon-btn" style="flex:1; height:50px;">Отмена</button>
+        </div>
+    </div>
+</div>
+
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, set, onValue, push, remove, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
@@ -358,19 +488,46 @@
 
     let chartInstance = null;
     
-    // ЗВУК КЛИКА - ДЕЛАЕМ ГЛОБАЛЬНОЙ ФУНКЦИЕЙ
+    // ЗВУК КЛИКА - МЯГКИЙ, КАК ЩЕЛЧОК КЛАВИАТУРЫ/МЫШИ
     window.playClickSound = () => {
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioContext.createOscillator();
-        const gain = audioContext.createGain();
-        oscillator.connect(gain);
-        gain.connect(audioContext.destination);
-        oscillator.frequency.value = 800;
-        oscillator.type = 'sine';
-        gain.gain.setValueAtTime(0.3, audioContext.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.1);
+        const now = audioContext.currentTime;
+        
+        // Создаём два осциллятора для более мягкого звука (как щелчок)
+        const osc1 = audioContext.createOscillator();
+        const osc2 = audioContext.createOscillator();
+        const gain1 = audioContext.createGain();
+        const gain2 = audioContext.createGain();
+        const masterGain = audioContext.createGain();
+        
+        // Первый осциллятор - основной звук
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(1200, now);
+        osc1.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+        gain1.gain.setValueAtTime(0.15, now);
+        gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+        
+        // Второй осциллятор - гармоника
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(600, now);
+        osc2.frequency.exponentialRampToValueAtTime(400, now + 0.08);
+        gain2.gain.setValueAtTime(0.08, now);
+        gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+        
+        // Общая громкость
+        masterGain.gain.setValueAtTime(0.3, now);
+        masterGain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+        
+        osc1.connect(gain1);
+        osc2.connect(gain2);
+        gain1.connect(masterGain);
+        gain2.connect(masterGain);
+        masterGain.connect(audioContext.destination);
+        
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + 0.08);
+        osc2.stop(now + 0.08);
     };
     
     // ПРОВЕРКА 30 ДНЕЙ
@@ -440,6 +597,7 @@
         
         isAuthReady = true;
         setupTaskListener();
+        setupNotesListener();
         refreshIcons();
     });
 
@@ -891,6 +1049,139 @@
             card.style.display = title.includes(searchText) ? 'block' : 'none';
         });
     };
+
+    // ============= ЗАМЕТКИ =============
+    let notesListener = null;
+
+    const setupNotesListener = () => {
+        if(notesListener) notesListener();
+        
+        notesListener = onValue(ref(db, 'notes'), (snapshot) => {
+            const list = document.getElementById('notesList');
+            list.innerHTML = '';
+            const notes = [];
+            
+            snapshot.forEach(child => {
+                const note = child.val();
+                note.id = child.key;
+                notes.push(note);
+            });
+            
+            // Сортируем: закреплённые сверху
+            notes.sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
+            
+            notes.forEach(note => {
+                const div = document.createElement('div');
+                div.className = `note-card ${note.color || 'default'} ${note.pinned ? 'pinned' : ''}`;
+                
+                const noteDate = note.createdAt ? new Date(note.createdAt).toLocaleDateString('ru-RU') : '';
+                
+                div.innerHTML = `
+                    <div class="note-header">
+                        <div style="flex:1;">
+                            <div class="note-title">${note.title || 'Без названия'}</div>
+                        </div>
+                        ${note.pinned ? '<div class="note-pin-badge"><i data-lucide="pin" style="width:12px; height:12px;"></i></div>' : ''}
+                    </div>
+                    <div class="note-content">${(note.text || '').substring(0, 200)}</div>
+                    <div style="font-size: 12px; color: #666; margin-bottom: 8px;">${noteDate}</div>
+                    <div class="note-footer">
+                        <button class="note-btn ${note.pinned ? 'pinned' : ''}" onclick="toggleNotePin('${note.id}'); playClickSound();" title="${note.pinned ? 'Открепить' : 'Закрепить'}">
+                            <i data-lucide="pin"></i>
+                        </button>
+                        <button class="note-btn" onclick="editNote('${note.id}'); playClickSound();" title="Редактировать">
+                            <i data-lucide="edit-2"></i>
+                        </button>
+                        <button class="note-btn" onclick="askDeleteNote('${note.id}'); playClickSound();" title="Удалить">
+                            <i data-lucide="trash-2"></i>
+                        </button>
+                    </div>
+                `;
+                
+                list.appendChild(div);
+            });
+            
+            refreshIcons();
+        });
+    };
+
+    window.showNoteModal = () => {
+        document.getElementById('noteModalId').value = '';
+        document.getElementById('noteModalTitle').innerText = 'Новая заметка';
+        document.getElementById('noteModalTitle2').value = '';
+        document.getElementById('noteModalText').value = '';
+        document.getElementById('noteModalColor').value = 'default';
+        document.getElementById('noteModal').style.display = 'flex';
+        document.getElementById('noteModalTitle2').focus();
+    };
+
+    window.closeNoteModal = () => {
+        document.getElementById('noteModal').style.display = 'none';
+    };
+
+    window.saveNote = () => {
+        const id = document.getElementById('noteModalId').value;
+        const title = document.getElementById('noteModalTitle2').value;
+        const text = document.getElementById('noteModalText').value;
+        const color = document.getElementById('noteModalColor').value;
+        
+        if(!text.trim()) {
+            alert('Заметка не может быть пустой');
+            return;
+        }
+        
+        playClickSound();
+        
+        if(id) {
+            // Редактируем существующую заметку
+            update(ref(db, `notes/${id}`), { title, text, color, updatedAt: Date.now() });
+        } else {
+            // Создаём новую заметку
+            push(ref(db, 'notes'), { 
+                title, 
+                text, 
+                color,
+                pinned: false,
+                createdAt: Date.now(),
+                updatedAt: Date.now()
+            });
+        }
+        
+        closeNoteModal();
+    };
+
+    window.editNote = (id) => {
+        onValue(ref(db, `notes/${id}`), (snapshot) => {
+            const note = snapshot.val();
+            if(note) {
+                document.getElementById('noteModalId').value = id;
+                document.getElementById('noteModalTitle').innerText = 'Редактировать заметку';
+                document.getElementById('noteModalTitle2').value = note.title || '';
+                document.getElementById('noteModalText').value = note.text || '';
+                document.getElementById('noteModalColor').value = note.color || 'default';
+                document.getElementById('noteModal').style.display = 'flex';
+                document.getElementById('noteModalText').focus();
+            }
+        }, { onlyOnce: true });
+    };
+
+    window.toggleNotePin = (id) => {
+        onValue(ref(db, `notes/${id}`), (snapshot) => {
+            const note = snapshot.val();
+            if(note) {
+                update(ref(db, `notes/${id}`), { pinned: !note.pinned });
+                playClickSound();
+            }
+        }, { onlyOnce: true });
+    };
+
+    window.askDeleteNote = (id) => {
+        if(confirm('Вы уверены? Это действие необратимо.')) {
+            playClickSound();
+            remove(ref(db, `notes/${id}`));
+        }
+    };
+
 </script>
 
 </body>
