@@ -669,6 +669,17 @@
                 <div id="statMatch" style="font-size: 18px; font-weight: 700; color: var(--accent);">0%</div>
             </div>
         </div>
+
+        <!-- DETAILED DIFF VIEW -->
+        <div id="diffViewContainer" style="margin-top: 25px; display: none;">
+            <div style="padding: 12px 16px; background: rgba(59, 130, 246, 0.1); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                <i data-lucide="zap" style="width: 18px; height: 18px; color: var(--accent);"></i>
+                <span style="font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase;">Посимвольное сравнение</span>
+            </div>
+            <div id="diffViewContent" style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px; max-height: 400px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.8;">
+                <!-- Diff results here -->
+            </div>
+        </div>
     </div>
 
     <div id="tab-progress" class="content">
@@ -1843,6 +1854,13 @@
 
     // ============= СРАВНЕНИЕ СКРИПТОВ С GROQ AI =============
     
+    // Экранирование HTML-символов
+    const escapeHtml = (str) => {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    };
+    
     window.copyCompareCode1 = () => {
         const code = document.getElementById('compareCode1').value;
         if(code) {
@@ -1985,6 +2003,36 @@ ${lines2.slice(0, 30).join('\n')}
         applyCompareResultsSimple(code1, code2, differentLines);
     };
 
+    // Посимвольное сравнение двух строк (алгоритм Майерса в упрощённом виде)
+    const getCharDiff = (str1, str2) => {
+        const diff = [];
+        let i = 0, j = 0;
+        
+        while(i < str1.length || j < str2.length) {
+            if(i < str1.length && j < str2.length && str1[i] === str2[j]) {
+                // Совпадающий символ
+                diff.push({type: 'equal', char: str1[i]});
+                i++;
+                j++;
+            } else if(i < str1.length && j < str2.length) {
+                // Буквально первый отличающийся символ
+                diff.push({type: 'delete', char: str1[i]});
+                i++;
+                diff.push({type: 'insert', char: str2[j]});
+                j++;
+            } else if(i < str1.length) {
+                // Есть остаток в первой строке
+                diff.push({type: 'delete', char: str1[i]});
+                i++;
+            } else {
+                // Есть остаток во второй строке
+                diff.push({type: 'insert', char: str2[j]});
+                j++;
+            }
+        }
+        return diff;
+    };
+
     const applyCompareResultsSimple = (code1, code2, differentLineNumbers) => {
         const lines1 = code1.split('\n');
         const lines2 = code2.split('\n');
@@ -2025,6 +2073,60 @@ ${lines2.slice(0, 30).join('\n')}
         document.getElementById('statMatch').textContent = matchPercent + '%';
         document.getElementById('compareCount1').textContent = lines1.length + ' строк';
         document.getElementById('compareCount2').textContent = lines2.length + ' строк';
+        
+        // Показываем посимвольное сравнение для отличающихся строк
+        showDetailedDiff(lines1, lines2, differentLineNumbers);
+    };
+
+    const showDetailedDiff = (lines1, lines2, differentLineNumbers) => {
+        const container = document.getElementById('diffViewContainer');
+        const content = document.getElementById('diffViewContent');
+        
+        if(differentLineNumbers.size === 0) {
+            container.style.display = 'none';
+            return;
+        }
+        
+        container.style.display = 'block';
+        let html = '';
+        
+        // Показываем первые 10 отличающихся строк максимум
+        let shownCount = 0;
+        for(let lineNum of Array.from(differentLineNumbers).sort((a, b) => a - b)) {
+            if(shownCount >= 10) break;
+            shownCount++;
+            
+            const line1 = lines1[lineNum] || '';
+            const line2 = lines2[lineNum] || '';
+            
+            html += `<div style="margin-bottom: 12px; border-left: 3px solid #666; padding-left: 8px;">`;
+            html += `<div style="color: #888; font-size: 10px; margin-bottom: 4px;">Строка ${lineNum + 1}:</div>`;
+            
+            // Посимвольное сравнение
+            const charDiff = getCharDiff(line1, line2);
+            let html1 = '', html2 = '';
+            
+            charDiff.forEach(item => {
+                if(item.type === 'equal') {
+                    html1 += `<span style="color: #22c55e; text-decoration: underline;">${escapeHtml(item.char)}</span>`;
+                    html2 += `<span style="color: #22c55e; text-decoration: underline;">${escapeHtml(item.char)}</span>`;
+                } else if(item.type === 'delete') {
+                    html1 += `<span style="color: #ef4444; background: rgba(239, 68, 68, 0.3); text-decoration: line-through;">${escapeHtml(item.char)}</span>`;
+                } else if(item.type === 'insert') {
+                    html2 += `<span style="color: #3b82f6; background: rgba(59, 130, 246, 0.3);">${escapeHtml(item.char)}</span>`;
+                }
+            });
+            
+            html += `<div style="color: #aaa; margin-bottom: 4px;">← ${html1 || '<span style="color:#555;">пусто</span>'}</div>`;
+            html += `<div style="color: #aaa;">→ ${html2 || '<span style="color:#555;">пусто</span>'}</div>`;
+            html += `</div>`;
+        }
+        
+        if(differentLineNumbers.size > 10) {
+            html += `<div style="color: #666; font-size: 10px; text-align: center; margin-top: 8px;">...и ещё ${differentLineNumbers.size - 10} отличающихся строк</div>`;
+        }
+        
+        content.innerHTML = html;
     };
 
     const applyCompareResults = (code1, code2, analysis) => {
