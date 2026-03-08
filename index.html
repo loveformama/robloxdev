@@ -140,7 +140,11 @@
         .progress-text { position: absolute; width: 100%; text-align: center; line-height: 50px; font-weight: 800; font-size: 18px; z-index: 2; color: #fff; }
 
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 30px; }
-        .stat-card { background: var(--card-bg); padding: 24px; border-radius: 18px; border: 1px solid var(--border); transition: 0.3s; position: relative; overflow: hidden; }
+        .stat-card { background: var(--card-bg); padding: 24px; border-radius: 18px; border: 1px solid var(--border); transition: 0.3s; position: relative; overflow: hidden; display: flex; align-items: center; gap: 16px; }
+        .stat-card:hover { border-color: #444; transform: translateY(-4px); }
+        .stat-icon { font-size: 32px; min-width: 50px; display: flex; align-items: center; justify-content: center; }
+        .stat-content { flex: 1; }
+        .stat-label { font-size: 12px; color: #888; text-transform: uppercase; font-weight: 600; }
         .stat-value { font-size: 26px; font-weight: 800; margin-top: 8px; color: var(--text); }
         .stat-value.deadline { 
             color: var(--danger); 
@@ -350,6 +354,10 @@
     </div>
 
     <div id="tab-progress" class="content">
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 30px;">
+            <i data-lucide="zap" style="width: 32px; height: 32px; color: var(--accent);"></i>
+            <h2 style="margin: 0; font-size: 24px; font-weight: 800;">Общий прогресс</h2>
+        </div>
         <div class="main-progress">
             <div id="totalProgressText" class="progress-text">0%</div>
             <div id="totalProgressBar" class="progress-fill"></div>
@@ -690,13 +698,82 @@
         const total = Math.min(100, Math.round((parseInt(data.t) + parseInt(data.y)) / 2));
         document.getElementById('totalProgressBar').style.width = total + '%';
         document.getElementById('totalProgressText').innerText = total + '%';
-        document.getElementById('statsGrid').innerHTML = `
-            <div class="stat-card"><div>Релиз через</div><div class="stat-value deadline">${daysLeft} д</div></div>
-            <div class="stat-card"><div>Стабильность</div><div class="stat-value">${data.stab}</div></div>
-            <div class="stat-card"><div>Успеваемость</div><div class="stat-value">${data.perf}</div></div>
-            <div class="stat-card"><div>Turbik</div><div class="stat-value">${data.t}%</div></div>
-            <div class="stat-card"><div>Yono</div><div class="stat-value">${data.y}%</div></div>
-        `;
+        
+        // Считаем общее время работы сегодня
+        let totalTimeToday = 0;
+        onValue(ref(db, 'tasks'), (tasksSnapshot) => {
+            const today = new Date().toDateString();
+            tasksSnapshot.forEach(child => {
+                const task = child.val();
+                if(task.status === 'Выполнено' && task.completedAt) {
+                    const completedDate = new Date(task.completedAt).toDateString();
+                    if(completedDate === today && task.endTime) {
+                        // Берём время которое было отведено на задачу
+                        const timeSpent = task.endTime - (task.createdAt || 0);
+                        totalTimeToday += Math.max(0, timeSpent);
+                    }
+                }
+            });
+            
+            const hoursToday = Math.floor(totalTimeToday / 3600000);
+            const minutesToday = Math.floor((totalTimeToday % 3600000) / 60000);
+            const timeStr = hoursToday > 0 ? `${hoursToday}ч ${minutesToday}м` : `${minutesToday}м`;
+            
+            document.getElementById('statsGrid').innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-icon"><i data-lucide="calendar-check"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-label">Релиз через</div>
+                        <div class="stat-value deadline">${daysLeft} д</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i data-lucide="shield-alert"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-label">Стабильность</div>
+                        <div class="stat-value">${data.stab}</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i data-lucide="activity"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-label">Успеваемость</div>
+                        <div class="stat-value">${data.perf}</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i data-lucide="hourglass"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-label">Время сегодня</div>
+                        <div class="stat-value">${timeStr}</div>
+                    </div>
+                </div>
+                <div class="stat-card" style="grid-column: 1 / -1;">
+                    <div class="stat-icon"><i data-lucide="users-round"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-label" style="margin-bottom: 12px;">Вклад за сегодня</div>
+                        <div style="display: flex; gap: 30px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <i data-lucide="user" style="width: 20px; height: 20px; color: #ef4444;"></i>
+                                <div>
+                                    <div style="font-size: 12px; color: #888;">Yono</div>
+                                    <div style="font-size: 20px; font-weight: 800; color: #ef4444;">${data.y}%</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <i data-lucide="user" style="width: 20px; height: 20px; color: #3b82f6;"></i>
+                                <div>
+                                    <div style="font-size: 12px; color: #888;">Turbik</div>
+                                    <div style="font-size: 20px; font-weight: 800; color: #3b82f6;">${data.t}%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            lucide.createIcons();
+        });
     });
 
     window.updateProjectData = () => {
@@ -935,7 +1012,11 @@
             if(!data) return;
             if(action === 'done') {
                 const newStatus = data.status === 'Выполнено' ? 'В очереди' : 'Выполнено';
-                update(ref(db, `tasks/${id}`), { status: newStatus });
+                const updates = { status: newStatus };
+                if(newStatus === 'Выполнено') {
+                    updates.completedAt = Date.now();
+                }
+                update(ref(db, `tasks/${id}`), updates);
             } else if(action === 'doing') {
                 update(ref(db, `tasks/${id}`), { status: 'Выполняется' });
             } else if(action === 'later') {
