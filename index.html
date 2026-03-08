@@ -103,6 +103,7 @@
         .login-card h1 {
             background: linear-gradient(90deg, #fff, #666);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
         .login-btn {
@@ -510,21 +511,102 @@
             color: #999;
         }
 
-        /* НОВЫЙ ДИЗАЙН КОМПАРАТОРА */
-        #compareCode1, #compareCode2 {
-            background-color: #0a0a0a !important;
-            color: #fff;
+        /* НОВЫЙ ДИЗАЙН КОМПАРАТОРА 1.5 */
+        .compare-workspace {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            height: calc(100vh - 300px);
+            min-height: 400px;
         }
 
-        #tab-compare > div:first-of-type > div > div:nth-child(1),
-        #tab-compare > div:first-of-type > div > div:nth-child(2) {
-            transition: all 0.3s ease;
+        .compare-box {
+            position: relative;
+            background: #080808;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            transition: 0.3s;
         }
-        
-        @media (max-width: 1200px) {
-            .compare-container {
-                grid-template-columns: 1fr;
-            }
+
+        .line-numbers {
+            width: 35px;
+            padding: 16px 5px;
+            background: #0a0a0a;
+            border-right: 1px solid #1a1a1a;
+            color: #444;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.7;
+            text-align: right;
+            user-select: none;
+            overflow: hidden;
+            white-space: pre;
+        }
+
+        .editor-container {
+            position: relative;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .highlight-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 16px;
+            color: transparent;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.7;
+            white-space: pre;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .diff-line-bg {
+            background: rgba(239, 68, 68, 0.2);
+            border-left: 3px solid #ef4444;
+            display: block;
+            width: 100%;
+        }
+
+        #compareCode1, #compareCode2 {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            padding: 16px;
+            background: transparent !important;
+            color: #fff;
+            border: none;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.7;
+            resize: none;
+            outline: none;
+            z-index: 2;
+            white-space: pre;
+            overflow: auto;
+        }
+
+        .compare-box:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+        }
+
+        .stat-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
         }
     
     </style>
@@ -603,81 +685,56 @@
 
     <div id="tab-compare" class="content">
         <!-- HEADER -->
-        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border);">
-            <i data-lucide="git-compare" style="width: 28px; height: 28px; color: var(--accent);"></i>
-            <h2 style="margin: 0; flex: 1; font-size: 22px; font-weight: 700;">Сравнение скриптов <span style="font-size: 12px; color: #666; margin-left: 8px; font-weight: 500;">• Анализ ИИ Groq</span></h2>
-            <div style="display: flex; gap: 8px;">
-                <button title="Копировать всё из окна 1" class="icon-btn" style="width: 44px; height: 44px; padding: 0;" onclick="copyCompareCode1(); playClickSound();">
-                    <i data-lucide="copy" style="width: 20px; height: 20px;"></i>
-                </button>
-                <button title="Копировать всё из окна 2" class="icon-btn" style="width: 44px; height: 44px; padding: 0;" onclick="copyCompareCode2(); playClickSound();">
-                    <i data-lucide="copy" style="width: 20px; height: 20px;"></i>
-                </button>
-                <button title="Поменять местами" class="icon-btn" style="width: 44px; height: 44px; padding: 0;" onclick="swapCompareCode(); playClickSound();">
-                    <i data-lucide="shuffle" style="width: 20px; height: 20px;"></i>
-                </button>
-                <button title="Очистить оба окна" class="icon-btn" style="width: 44px; height: 44px; padding: 0;" onclick="clearCompareCode(); playClickSound();">
-                    <i data-lucide="trash-2" style="width: 20px; height: 20px;"></i>
-                </button>
+        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border);">
+            <div style="background: var(--accent); width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px var(--accent-glow);">
+                <i data-lucide="git-diff" style="color: white; width: 22px; height: 22px;"></i>
             </div>
-        </div>
-
-        <!-- ИНСТРУКЦИЯ -->
-        <div style="background: rgba(59, 130, 246, 0.1); padding: 12px 16px; border-radius: 8px; border-left: 3px solid var(--accent); margin-bottom: 20px; font-size: 12px; color: #aaa;">
-            💡 Вставьте два скрипта в окна ниже. Groq AI автоматически найдёт все различия, даже если строки похожи.
+            <div>
+                <h2 style="margin: 0; font-size: 20px; font-weight: 800;">Smart Compare <span style="font-size: 12px; color: #555; font-weight: 400; margin-left: 5px;">v1.5</span></h2>
+                <div style="display: flex; gap: 10px; margin-top: 4px;">
+                    <div id="statMatch" style="color: var(--accent); font-size: 11px; font-weight: 700; text-transform: uppercase;">0% Match</div>
+                    <div style="color: #444; font-size: 11px;">•</div>
+                    <div id="statDiffCount" style="color: #ef4444; font-size: 11px; font-weight: 700; text-transform: uppercase;">0 Diffs</div>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 8px; margin-left: auto;">
+                <button title="Копировать 1" class="icon-btn" onclick="copyCompareCode1(); playClickSound();"><i data-lucide="copy" style="width: 18px;"></i></button>
+                <button title="Копировать 2" class="icon-btn" onclick="copyCompareCode2(); playClickSound();"><i data-lucide="copy" style="width: 18px;"></i></button>
+                <div style="width: 1px; background: #222; margin: 5px 2px;"></div>
+                <button title="Поменять местами" class="icon-btn btn-yellow" onclick="swapCompareCode(); playClickSound();"><i data-lucide="arrow-left-right" style="width: 18px;"></i></button>
+                <button title="Очистить" class="icon-btn btn-red" onclick="clearCompareCode(); playClickSound();"><i data-lucide="trash-2" style="width: 18px;"></i></button>
+            </div>
         </div>
 
         <!-- MAIN COMPARE AREA -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: calc(100vh - 280px);">
+        <div class="compare-workspace">
             <!-- СКРИПТ 1 -->
-            <div style="display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--card-bg); transition: 0.3s;">
-                <div style="padding: 12px 16px; background: rgba(59, 130, 246, 0.1); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px;">
-                    <i data-lucide="file-code" style="width: 18px; height: 18px; color: var(--accent);"></i>
-                    <span style="font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase;">Скрипт 1</span>
-                    <span id="compareCount1" style="font-size: 11px; color: #666; margin-left: auto;"></span>
+            <div class="compare-box" id="box1">
+                <div class="line-numbers" id="lines1">1</div>
+                <div class="editor-container">
+                    <div class="highlight-layer" id="hl1"></div>
+                    <textarea id="compareCode1" placeholder="Original code..." spellcheck="false" onscroll="syncScroll(1)"></textarea>
                 </div>
-                <textarea id="compareCode1" placeholder="Вставьте первый скрипт..." 
-                    style="flex:1; padding: 16px; border: none; background: #0a0a0a; color: #fff; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.7; resize: none; outline: none;">
-                </textarea>
             </div>
 
             <!-- СКРИПТ 2 -->
-            <div style="display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--card-bg); transition: 0.3s;">
-                <div style="padding: 12px 16px; background: rgba(59, 130, 246, 0.1); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px;">
-                    <i data-lucide="file-code" style="width: 18px; height: 18px; color: var(--accent);"></i>
-                    <span style="font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase;">Скрипт 2</span>
-                    <span id="compareCount2" style="font-size: 11px; color: #666; margin-left: auto;"></span>
+            <div class="compare-box" id="box2">
+                <div class="line-numbers" id="lines2">1</div>
+                <div class="editor-container">
+                    <div class="highlight-layer" id="hl2"></div>
+                    <textarea id="compareCode2" placeholder="Modified code..." spellcheck="false" onscroll="syncScroll(2)"></textarea>
                 </div>
-                <textarea id="compareCode2" placeholder="Вставьте второй скрипт..." 
-                    style="flex:1; padding: 16px; border: none; background: #0a0a0a; color: #fff; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.7; resize: none; outline: none;">
-                </textarea>
             </div>
         </div>
 
-        <!-- STATS -->
-        <div style="margin-top: 15px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
-            <div style="background: rgba(34, 197, 94, 0.1); padding: 12px; border-radius: 8px; border-left: 3px solid #22c55e;">
-                <div style="font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 4px;">✓ Одинаковых строк</div>
-                <div id="statSame" style="font-size: 18px; font-weight: 700; color: #22c55e;">0</div>
+        <!-- QUICK TOOLS -->
+        <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+            <div class="stat-badge" style="background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2);">
+                <i data-lucide="check-circle-2" style="width: 14px;"></i> <span id="statSame">0</span> Same lines
             </div>
-            <div style="background: rgba(239, 68, 68, 0.1); padding: 12px; border-radius: 8px; border-left: 3px solid #ef4444;">
-                <div style="font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 4px;">✗ Различных строк</div>
-                <div id="statDiff" style="font-size: 18px; font-weight: 700; color: #ef4444;">0</div>
-            </div>
-            <div style="background: rgba(59, 130, 246, 0.1); padding: 12px; border-radius: 8px; border-left: 3px solid var(--accent);">
-                <div style="font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 4px;">📊 Совпадение</div>
-                <div id="statMatch" style="font-size: 18px; font-weight: 700; color: var(--accent);">0%</div>
-            </div>
-        </div>
-
-        <!-- DETAILED DIFF VIEW -->
-        <div id="diffViewContainer" style="margin-top: 25px; display: none;">
-            <div style="padding: 12px 16px; background: rgba(59, 130, 246, 0.1); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                <i data-lucide="zap" style="width: 18px; height: 18px; color: var(--accent);"></i>
-                <span style="font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase;">Посимвольное сравнение</span>
-            </div>
-            <div id="diffViewContent" style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px; max-height: 400px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.8;">
-                <!-- Diff results here -->
+            <div class="stat-badge" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2);">
+                <i data-lucide="alert-circle" style="width: 14px;"></i> <span id="statDiff">0</span> Differences
             </div>
         </div>
     </div>
@@ -1854,13 +1911,6 @@
 
     // ============= СРАВНЕНИЕ СКРИПТОВ С GROQ AI =============
     
-    // Экранирование HTML-символов
-    const escapeHtml = (str) => {
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    };
-    
     window.copyCompareCode1 = () => {
         const code = document.getElementById('compareCode1').value;
         if(code) {
@@ -1878,398 +1928,131 @@
     };
     
     window.swapCompareCode = () => {
-        const temp = document.getElementById('compareCode1').value;
-        document.getElementById('compareCode1').value = document.getElementById('compareCode2').value;
-        document.getElementById('compareCode2').value = temp;
-        updateCompareWithGroq();
-        playClickSound();
+        const c1 = document.getElementById('compareCode1').value;
+        const c2 = document.getElementById('compareCode2').value;
+        document.getElementById('compareCode1').value = c2;
+        document.getElementById('compareCode2').value = c1;
+        updateCompareHighlight();
     };
     
-    window.clearCompareCode = () => {
-        if(confirm('Очистить оба окна скриптов?')) {
-            document.getElementById('compareCode1').value = '';
-            document.getElementById('compareCode2').value = '';
-            resetCompareStats();
-            playClickSound();
-        }
+    // Экранирование HTML-символов
+    const escapeHtml = (str) => {
+        return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
     };
 
-    const resetCompareStats = () => {
-        document.getElementById('statSame').textContent = '0';
-        document.getElementById('statDiff').textContent = '0';
-        document.getElementById('statMatch').textContent = '0%';
-        document.getElementById('compareCount1').textContent = '';
-        document.getElementById('compareCount2').textContent = '';
-        
-        const code1 = document.getElementById('compareCode1');
-        const code2 = document.getElementById('compareCode2');
-        code1.style.background = '#0a0a0a';
-        code2.style.background = '#0a0a0a';
-        code1.parentElement.style.borderColor = 'var(--border)';
-        code2.parentElement.style.borderColor = 'var(--border)';
-        code1.parentElement.style.boxShadow = 'none';
-        code2.parentElement.style.boxShadow = 'none';
+    window.syncScroll = (id) => {
+        const textarea = document.getElementById(`compareCode${id}`);
+        const hl = document.getElementById(`hl${id}`);
+        const lines = document.getElementById(`lines${id}`);
+        if(hl) {
+            hl.scrollTop = textarea.scrollTop;
+            hl.scrollLeft = textarea.scrollLeft;
+        }
+        if(lines) lines.scrollTop = textarea.scrollTop;
     };
 
-    const compareWithGroq = async (code1, code2) => {
-        if(!code1.trim() || !code2.trim()) {
-            resetCompareStats();
-            return;
-        }
-
-        // Показываем загрузку
-        document.getElementById('statMatch').textContent = '⏳ Анализ...';
-        
-        try {
-            const lines1 = code1.split('\n');
-            const lines2 = code2.split('\n');
-            
-            // Простой промпт без сложного форматирования
-            const prompt = `Сравни эти две последовательности строк кода и найди различия:
-
-Файл 1 (${lines1.length} строк):
-${lines1.slice(0, 30).join('\n')}
-
-Файл 2 (${lines2.length} строк):
-${lines2.slice(0, 30).join('\n')}
-
-Определи номера строк которые отличаются. Ответь только числами через запятую, например: 1,3,5,7`;
-
-            const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${CONFIG.GROQ.apiKey}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    model: 'mixtral-8x7b-32768',
-                    messages: [
-                        {
-                            role: 'user',
-                            content: prompt
-                        }
-                    ],
-                    temperature: 0.1,
-                    max_tokens: 500
-                })
-            });
-
-            if(!response.ok) {
-                console.warn('Groq API Error, using fallback comparison');
-                // Fallback на простое сравнение
-                useSimpleComparison(code1, code2);
-                return;
-            }
-            
-            const data = await response.json();
-            
-            if(!data.choices || !data.choices[0]?.message?.content) {
-                useSimpleComparison(code1, code2);
-                return;
-            }
-            
-            const content = data.choices[0].message.content;
-            console.log('Groq Response:', content);
-            
-            // Извлекаем номера строк из простого ответа
-            const differentLines = new Set();
-            const numbers = content.match(/\d+/g);
-            if(numbers) {
-                numbers.forEach(num => {
-                    differentLines.add(parseInt(num) - 1); // Convert to 0-indexed
-                });
-            }
-            
-            applyCompareResultsSimple(code1, code2, differentLines);
-        } catch(error) {
-            console.error('Ошибка сравнения:', error);
-            // Fallback на простое сравнение
-            useSimpleComparison(code1, code2);
-        }
-    };
-
-    const useSimpleComparison = (code1, code2) => {
-        const lines1 = code1.split('\n');
-        const lines2 = code2.split('\n');
-        const differentLines = new Set();
-        
-        // Простое построчное сравнение
-        for(let i = 0; i < Math.max(lines1.length, lines2.length); i++) {
-            if((lines1[i] || '') !== (lines2[i] || '')) {
-                differentLines.add(i);
-            }
-        }
-        
-        applyCompareResultsSimple(code1, code2, differentLines);
-    };
-
-    // Посимвольное сравнение двух строк (алгоритм Майерса в упрощённом виде)
-    const getCharDiff = (str1, str2) => {
-        const diff = [];
-        let i = 0, j = 0;
-        
-        while(i < str1.length || j < str2.length) {
-            if(i < str1.length && j < str2.length && str1[i] === str2[j]) {
-                // Совпадающий символ
-                diff.push({type: 'equal', char: str1[i]});
-                i++;
-                j++;
-            } else if(i < str1.length && j < str2.length) {
-                // Буквально первый отличающийся символ
-                diff.push({type: 'delete', char: str1[i]});
-                i++;
-                diff.push({type: 'insert', char: str2[j]});
-                j++;
-            } else if(i < str1.length) {
-                // Есть остаток в первой строке
-                diff.push({type: 'delete', char: str1[i]});
-                i++;
-            } else {
-                // Есть остаток во второй строке
-                diff.push({type: 'insert', char: str2[j]});
-                j++;
-            }
-        }
-        return diff;
-    };
-
-    const applyCompareResultsSimple = (code1, code2, differentLineNumbers) => {
-        const lines1 = code1.split('\n');
-        const lines2 = code2.split('\n');
-        
-        const code1Elem = document.getElementById('compareCode1');
-        const code2Elem = document.getElementById('compareCode2');
-        const container1 = code1Elem.parentElement;
-        const container2 = code2Elem.parentElement;
-        
-        // Если есть отличающиеся строки - применяем красную подсветку к границам
-        if(differentLineNumbers.size > 0) {
-            container1.style.borderColor = '#ef4444';
-            container1.style.boxShadow = '0 0 25px rgba(239, 68, 68, 0.25), inset 0 0 15px rgba(239, 68, 68, 0.1)';
-            
-            container2.style.borderColor = '#ef4444';
-            container2.style.boxShadow = '0 0 25px rgba(239, 68, 68, 0.25), inset 0 0 15px rgba(239, 68, 68, 0.1)';
-            
-            code1Elem.style.background = '#0a0a0a';
-            code2Elem.style.background = '#0a0a0a';
-        } else {
-            // Если коды полностью одинаковые - зелёная подсветка границ
-            container1.style.borderColor = '#22c55e';
-            container1.style.boxShadow = '0 0 25px rgba(34, 197, 94, 0.2), inset 0 0 15px rgba(34, 197, 94, 0.05)';
-            
-            container2.style.borderColor = '#22c55e';
-            container2.style.boxShadow = '0 0 25px rgba(34, 197, 94, 0.2), inset 0 0 15px rgba(34, 197, 94, 0.05)';
-            
-            code1Elem.style.background = '#0a0a0a';
-            code2Elem.style.background = '#0a0a0a';
-        }
-        
-        const identicalCount = lines1.length - differentLineNumbers.size;
-        const differentCount = differentLineNumbers.size;
-        const matchPercent = lines1.length > 0 ? Math.round((identicalCount / lines1.length) * 100) : 0;
-        
-        document.getElementById('statSame').textContent = identicalCount;
-        document.getElementById('statDiff').textContent = differentCount;
-        document.getElementById('statMatch').textContent = matchPercent + '%';
-        document.getElementById('compareCount1').textContent = lines1.length + ' строк';
-        document.getElementById('compareCount2').textContent = lines2.length + ' строк';
-        
-        // Показываем посимвольное сравнение для отличающихся строк
-        showDetailedDiff(lines1, lines2, differentLineNumbers);
-    };
-
-    const showDetailedDiff = (lines1, lines2, differentLineNumbers) => {
-        const container = document.getElementById('diffViewContainer');
-        const content = document.getElementById('diffViewContent');
-        
-        if(differentLineNumbers.size === 0) {
-            container.style.display = 'none';
-            return;
-        }
-        
-        container.style.display = 'block';
-        let html = '';
-        
-        // Показываем первые 20 отличающихся строк максимум
-        let shownCount = 0;
-        const sortedDiffs = Array.from(differentLineNumbers).sort((a, b) => a - b);
-        
-        for(let lineNum of sortedDiffs) {
-            if(shownCount >= 20) break;
-            shownCount++;
-            
-            const line1 = lines1[lineNum] || '';
-            const line2 = lines2[lineNum] || '';
-            
-            html += `<div style="margin-bottom: 10px; border-left: 3px solid #ef4444; padding-left: 10px;">`;
-            html += `<div style="color: #ef4444; font-size: 11px; font-weight: 600; margin-bottom: 6px;">№ ${lineNum + 1}</div>`;
-            
-            // Показываем обе строки подчеркнутыми полностью
-            html += `<div style="color: #aaa; margin-bottom: 4px; text-decoration: underline;">← ${escapeHtml(line1 || '(пусто)')}</div>`;
-            html += `<div style="color: #aaa; text-decoration: underline;">→ ${escapeHtml(line2 || '(пусто)')}</div>`;
-            
-            html += `</div>`;
-        }
-        
-        if(sortedDiffs.length > 20) {
-            html += `<div style="color: #666; font-size: 10px; text-align: center; margin-top: 8px;">...и ещё ${sortedDiffs.length - 20} отличающихся строк</div>`;
-        }
-        
-        content.innerHTML = html;
-    };
-
-    const applyCompareResults = (code1, code2, analysis) => {
-        const lines1 = code1.split('\n');
-        const lines2 = code2.split('\n');
-        
-        const differentSet1 = new Set();
-        const differentSet2 = new Set();
-        
-        // Собираем номера отличающихся строк
-        if(analysis.different_lines) {
-            analysis.different_lines.forEach(diff => {
-                if(diff.line_num1) differentSet1.add(diff.line_num1 - 1);
-                if(diff.line_num2) differentSet2.add(diff.line_num2 - 1);
-            });
-        }
-        
-        // Создаём градиент для подсветки
-        const gradient1 = createHighlightGradient(lines1, differentSet1);
-        const gradient2 = createHighlightGradient(lines2, differentSet2);
-        
-        const code1Elem = document.getElementById('compareCode1');
-        const code2Elem = document.getElementById('compareCode2');
-        
-        code1Elem.style.background = gradient1;
-        code2Elem.style.background = gradient2;
-        
-        // Подсветка границ
-        updateBorderHighlight(code1Elem, differentSet1.size > 0);
-        updateBorderHighlight(code2Elem, differentSet2.size > 0);
-        
-        // Обновляем статистику
-        const identicalCount = lines1.length - differentSet1.size;
-        const differentCount = differentSet1.size;
-        const matchPercent = lines1.length > 0 ? Math.round((identicalCount / lines1.length) * 100) : 0;
-        
-        document.getElementById('statSame').textContent = identicalCount;
-        document.getElementById('statDiff').textContent = differentCount;
-        document.getElementById('statMatch').textContent = matchPercent + '%';
-        document.getElementById('compareCount1').textContent = lines1.length + ' строк';
-        document.getElementById('compareCount2').textContent = lines2.length + ' строк';
-    };
-
-    const createHighlightGradient = (lines, differentLineNumbers) => {
-        if(lines.length === 0) return '#0a0a0a';
-        
-        let gradientStops = [];
-        const lineHeight = 1.7;
-        const fontSize = 12;
-        const pxPerLine = fontSize * lineHeight;
-        const totalHeight = lines.length * pxPerLine;
-        
-        let currentPos = 0;
-        
-        for(let i = 0; i < lines.length; i++) {
-            const startPercent = (currentPos / totalHeight) * 100;
-            currentPos += pxPerLine;
-            const endPercent = (currentPos / totalHeight) * 100;
-            
-            const color = differentLineNumbers.has(i) 
-                ? 'rgba(239, 68, 68, 0.3)' 
-                : '#0a0a0a';
-            
-            gradientStops.push(`${color} ${startPercent}%`);
-            gradientStops.push(`${color} ${endPercent}%`);
-        }
-        
-        return `linear-gradient(to bottom, ${gradientStops.join(', ')})`;
-    };
-
-    const updateBorderHighlight = (element, hasDifferences) => {
-        const container = element.parentElement;
-        if(!container) return;
-        
-        if(hasDifferences) {
-            container.style.borderColor = '#ef4444';
-            container.style.boxShadow = '0 0 25px rgba(239, 68, 68, 0.25), inset 0 0 15px rgba(239, 68, 68, 0.1)';
-        } else if(element.value.trim()) {
-            container.style.borderColor = '#22c55e';
-            container.style.boxShadow = '0 0 25px rgba(34, 197, 94, 0.2), inset 0 0 15px rgba(34, 197, 94, 0.05)';
-        } else {
-            container.style.borderColor = 'var(--border)';
-            container.style.boxShadow = 'none';
-        }
-    };
-
-    const updateCompareWithGroq = () => {
+    const updateCompareHighlight = () => {
         const code1 = document.getElementById('compareCode1').value;
         const code2 = document.getElementById('compareCode2').value;
         
-        if(!code1.trim() && !code2.trim()) {
-            resetCompareStats();
-            return;
-        }
+        const lines1 = code1.split('\n');
+        const lines2 = code2.split('\n');
+        const maxLines = Math.max(lines1.length, lines2.length);
         
-        if(code1.trim() && code2.trim()) {
-            compareWithGroq(code1, code2);
+        let hl1Html = '';
+        let hl2Html = '';
+        let lineNumsHtml = '';
+        let diffsCount = 0;
+        let samesCount = 0;
+
+        for (let i = 0; i < maxLines; i++) {
+            lineNumsHtml += `${i + 1}\n`;
+            const l1 = lines1[i] !== undefined ? lines1[i] : '';
+            const l2 = lines2[i] !== undefined ? lines2[i] : '';
+            
+            if (l1 !== l2) {
+                diffsCount++;
+                hl1Html += `<div class="diff-line-bg">${escapeHtml(l1 || ' ')}</div>`;
+                hl2Html += `<div class="diff-line-bg">${escapeHtml(l2 || ' ')}</div>`;
+            } else {
+                if(l1 || l2) samesCount++;
+                hl1Html += `<div>${escapeHtml(l1 || ' ')}</div>`;
+                hl2Html += `<div>${escapeHtml(l2 || ' ')}</div>`;
+            }
+        }
+
+        document.getElementById('hl1').innerHTML = hl1Html;
+        document.getElementById('hl2').innerHTML = hl2Html;
+        document.getElementById('lines1').innerText = lineNumsHtml;
+        document.getElementById('lines2').innerText = lineNumsHtml;
+
+        // Stats
+        const matchPercent = maxLines > 0 ? Math.round(((maxLines - diffsCount) / maxLines) * 100) : 0;
+        document.getElementById('statMatch').innerText = `${matchPercent}% Match`;
+        document.getElementById('statDiffCount').innerText = `${diffsCount} Diffs`;
+        document.getElementById('statSame').innerText = samesCount;
+        document.getElementById('statDiff').innerText = diffsCount;
+
+        // Border Colors
+        const box1 = document.getElementById('box1');
+        const box2 = document.getElementById('box2');
+        if (diffsCount > 0) {
+            box1.style.borderColor = '#ef444455';
+            box2.style.borderColor = '#ef444455';
+        } else if (code1 && code2) {
+            box1.style.borderColor = '#22c55e55';
+            box2.style.borderColor = '#22c55e55';
         }
     };
+
+    window.copyCompareCode1 = () => {
+        const code = document.getElementById('compareCode1').value;
+        if(code) { navigator.clipboard.writeText(code); playClickSound(); }
+    };
     
-    // ============= ОБРАБОТЧИКИ МОДАЛЬНЫХ ОКОН =============
+    window.copyCompareCode2 = () => {
+        const code = document.getElementById('compareCode2').value;
+        if(code) { navigator.clipboard.writeText(code); playClickSound(); }
+    };
     
-    // ============= ИНИЦИАЛИЗАЦИЯ КОМПАРАТОРА =============
+    window.swapCompareCode = () => {
+        const t1 = document.getElementById('compareCode1');
+        const t2 = document.getElementById('compareCode2');
+        const temp = t1.value;
+        t1.value = t2.value;
+        t2.value = temp;
+        updateCompareHighlight();
+    };
+    
+    window.clearCompareCode = () => {
+        if(confirm('Очистить окна?')) {
+            document.getElementById('compareCode1').value = '';
+            document.getElementById('compareCode2').value = '';
+            updateCompareHighlight();
+        }
+    };
     
     const initCompare = () => {
-        const compareCode1 = document.getElementById('compareCode1');
-        const compareCode2 = document.getElementById('compareCode2');
-        
-        let compareTimeout;
-        
-        if(compareCode1) {
-            ['input', 'paste', 'change'].forEach(event => {
-                compareCode1.addEventListener(event, () => {
-                    clearTimeout(compareTimeout);
-                    compareTimeout = setTimeout(() => {
-                        updateCompareWithGroq();
-                    }, 600);
-                });
+        const c1 = document.getElementById('compareCode1');
+        const c2 = document.getElementById('compareCode2');
+        if(!c1 || !c2) return;
+
+        [c1, c2].forEach((el, index) => {
+            const id = index + 1;
+            el.addEventListener('input', () => {
+                updateCompareHighlight();
+                syncScroll(id);
             });
-        }
-        
-        if(compareCode2) {
-            ['input', 'paste', 'change'].forEach(event => {
-                compareCode2.addEventListener(event, () => {
-                    clearTimeout(compareTimeout);
-                    compareTimeout = setTimeout(() => {
-                        updateCompareWithGroq();
-                    }, 600);
-                });
-            });
-        }
+            el.addEventListener('scroll', () => syncScroll(id));
+        });
     };
     
-    // Инициализируем при загрузке DOM
+    // Инициализация при загрузке DOM
     if(document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initCompare);
     } else {
         initCompare();
     }
-    
-    document.addEventListener('click', (e) => {
-        const noteModal = document.getElementById('noteModal');
-        const backupModal = document.getElementById('backupModal');
-        
-        // Закрыть noteModal при клике вне контента
-        if(e.target === noteModal && noteModal.style.display === 'flex') {
-            closeNoteModal();
-        }
-        
-        // Закрыть backupModal при клике вне контента
-        if(e.target === backupModal && backupModal.style.display === 'flex') {
-            closeBackupModal();
-        }
-    });
     
     // Горячие клавиши для модальных окон
     document.addEventListener('keydown', (e) => {
