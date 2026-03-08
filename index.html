@@ -2186,12 +2186,14 @@
         };
         
         workTimeListenerTurbik = onValue(ref(db, `worktime/turbik`), (snapshot) => {
-            const seconds = snapshot.val() || 0;
+            const data = snapshot.val();
+            const seconds = (data && data.totalSeconds) ? data.totalSeconds : 0;
             document.getElementById('workTimeTurbik').textContent = formatTime(seconds);
         });
         
         workTimeListenerYono = onValue(ref(db, `worktime/yono`), (snapshot) => {
-            const seconds = snapshot.val() || 0;
+            const data = snapshot.val();
+            const seconds = (data && data.totalSeconds) ? data.totalSeconds : 0;
             document.getElementById('workTimeYono').textContent = formatTime(seconds);
         });
     };
@@ -2347,7 +2349,7 @@
 
 <!-- ВЕРСИЯ ПРИЛОЖЕНИЯ -->
 <div style="position: fixed; bottom: 0; right: 0; padding: 12px 16px; font-size: 10px; color: #666; background: rgba(0,0,0,0.3); border-radius: 8px 0 0 0; font-family: monospace; z-index: 100;">
-    version dev: 4.0
+    version dev: 4ю8
 </div>
 
 </body>
