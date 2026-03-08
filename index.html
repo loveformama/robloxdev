@@ -774,6 +774,12 @@
             </div>
         </div>
 
+        <!-- SEARCH FILTER -->
+        <div style="margin: 12px 0; display: flex; gap: 8px;">
+            <input type="text" id="searchFilter" placeholder="🔍 Поиск кода..." style="flex: 1; padding: 8px 12px; background: #1a1a1a; border: 1px solid #333; color: #ccc; border-radius: 4px; font-size: 12px;" oninput="filterCodeSearch()">
+            <button class="icon-btn" title="Очистить поиск" onclick="document.getElementById('searchFilter').value = ''; filterCodeSearch(); playClickSound();"><i data-lucide="x" style="width: 16px;"></i></button>
+        </div>
+
         <!-- MAIN COMPARE AREA -->
         <div class="compare-workspace">
             <!-- СКРИПТ 1 -->
@@ -804,6 +810,12 @@
             </div>
             <div class="stat-badge" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2);">
                 <i data-lucide="alert-circle" style="width: 14px;"></i> <span id="statDiff">0</span> различий
+            </div>
+            <div class="stat-badge" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2);">
+                <i data-lucide="clock" style="width: 14px;"></i> Turbik: <span id="workTimeTurbik">0ч 0м</span>
+            </div>
+            <div class="stat-badge" style="background: rgba(168, 85, 247, 0.1); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.2);">
+                <i data-lucide="clock" style="width: 14px;"></i> Yono: <span id="workTimeYono">0ч 0м</span>
             </div>
         </div>
     </div>
@@ -2153,18 +2165,46 @@
             }
         });
     };
+
+    let workTimeListenerTurbik, workTimeListenerYono;
+    
+    const setupWorkTimeListeners = () => {
+        const formatTime = (seconds) => {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            return `${hours}ч ${minutes}м`;
+        };
+        
+        workTimeListenerTurbik = onValue(ref(db, `worktime/turbik`), (snapshot) => {
+            const seconds = snapshot.val() || 0;
+            document.getElementById('workTimeTurbik').textContent = formatTime(seconds);
+        });
+        
+        workTimeListenerYono = onValue(ref(db, `worktime/yono`), (snapshot) => {
+            const seconds = snapshot.val() || 0;
+            document.getElementById('workTimeYono').textContent = formatTime(seconds);
+        });
+    };
     
     // Инициализируем слушатели при загрузке
     if(document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', setupCompareSyncListeners);
+        document.addEventListener('DOMContentLoaded', () => {
+            setupCompareSyncListeners();
+            setupWorkTimeListeners();
+        });
     } else {
         setupCompareSyncListeners();
+        setupWorkTimeListeners();
     }
     
     // Отобразить курсор пользователя
-    const updateCursorDisplay = (id, position, userName = 'Собеседник') => {
+    const updateCursorDisplay = (id, position, userEmail = 'Собеседник') => {
         const layer = document.getElementById(`cursorLayer${id}`);
         if(!layer) return;
+        
+        let userName = 'Собеседник';
+        if(userEmail.includes('turbik')) userName = 'Turbik';
+        else if(userEmail.includes('yono') || userEmail.includes('gleb')) userName = 'Yono';
         
         const textarea = document.getElementById(`compareCode${id}`);
         const text = textarea.value.substring(0, position);
@@ -2173,9 +2213,8 @@
         const lineStart = text.lastIndexOf('\\n') + 1;
         const column = position - lineStart;
         
-        // Рассчитать позицию курсора
-        const lineHeight = 19.2; // 1.6 * 12px
-        const charWidth = 7.2; // приблизительная ширина monospace char
+        const lineHeight = 19.2;
+        const charWidth = 7.2;
         const top = currentLine * lineHeight + 12;
         const left = column * charWidth + 12;
         
@@ -2215,6 +2254,45 @@
             syncLiveCode(2);
             updateCompareHighlight();
         }
+    };
+
+    window.filterCodeSearch = () => {
+        const searchTerm = document.getElementById('searchFilter').value.toLowerCase();
+        const code1 = document.getElementById('compareCode1').value;
+        const code2 = document.getElementById('compareCode2').value;
+        const lines1 = code1.split('\\n');
+        const lines2 = code2.split('\\n');
+        
+        if(!searchTerm) {
+            updateCompareHighlight();
+            return;
+        }
+        
+        const escapeHtml = (text) => {
+            const map = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'};
+            return text.replace(/[&<>"']/g, m => map[m]);
+        };
+        
+        let hl1Html = '', hl2Html = '';
+        
+        lines1.forEach((line) => {
+            if(line.toLowerCase().includes(searchTerm)) {
+                hl1Html += `<div style="background: rgba(250, 204, 21, 0.3); border-left: 3px solid #fdca4b;">${escapeHtml(line || ' ')}</div>`;
+            } else {
+                hl1Html += `<div>${escapeHtml(line || ' ')}</div>`;
+            }
+        });
+        
+        lines2.forEach((line) => {
+            if(line.toLowerCase().includes(searchTerm)) {
+                hl2Html += `<div style="background: rgba(250, 204, 21, 0.3); border-left: 3px solid #fdca4b;">${escapeHtml(line || ' ')}</div>`;
+            } else {
+                hl2Html += `<div>${escapeHtml(line || ' ')}</div>`;
+            }
+        });
+        
+        document.getElementById('hl1').innerHTML = hl1Html;
+        document.getElementById('hl2').innerHTML = hl2Html;
     };
     
     const initCompare = () => {
@@ -2259,7 +2337,7 @@
 
 <!-- ВЕРСИЯ ПРИЛОЖЕНИЯ -->
 <div style="position: fixed; bottom: 0; right: 0; padding: 12px 16px; font-size: 10px; color: #666; background: rgba(0,0,0,0.3); border-radius: 8px 0 0 0; font-family: monospace; z-index: 100;">
-    version dev: 1.9
+    version dev: 3.0
 </div>
 
 </body>
