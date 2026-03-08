@@ -23,6 +23,10 @@
                 storageBucket: 'math-project-8195b.firebasestorage.app',
                 messagingSenderId: '947622423521',
                 appId: '1:947622423521:web:fbaa98fddad1cf99f740a0'
+            },
+            GROQ: {
+                apiKey: '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',
+                baseURL: 'https://api.groq.com/openai/v1'
             }
         };
     </script>
@@ -1832,7 +1836,7 @@
         }
     };
 
-    // ============= СРАВНЕНИЕ СКРИПТОВ =============
+    // ============= СРАВНЕНИЕ СКРИПТОВ С GROQ AI =============
     
     window.copyCompareCode1 = () => {
         const code = document.getElementById('compareCode1').value;
@@ -1854,7 +1858,7 @@
         const temp = document.getElementById('compareCode1').value;
         document.getElementById('compareCode1').value = document.getElementById('compareCode2').value;
         document.getElementById('compareCode2').value = temp;
-        updateCompareHighlight();
+        updateCompareWithGroq();
         playClickSound();
     };
     
@@ -1862,107 +1866,188 @@
         if(confirm('Очистить оба окна скриптов?')) {
             document.getElementById('compareCode1').value = '';
             document.getElementById('compareCode2').value = '';
-            updateCompareHighlight();
+            resetCompareStats();
             playClickSound();
         }
     };
-    
-    const updateCompareHighlight = () => {
+
+    const resetCompareStats = () => {
+        document.getElementById('statSame').textContent = '0';
+        document.getElementById('statDiff').textContent = '0';
+        document.getElementById('statMatch').textContent = '0%';
+        document.getElementById('compareCount1').textContent = '';
+        document.getElementById('compareCount2').textContent = '';
+        
         const code1 = document.getElementById('compareCode1');
         const code2 = document.getElementById('compareCode2');
-        const lines1 = code1.value.split('\n');
-        const lines2 = code2.value.split('\n');
+        code1.style.background = '#0a0a0a';
+        code2.style.background = '#0a0a0a';
+        code1.parentElement.style.borderColor = 'var(--border)';
+        code2.parentElement.style.borderColor = 'var(--border)';
+        code1.parentElement.style.boxShadow = 'none';
+        code2.parentElement.style.boxShadow = 'none';
+    };
+
+    const compareWithGroq = async (code1, code2) => {
+        if(!code1.trim() || !code2.trim()) {
+            resetCompareStats();
+            return;
+        }
+
+        // Показываем загрузку
+        document.getElementById('statMatch').textContent = '⏳ Анализ...';
         
-        // Сравнение построчно
-        let sameCount = 0, diffCount = 0;
-        const maxLines = Math.max(lines1.length, lines2.length);
+        try {
+            const response = await fetch(`${CONFIG.GROQ.baseURL}/chat/completions`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${CONFIG.GROQ.apiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: 'mixtral-8x7b-32768',
+                    messages: [{
+                        role: 'user',
+                        content: `Ты эксперт по анализу кода. Сравни два скрипта и найди ВСЕ различия.
+
+СКРИПТ 1:
+\`\`\`
+${code1}
+\`\`\`
+
+СКРИПТ 2:
+\`\`\`
+${code2}
+\`\`\`
+
+Ответь ТОЛЬКО в JSON формате (без markdown):
+{
+  "identical_lines": [номера строк которые совпадают],
+  "different_lines": [
+    {
+      "line_num1": номер строки в скрипте 1,
+      "line_num2": номер строки в скрипте 2,
+      "content1": "содержимое строки 1",
+      "content2": "содержимое строки 2",
+      "difference": "краткое описание отличия"
+    }
+  ],
+  "summary": "общее описание отличий"
+}`
+                    }],
+                    temperature: 0.3,
+                    max_tokens: 2000
+                })
+            });
+
+            if(!response.ok) throw new Error('Ошибка Groq API');
+            
+            const data = await response.json();
+            const analysis = JSON.parse(data.choices[0].message.content);
+            
+            applyCompareResults(code1, code2, analysis);
+        } catch(error) {
+            console.error('Ошибка сравнения:', error);
+            document.getElementById('statMatch').textContent = '❌ Ошибка';
+            setTimeout(() => resetCompareStats(), 2000);
+        }
+    };
+
+    const applyCompareResults = (code1, code2, analysis) => {
+        const lines1 = code1.split('\n');
+        const lines2 = code2.split('\n');
         
-        for(let i = 0; i < maxLines; i++) {
-            if(lines1[i] === lines2[i]) {
-                sameCount++;
-            } else {
-                diffCount++;
-            }
+        const differentSet1 = new Set();
+        const differentSet2 = new Set();
+        
+        // Собираем номера отличающихся строк
+        if(analysis.different_lines) {
+            analysis.different_lines.forEach(diff => {
+                if(diff.line_num1) differentSet1.add(diff.line_num1 - 1);
+                if(diff.line_num2) differentSet2.add(diff.line_num2 - 1);
+            });
         }
         
-        const totalLines = Math.max(sameCount + diffCount, 1);
-        const matchPercent = Math.round((sameCount / totalLines) * 100);
+        // Создаём градиент для подсветки
+        const gradient1 = createHighlightGradient(lines1, differentSet1);
+        const gradient2 = createHighlightGradient(lines2, differentSet2);
         
-        document.getElementById('statSame').textContent = sameCount;
-        document.getElementById('statDiff').textContent = diffCount;
+        const code1Elem = document.getElementById('compareCode1');
+        const code2Elem = document.getElementById('compareCode2');
+        
+        code1Elem.style.background = gradient1;
+        code2Elem.style.background = gradient2;
+        
+        // Подсветка границ
+        updateBorderHighlight(code1Elem, differentSet1.size > 0);
+        updateBorderHighlight(code2Elem, differentSet2.size > 0);
+        
+        // Обновляем статистику
+        const identicalCount = lines1.length - differentSet1.size;
+        const differentCount = differentSet1.size;
+        const matchPercent = lines1.length > 0 ? Math.round((identicalCount / lines1.length) * 100) : 0;
+        
+        document.getElementById('statSame').textContent = identicalCount;
+        document.getElementById('statDiff').textContent = differentCount;
         document.getElementById('statMatch').textContent = matchPercent + '%';
-        
         document.getElementById('compareCount1').textContent = lines1.length + ' строк';
         document.getElementById('compareCount2').textContent = lines2.length + ' строк';
-        
-        // Подсветка с use linear-gradient
-        const gradient1 = createGradient(lines1, lines2);
-        const gradient2 = createGradient(lines2, lines1);
-        
-        code1.style.background = gradient1;
-        code2.style.background = gradient2;
-        
-        // Border для выделения разных строк
-        highlightDifferentLines(code1, lines1, lines2);
-        highlightDifferentLines(code2, lines2, lines1);
     };
-    
-    const createGradient = (currentLines, compareLines) => {
-        if(currentLines.length === 0) return '#0a0a0a';
+
+    const createHighlightGradient = (lines, differentLineNumbers) => {
+        if(lines.length === 0) return '#0a0a0a';
         
-        let colors = [];
-        for(let i = 0; i < currentLines.length; i++) {
-            const isSame = currentLines[i] === compareLines[i];
-            colors.push(isSame ? '#0a0a0a' : 'rgba(239, 68, 68, 0.25)');
-        }
-        
-        if(colors.length === 0) return '#0a0a0a';
-        
-        // Построить градиент для каждой строки
         let gradientStops = [];
         const lineHeight = 1.7;
         const fontSize = 12;
-        const pxPerLine = fontSize * lineHeight; // ~20.4px
-        const totalHeight = currentLines.length * pxPerLine;
+        const pxPerLine = fontSize * lineHeight;
+        const totalHeight = lines.length * pxPerLine;
         
         let currentPos = 0;
         
-        for(let i = 0; i < colors.length; i++) {
+        for(let i = 0; i < lines.length; i++) {
             const startPercent = (currentPos / totalHeight) * 100;
             currentPos += pxPerLine;
             const endPercent = (currentPos / totalHeight) * 100;
             
-            gradientStops.push(`${colors[i]} ${startPercent}%`);
-            gradientStops.push(`${colors[i]} ${endPercent}%`);
+            const color = differentLineNumbers.has(i) 
+                ? 'rgba(239, 68, 68, 0.3)' 
+                : '#0a0a0a';
+            
+            gradientStops.push(`${color} ${startPercent}%`);
+            gradientStops.push(`${color} ${endPercent}%`);
         }
         
         return `linear-gradient(to bottom, ${gradientStops.join(', ')})`;
     };
-    
-    const highlightDifferentLines = (textarea, currentLines, compareLines) => {
-        // Найти родительский контейнер
-        const container = textarea.parentElement;
+
+    const updateBorderHighlight = (element, hasDifferences) => {
+        const container = element.parentElement;
         if(!container) return;
         
-        // Проверяем есть ли различия
-        let hasDifferences = false;
-        for(let i = 0; i < currentLines.length; i++) {
-            if(currentLines[i] !== compareLines[i]) {
-                hasDifferences = true;
-                break;
-            }
-        }
-        
-        // Обновляем стиль границы контейнера
         if(hasDifferences) {
             container.style.borderColor = '#ef4444';
-            container.style.boxShadow = '0 0 20px rgba(239, 68, 68, 0.15)';
-        } else if(currentLines.length > 0 && currentLines[0] !== '') {
+            container.style.boxShadow = '0 0 25px rgba(239, 68, 68, 0.25), inset 0 0 15px rgba(239, 68, 68, 0.1)';
+        } else if(element.value.trim()) {
             container.style.borderColor = '#22c55e';
-            container.style.boxShadow = '0 0 20px rgba(34, 197, 94, 0.15)';
+            container.style.boxShadow = '0 0 25px rgba(34, 197, 94, 0.2), inset 0 0 15px rgba(34, 197, 94, 0.05)';
         } else {
             container.style.borderColor = 'var(--border)';
             container.style.boxShadow = 'none';
+        }
+    };
+
+    const updateCompareWithGroq = () => {
+        const code1 = document.getElementById('compareCode1').value;
+        const code2 = document.getElementById('compareCode2').value;
+        
+        if(!code1.trim() && !code2.trim()) {
+            resetCompareStats();
+            return;
+        }
+        
+        if(code1.trim() && code2.trim()) {
+            compareWithGroq(code1, code2);
         }
     };
     
@@ -1974,10 +2059,15 @@
         const compareCode1 = document.getElementById('compareCode1');
         const compareCode2 = document.getElementById('compareCode2');
         
+        let compareTimeout;
+        
         if(compareCode1) {
             ['input', 'paste', 'change'].forEach(event => {
                 compareCode1.addEventListener(event, () => {
-                    setTimeout(updateCompareHighlight, 10);
+                    clearTimeout(compareTimeout);
+                    compareTimeout = setTimeout(() => {
+                        updateCompareWithGroq();
+                    }, 600);
                 });
             });
         }
@@ -1985,7 +2075,10 @@
         if(compareCode2) {
             ['input', 'paste', 'change'].forEach(event => {
                 compareCode2.addEventListener(event, () => {
-                    setTimeout(updateCompareHighlight, 10);
+                    clearTimeout(compareTimeout);
+                    compareTimeout = setTimeout(() => {
+                        updateCompareWithGroq();
+                    }, 600);
                 });
             });
         }
