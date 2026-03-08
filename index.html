@@ -542,9 +542,9 @@
     });
 
     window.updateProjectData = () => {
-        // Only Turbik can update project stats
-        if(window.currentUserRole !== 'Turbik') {
-            alert('Только Turbik может обновлять статистику');
+        // Only Yono can update project stats
+        if(window.currentUserRole !== 'Yono') {
+            alert('Только Yono может редактировать статистику');
             return;
         }
         
@@ -865,22 +865,11 @@
     window.addEventListener('keydown', e => {
         if(e.key.toLowerCase() === 'f' || e.key.toLowerCase() === 'а') {
             if(document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
-                // Only Yono can open admin panel (for creating tasks)
+                // Only Yono can open admin panel (for creating tasks and stats)
                 if(window.currentUserRole === 'Yono') {
                     document.getElementById('adminPanel').style.display = 'block';
                     document.getElementById('overlay').style.display = 'block';
                     setAdminTab('task'); // Yono sees task creation form
-                    refreshIcons();
-                }
-            }
-        }
-        // Turbik can use 'D' to manage stats
-        if(e.key.toLowerCase() === 'd') {
-            if(document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
-                if(window.currentUserRole === 'Turbik') {
-                    document.getElementById('adminPanel').style.display = 'block';
-                    document.getElementById('overlay').style.display = 'block';
-                    setAdminTab('stats'); // Turbik sees stats form
                     refreshIcons();
                 }
             }
