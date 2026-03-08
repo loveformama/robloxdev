@@ -379,29 +379,59 @@
         <button onclick="setAdminTab('task'); playClickSound();" id="btn-adm-task" style="flex:1; padding:10px; background:none; border:none; color:#555; cursor:pointer;">Новая задача</button>
     </div>
     <div id="adm-stats-form">
-        <input type="number" id="adm-days" class="search-bar" style="margin-bottom:10px" placeholder="Дней до релиза">
-        <select id="adm-stab" class="search-bar" style="margin-bottom:10px; background:#111;">
+        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Дней до релиза</label>
+        <input type="number" id="adm-days" class="search-bar" style="margin-bottom:15px" placeholder="10">
+        
+        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Стабильность проекта</label>
+        <select id="adm-stab" class="search-bar" style="margin-bottom:15px; background:#111;">
             <option value="Низкая">Низкая</option>
             <option value="Средняя">Средняя</option>
             <option value="Высокая">Высокая</option>
         </select>
-        <select id="adm-perf" class="search-bar" style="margin-bottom:10px; background:#111;">
+        
+        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Успеваемость</label>
+        <select id="adm-perf" class="search-bar" style="margin-bottom:15px; background:#111;">
             <option value="Плохая">Плохая</option>
             <option value="Средняя">Средняя</option>
             <option value="Отличная">Отличная</option>
         </select>
-        <input type="number" id="adm-t" class="search-bar" style="margin-bottom:10px" placeholder="Turbik %">
-        <input type="number" id="adm-y" class="search-bar" style="margin-bottom:20px" placeholder="Yono %">
+        
+        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Прогресс Turbik</label>
+        <input type="number" id="adm-t" class="search-bar" style="margin-bottom:15px" placeholder="50" min="0" max="100">
+        
+        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Прогресс Yono</label>
+        <input type="number" id="adm-y" class="search-bar" style="margin-bottom:20px" placeholder="50" min="0" max="100">
+        
         <button onclick="updateProjectData(); playClickSound();" class="icon-btn" style="width:100%; height:50px; background:var(--accent); color:white;">Обновить</button>
     </div>
     <div id="adm-task-form" style="display:none">
-        <textarea id="taskText" class="search-bar" rows="3" placeholder="Описание задачи..." style="margin-bottom:10px"></textarea>
-        <select id="taskType" class="search-bar" style="margin-bottom:10px; background:#111;">
+        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Описание задачи</label>
+        <textarea id="taskText" class="search-bar" rows="3" placeholder="Описание..." style="margin-bottom:15px"></textarea>
+        
+        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Сложность</label>
+        <select id="taskType" class="search-bar" style="margin-bottom:15px; background:#111;">
             <option value="Легкое">Легкое</option>
             <option value="Среднее">Среднее</option>
             <option value="Сложное">Сложное</option>
         </select>
-        <input type="number" id="taskHours" class="search-bar" placeholder="Время (в минутах)" style="margin-bottom:20px">
+        
+        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Время на задачу</label>
+        <div style="display:flex; gap:10px; margin-bottom:15px;">
+            <div style="flex:1;">
+                <input type="number" id="taskHoursInput" class="search-bar" placeholder="Часы" min="0" style="margin-bottom:0">
+            </div>
+            <div style="flex:1;">
+                <input type="number" id="taskMinutesInput" class="search-bar" placeholder="Минуты" min="0" max="59" style="margin-bottom:0">
+            </div>
+        </div>
+        
+        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Назначить</label>
+        <select id="taskAssignTo" class="search-bar" style="margin-bottom:20px; background:#111;">
+            <option value="both">Обоим (Turbik, Yono)</option>
+            <option value="turbik">Turbik</option>
+            <option value="yono">Yono</option>
+        </select>
+        
         <button onclick="createTask(); playClickSound();" class="icon-btn" style="width:100%; height:50px; background:var(--success); color:white;">Создать задачу</button>
     </div>
 </div>
@@ -429,13 +459,27 @@
     <div class="modal-content" style="width:450px; padding:30px; margin-top:100px;">
         <h3 style="margin-top:0">Редактировать задачу</h3>
         <input type="hidden" id="editTaskId">
-        <textarea id="editTaskText" class="search-bar" rows="3" placeholder="Описание задачи..." style="margin-bottom:10px"></textarea>
-        <select id="editTaskType" class="search-bar" style="margin-bottom:10px; background:#111;">
+        
+        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Описание</label>
+        <textarea id="editTaskText" class="search-bar" rows="3" placeholder="Описание задачи..." style="margin-bottom:15px"></textarea>
+        
+        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Сложность</label>
+        <select id="editTaskType" class="search-bar" style="margin-bottom:15px; background:#111;">
             <option value="Легкое">Легкое</option>
             <option value="Среднее">Среднее</option>
             <option value="Сложное">Сложное</option>
         </select>
-        <input type="number" id="editTaskHours" class="search-bar" placeholder="Добавить времени (минут)" style="margin-bottom:20px">
+        
+        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Добавить времени</label>
+        <div style="display:flex; gap:10px; margin-bottom:20px;">
+            <div style="flex:1;">
+                <input type="number" id="editTaskHoursInput" class="search-bar" placeholder="Часы" min="0" style="margin-bottom:0">
+            </div>
+            <div style="flex:1;">
+                <input type="number" id="editTaskMinutesInput" class="search-bar" placeholder="Минуты" min="0" max="59" style="margin-bottom:0">
+            </div>
+        </div>
+        
         <button onclick="saveEditTask(); playClickSound();" class="icon-btn" style="width:100%; height:50px; background:var(--accent); color:white;">Сохранить изменения</button>
     </div>
 </div>
@@ -847,29 +891,39 @@
         
         const text = document.getElementById('taskText').value;
         const type = document.getElementById('taskType').value;
-        const minutes = document.getElementById('taskHours').value; // теперь это минуты
-        if(text && minutes) {
-            playClickSound();
-            const endTime = Date.now() + (minutes * 60000); // конвертируем минуты в миллисекунды
-            const deadlineDate = new Date(endTime).toLocaleString();
-            push(ref(db, 'tasks'), { text, type, endTime, status: 'В очереди', createdAt: Date.now() });
-            sendNotify("Новая задача!", `Выполнить до: ${deadlineDate}`);
-            
-            // Отправляем уведомление в реальное время для всех через broadcast
-            set(ref(db, `notifications/${Date.now()}`), { 
-                type: 'newTask', 
-                text, 
-                deadline: deadlineDate,
-                timestamp: Date.now()
-            });
-            
-            // Очищаем форму
-            document.getElementById('taskText').value = '';
-            document.getElementById('taskType').value = 'Легкое';
-            document.getElementById('taskHours').value = '';
-            
-            closeAdmin();
+        const hours = parseInt(document.getElementById('taskHoursInput').value) || 0;
+        const minutes = parseInt(document.getElementById('taskMinutesInput').value) || 0;
+        const assignTo = document.getElementById('taskAssignTo').value;
+        
+        if(!text || (hours === 0 && minutes === 0)) {
+            alert('Укажите описание и время');
+            return;
         }
+        
+        playClickSound();
+        const totalMinutes = hours * 60 + minutes;
+        const endTime = Date.now() + (totalMinutes * 60000);
+        const deadlineDate = new Date(endTime).toLocaleString();
+        
+        push(ref(db, 'tasks'), { text, type, endTime, status: 'В очереди', createdAt: Date.now(), assignedTo: assignTo });
+        sendNotify("Новая задача!", `Выполнить до: ${deadlineDate}`);
+        
+        // Отправляем уведомление в реальное время для всех через broadcast
+        set(ref(db, `notifications/${Date.now()}`), { 
+            type: 'newTask', 
+            text, 
+            deadline: deadlineDate,
+            timestamp: Date.now()
+        });
+        
+        // Очищаем форму
+        document.getElementById('taskText').value = '';
+        document.getElementById('taskType').value = 'Легкое';
+        document.getElementById('taskHoursInput').value = '';
+        document.getElementById('taskMinutesInput').value = '';
+        document.getElementById('taskAssignTo').value = 'both';
+        
+        closeAdmin();
     };
 
     let lastTasksState = {};
@@ -906,10 +960,29 @@
 
                 const canEditDelete = window.currentUserRole === 'Yono';
                 const canChangeStatus = window.currentUserRole === 'Yono' || window.currentUserRole === 'Turbik';
+                
+                // Определяем отображение назначения
+                let assignedDisplay = '';
+                if(t.assignedTo) {
+                    let assignColor = '#888';
+                    let assignText = '';
+                    if(t.assignedTo === 'turbik') {
+                        assignColor = '#3b82f6';
+                        assignText = '👤 Turbik';
+                    } else if(t.assignedTo === 'yono') {
+                        assignColor = '#ef4444';
+                        assignText = '👤 Yono';
+                    } else {
+                        assignColor = '#10b981';
+                        assignText = '👥 Двоим';
+                    }
+                    assignedDisplay = `<div style="font-size:10px; padding:4px 8px; border-radius:6px; background:#222; margin-bottom:10px; color:${assignColor}; font-weight:600;">${assignText}</div>`;
+                }
 
                 div.innerHTML = `
                     <span class="task-status-label">Статус: ${t.status}</span>
                     <span class="task-type">${t.type}</span>
+                    ${assignedDisplay}
                     <div style="font-weight:600; margin-bottom:10px;">${t.text}</div>
                     <div class="timer ${t.status === 'Выполнено' ? 'paused' : ''}" id="timer-${t.id}">00:00</div>
                     <div class="task-actions">
@@ -941,7 +1014,8 @@
                 document.getElementById('editTaskId').value = id;
                 document.getElementById('editTaskText').value = t.text;
                 document.getElementById('editTaskType').value = t.type;
-                document.getElementById('editTaskHours').value = '';
+                document.getElementById('editTaskHoursInput').value = '';
+                document.getElementById('editTaskMinutesInput').value = '';
                 document.getElementById('editTaskModal').style.display = 'flex';
             }
         }, {onlyOnce: true});
@@ -957,13 +1031,17 @@
         const id = document.getElementById('editTaskId').value;
         const text = document.getElementById('editTaskText').value;
         const type = document.getElementById('editTaskType').value;
-        const addMinutes = document.getElementById('editTaskHours').value;
+        const addHours = parseInt(document.getElementById('editTaskHoursInput').value) || 0;
+        const addMinutes = parseInt(document.getElementById('editTaskMinutesInput').value) || 0;
         
         onValue(ref(db, `tasks/${id}`), (s) => {
             const t = s.val();
             if(t) {
                 const updates = { text, type };
-                if(addMinutes) updates.endTime = t.endTime + (addMinutes * 60000); // минуты в миллисекунды
+                if(addHours > 0 || addMinutes > 0) {
+                    const addTotalMinutes = addHours * 60 + addMinutes;
+                    updates.endTime = t.endTime + (addTotalMinutes * 60000);
+                }
                 update(ref(db, `tasks/${id}`), updates);
                 playClickSound();
                 document.getElementById('editTaskModal').style.display = 'none';
