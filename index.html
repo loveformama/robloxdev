@@ -27,23 +27,20 @@
         };
     </script>
 <script>
-    // 🔒 ЛЕГКАЯ ЗАЩИТА ОТ DEVTOOLS (БЕЗ БЛОКИРОВКИ ЗАГРУЗКИ)
     (function() {
-        // Блокируем контекстное меню (правый клик)
         document.addEventListener('contextmenu', e => e.preventDefault());
         
-        // Блокируем горячие клавиши для devtools
+        const isYono = localStorage.getItem('userEmail') === 'glebushkameet@gmail.com' || (typeof window.currentUserEmail !== 'undefined' && window.currentUserEmail === 'glebushkameet@gmail.com');
+        
         document.addEventListener('keydown', e => {
-            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C'))) {
+            if (!isYono && (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')))) {
                 e.preventDefault();
             }
         });
 
-        // Переопределяем console (но не полностью - оставляем для отладки разработчиков)
         if (typeof window.console !== 'undefined') {
             const originalLog = window.console.log;
             window.console.log = function(...args) {
-                // Логируем только важные сообщения
                 if (args[0] && args[0].toString().includes('В системе:')) {
                     return;
                 }
@@ -920,6 +917,8 @@
         if (user) {
             checkAuthExpiry();
             console.log("В системе:", user.email);
+            localStorage.setItem('userEmail', user.email);
+            window.currentUserEmail = user.email;
             
             if (user.email === CONFIG.USERS.TURBIK) {
                 window.currentUserRole = "Turbik";
@@ -935,6 +934,8 @@
             window.currentUserRole = null;
             loginScreen.style.display = 'flex';
             if(loginBtn) loginBtn.innerHTML = `<i data-lucide="log-in"></i> Войти`;
+            localStorage.removeItem('userEmail');
+            window.currentUserEmail = null;
         }
         
         isAuthReady = true;
@@ -1112,7 +1113,6 @@
     });
 
     window.updateProjectData = () => {
-        // Only Yono can update project stats
         if(window.currentUserRole !== 'Yono') {
             alert('Только Yono может редактировать статистику');
             return;
@@ -1174,7 +1174,6 @@
     };
 
     window.createTask = () => {
-        // Only Yono can create tasks
         if(window.currentUserRole !== 'Yono') {
             alert('Только Yono может создавать задачи');
             return;
@@ -1240,7 +1239,7 @@
                         completedTasksTimers[t.id] = setTimeout(() => {
                             remove(ref(db, `tasks/${t.id}`));
                             delete completedTasksTimers[t.id];
-                        }, 36000000); // 10 часов в миллисекундах
+                        }, 36000000);
                     }
                 }
 
@@ -1292,7 +1291,6 @@
     };
     
     window.editTask = (id) => {
-        // Only Yono can edit tasks
         if(window.currentUserRole !== 'Yono') {
             alert('Только Yono может редактировать задачи');
             return;
@@ -1313,7 +1311,6 @@
     };
 
     window.saveEditTask = () => {
-        // Only Yono can edit tasks
         if(window.currentUserRole !== 'Yono') {
             alert('Только Yono может редактировать задачи');
             return;
@@ -1340,7 +1337,7 @@
         }, {onlyOnce: true});
     };
 
-    let timerIntervals = {}; // Track all timer intervals to clear them properly
+    let timerIntervals = {};
 
     function startTimer(id, end, status) {
         // Clear any existing timer for this task
@@ -1783,22 +1780,18 @@
 
     // ============= СРАВНЕНИЕ =============
     
-    // Алгоритм для сравнения символов
     const diffStrings = (str1, str2) => {
         let result = '';
         let i = 0, j = 0;
         
-        // Просто сравниваем посимвольно
         const maxLen = Math.max(str1.length, str2.length);
         
         while(i < str1.length || j < str2.length) {
             if(str1[i] === str2[j]) {
-                // Одинаковый символ - зелёный
                 result += `<span style="color: #22c55e; font-weight: 600;">${escapeHtml(str1[i])}</span>`;
                 i++;
                 j++;
             } else {
-                // Разные символы - красный
                 if(i < str1.length && j < str2.length) {
                     result += `<span style="color: #ef4444; font-weight: 600; background: rgba(239, 68, 68, 0.15); padding: 2px 4px; border-radius: 2px;">${escapeHtml(str1[i])}</span>`;
                     result += `<span style="color: #10b981; font-weight: 600; background: rgba(16, 185, 129, 0.15); padding: 2px 4px; border-radius: 2px;">${escapeHtml(str2[j])}</span>`;
@@ -1818,8 +1811,6 @@
     };
     
     window.compareScripts = () => {
-        playClickSound();
-        
         const code1 = document.getElementById('compareCode1').value;
         const code2 = document.getElementById('compareCode2').value;
         const resultDiv = document.getElementById('compareResult');
@@ -1843,13 +1834,11 @@
             const line2 = lines2[i] || '';
             
             if(line1 === line2) {
-                // Если строки одинаковые - всё зелёным
                 html += `<div class="diff-line" style="padding: 8px 12px; margin-bottom: 4px; border-radius: 4px; background: rgba(34, 197, 94, 0.1); color: #22c55e;">`;
                 html += `<span style="opacity: 0.7; margin-right: 8px;">${i + 1}:</span>`;
                 html += `<span style="color: #22c55e;">${escapeHtml(line1 || '(пусто)')}</span>`;
                 html += `</div>`;
             } else {
-                // Сравниваем посимвольно
                 html += `<div class="diff-line" style="padding: 8px 12px; margin-bottom: 4px; border-radius: 4px; background: rgba(50, 50, 50, 0.5);">`;
                 html += `<span style="opacity: 0.7; margin-right: 8px;">${i + 1}:</span>`;
                 html += diffStrings(line1, line2);
@@ -1858,6 +1847,7 @@
         }
         
         outputDiv.innerHTML = html;
+        resultDiv.style.display = 'block';
         resultDiv.classList.add('active');
     };
     
@@ -1926,7 +1916,7 @@
 
 <!-- ВЕРСИЯ ПРИЛОЖЕНИЯ -->
 <div style="position: fixed; bottom: 0; right: 0; padding: 12px 16px; font-size: 10px; color: #666; background: rgba(0,0,0,0.3); border-radius: 8px 0 0 0; font-family: monospace; z-index: 100;">
-    version dev: 1.2
+    version dev: 1.3
 </div>
 
 </body>
