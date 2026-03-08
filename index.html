@@ -515,16 +515,19 @@
         .compare-workspace {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            height: calc(100vh - 300px);
-            min-height: 600px;
+            gap: 16px;
+            height: 500px;
+            padding: 20px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 16px;
+            border: 1px solid #1a1a1a;
         }
 
         .compare-box {
             position: relative;
-            background: #080808;
-            border: 1px solid var(--border);
-            border-radius: 12px;
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            border-radius: 8px;
             overflow: hidden;
             display: flex;
             transition: 0.3s;
@@ -532,14 +535,14 @@
         }
 
         .line-numbers {
-            width: 35px;
-            padding: 16px 5px;
-            background: #0a0a0a;
-            border-right: 1px solid #1a1a1a;
+            width: 32px;
+            padding: 12px 4px;
+            background: #080808;
+            border-right: 1px solid #151515;
             color: #444;
             font-family: 'Courier New', monospace;
-            font-size: 12px;
-            line-height: 1.7;
+            font-size: 11px;
+            line-height: 1.6;
             text-align: right;
             user-select: none;
             overflow: hidden;
@@ -550,6 +553,53 @@
             position: relative;
             flex: 1;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-radius: 8px;
+        }
+        
+        .cursor-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 3;
+            overflow: hidden;
+        }
+        
+        .cursor-indicator {
+            position: absolute;
+            width: 2px;
+            height: 20px;
+            background: #3b82f6;
+            border-left: 1px solid #60a5fa;
+            animation: cursor-blink 1s infinite;
+            pointer-events: none;
+        }
+        
+        @keyframes cursor-blink {
+            0%, 49% { opacity: 1; }
+            50%, 100% { opacity: 0; }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        
+        .cursor-label {
+            position: absolute;
+            background: #3b82f6;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            white-space: nowrap;
+            top: -18px;
+            left: 0;
+            font-weight: bold;
         }
 
         .highlight-layer {
@@ -558,11 +608,11 @@
             left: 0;
             right: 0;
             bottom: 0;
-            padding: 16px;
+            padding: 12px;
             color: transparent;
             font-family: 'Courier New', monospace;
             font-size: 12px;
-            line-height: 1.7;
+            line-height: 1.6;
             white-space: pre;
             pointer-events: none;
             z-index: 1;
@@ -580,13 +630,13 @@
             position: relative;
             width: 100%;
             height: 100%;
-            padding: 16px;
+            padding: 12px;
             background: transparent !important;
-            color: #e0e0e0;
+            color: #ddd;
             border: none;
             font-family: 'Courier New', monospace;
-            font-size: 13px;
-            line-height: 1.8;
+            font-size: 12px;
+            line-height: 1.6;
             resize: none;
             outline: none;
             z-index: 2;
@@ -690,6 +740,11 @@
     </div>
 
     <div id="tab-compare" class="content">
+        <!-- LIVE STATUS -->
+        <div id="liveStatus" style="display: none; position: fixed; top: 80px; right: 20px; background: rgba(34, 197, 94, 0.1); border: 1px solid #22c55e; color: #22c55e; padding: 8px 16px; border-radius: 6px; font-size: 12px; z-index: 500; animation: pulse 2s infinite;">
+            <i data-lucide="wifi" style="width: 14px; display: inline; margin-right: 4px;"></i> Синхронизация в реальном времени
+        </div>
+        
         <!-- HEADER -->
         <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border);">
             <div style="background: var(--accent); width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px var(--accent-glow);">
@@ -720,7 +775,8 @@
                 <div class="line-numbers" id="lines1">1</div>
                 <div class="editor-container">
                     <div class="highlight-layer" id="hl1"></div>
-                    <textarea id="compareCode1" placeholder="Оригинальный код..." spellcheck="false" onscroll="syncScroll(1)"></textarea>
+                    <div class="cursor-layer" id="cursorLayer1"></div>
+                    <textarea id="compareCode1" placeholder="Оригинальный код..." spellcheck="false" onscroll="syncScroll(1)" oninput="syncLiveCode(1)"></textarea>
                 </div>
             </div>
 
@@ -729,7 +785,8 @@
                 <div class="line-numbers" id="lines2">1</div>
                 <div class="editor-container">
                     <div class="highlight-layer" id="hl2"></div>
-                    <textarea id="compareCode2" placeholder="Измененный код..." spellcheck="false" onscroll="syncScroll(2)"></textarea>
+                    <div class="cursor-layer" id="cursorLayer2"></div>
+                    <textarea id="compareCode2" placeholder="Измененный код..." spellcheck="false" onscroll="syncScroll(2)" oninput="syncLiveCode(2)"></textarea>
                 </div>
             </div>
         </div>
@@ -2011,6 +2068,92 @@
         }
     };
 
+    // LIVE CODE SYNC И КУРСОРЫ
+    let compareSync = { code1: '', code2: '', cursor1: 0, cursor2: 0 };
+    let syncTimeout = null;
+    
+    window.syncLiveCode = (id) => {
+        clearTimeout(syncTimeout);
+        const textarea = document.getElementById(`compareCode${id}`);
+        const code = textarea.value;
+        const cursor = textarea.selectionStart;
+        
+        // Обновить локальный объект
+        if(id === 1) compareSync.code1 = code;
+        if(id === 2) compareSync.code2 = code;
+        
+        // Сохранить в Firebase с задержкой
+        syncTimeout = setTimeout(() => {
+            const syncRef = ref(db, `compareSync/${window.currentUserEmail || 'anon'}/code${id}`);
+            set(syncRef, { code, cursor, timestamp: Date.now() });
+        }, 200);
+        
+        // Обновить подсветку в реальном времени
+        updateCompareHighlight();
+        
+        // Показать status
+        document.getElementById('liveStatus').style.display = 'flex';
+        clearTimeout(window.statusTimeout);
+        window.statusTimeout = setTimeout(() => {
+            document.getElementById('liveStatus').style.display = 'none';
+        }, 2000);
+    };
+    
+    // Слушатель для обновления кода с другого устройства
+    onValue(ref(db, `compareSync`), (snapshot) => {
+        const data = snapshot.val();
+        if(!data) return;
+        
+        const entries = Object.entries(data);
+        entries.forEach(([email, userSync]) => {
+            // Не обновляем свой код
+            if(email === (window.currentUserEmail || 'anon')) return;
+            
+            // Обновляем код 1 с другого пользователя
+            if(userSync.code1) {
+                const textarea1 = document.getElementById('compareCode1');
+                textarea1.value = userSync.code1.code;
+                compareSync.code1 = userSync.code1.code;
+                updateCompareHighlight();
+                updateCursorDisplay(1, userSync.code1.cursor || 0, email);
+            }
+            
+            // Обновляем код 2 с другого пользователя
+            if(userSync.code2) {
+                const textarea2 = document.getElementById('compareCode2');
+                textarea2.value = userSync.code2.code;
+                compareSync.code2 = userSync.code2.code;
+                updateCompareHighlight();
+                updateCursorDisplay(2, userSync.code2.cursor || 0, email);
+            }
+        });
+    });
+    
+    // Отобразить курсор пользователя
+    const updateCursorDisplay = (id, position, userName = 'Собеседник') => {
+        const layer = document.getElementById(`cursorLayer${id}`);
+        if(!layer) return;
+        
+        const textarea = document.getElementById(`compareCode${id}`);
+        const text = textarea.value.substring(0, position);
+        const lines = text.split('\\n');
+        const currentLine = lines.length - 1;
+        const lineStart = text.lastIndexOf('\\n') + 1;
+        const column = position - lineStart;
+        
+        // Рассчитать позицию курсора
+        const lineHeight = 19.2; // 1.6 * 12px
+        const charWidth = 7.2; // приблизительная ширина monospace char
+        const top = currentLine * lineHeight + 12;
+        const left = column * charWidth + 12;
+        
+        layer.innerHTML = `
+            <div class="cursor-indicator" style="top: ${top}px; left: ${left}px;">
+                <div class="cursor-label">${userName}</div>
+            </div>
+        `;
+    };
+
     window.copyCompareCode1 = () => {
         const code = document.getElementById('compareCode1').value;
         if(code) { navigator.clipboard.writeText(code); playClickSound(); alert('Скопировано в буфер обмена!'); }
@@ -2079,7 +2222,7 @@
 
 <!-- ВЕРСИЯ ПРИЛОЖЕНИЯ -->
 <div style="position: fixed; bottom: 0; right: 0; padding: 12px 16px; font-size: 10px; color: #666; background: rgba(0,0,0,0.3); border-radius: 8px 0 0 0; font-family: monospace; z-index: 100;">
-    version dev: 1.7
+    version dev: 1.8
 </div>
 
 </body>
