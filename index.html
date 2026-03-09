@@ -698,6 +698,7 @@
     <button class="nav-btn active" onclick="switchTab('tab-templates', this); playClickSound();"><i data-lucide="code"></i> Скрипты</button>
     <button class="nav-btn" onclick="switchTab('tab-tasks', this); playClickSound();"><i data-lucide="check-square"></i> Задачи</button>
     <button class="nav-btn" onclick="switchTab('tab-progress', this); playClickSound();"><i data-lucide="bar-chart-3"></i> Прогресс</button>
+    <button class="nav-btn" onclick="switchTab('tab-chat', this); playClickSound();"><i data-lucide="message-circle"></i> Чат</button>
     <button class="nav-btn" onclick="switchTab('tab-notes', this); playClickSound();"><i data-lucide="sticky-note"></i> Заметки</button>
     <button class="nav-btn" onclick="switchTab('tab-backups', this); playClickSound();"><i data-lucide="save"></i> Бэкапы</button>
     <button class="nav-btn" onclick="switchTab('tab-compare', this); playClickSound();"><i data-lucide="git-compare"></i> Сравнение</button>
@@ -715,6 +716,22 @@
             </button>
         </div>
         <div id="scriptList" class="script-grid"></div>
+    </div>
+
+    <div id="tab-chat" class="content">
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 30px;">
+            <i data-lucide="message-circle" style="width: 32px; height: 32px; color: #8b5cf6;"></i>
+            <h2 style="margin: 0; font-size: 24px; font-weight: 800; color: #a78bfa;">Groq AI Помощник</h2>
+        </div>
+        <div id="chatContainer" style="background: linear-gradient(135deg, #1e1b4b, #0f172a); border: 1px solid #4c1d95; border-radius: 20px; padding: 20px; height: 650px; display: flex; flex-direction: column; overflow: hidden;">
+            <div id="chatMessages" style="flex: 1; overflow-y: auto; margin-bottom: 20px; display: flex; flex-direction: column; gap: 12px; padding-right: 8px;" class="custom-scrollbar"></div>
+            <div style="display: flex; gap: 10px;">
+                <textarea id="chatInput" class="search-bar" placeholder="Напишите сообщение или спросите о коде..." style="flex: 1; height: 60px; resize: none; margin: 0;"></textarea>
+                <button onclick="sendChatMessage(); playClickSound();" class="icon-btn" style="height: 60px; width: 60px; background: linear-gradient(135deg, #8b5cf6, #6d28d9); border: 1px solid #8b5cf6;">
+                    <i data-lucide="send" style="width: 20px; height: 20px;"></i>
+                </button>
+            </div>
+        </div>
     </div>
 
     <div id="tab-tasks" class="content">
@@ -996,6 +1013,14 @@
             <option value="Легкое">Легкое</option>
             <option value="Среднее">Среднее</option>
             <option value="Сложное">Сложное</option>
+        </select>
+        
+        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Для кого</label>
+        <select id="editTaskAssignedTo" class="search-bar" style="margin-bottom:15px; background:#111;">
+            <option value="">Не выбрано</option>
+            <option value="turbik">Turbik</option>
+            <option value="yono">Yono</option>
+            <option value="both">Двоим</option>
         </select>
         
         <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Добавить времени</label>
@@ -1835,7 +1860,7 @@
     window.editTask = (id) => {
         // Only Yono can edit tasks
         if(window.currentUserRole !== 'Yono') {
-            alert('Только Yono может редактировать задачи');
+            alert('Окан единксф может редактировать задачи');
             return;
         }
         
@@ -1846,6 +1871,7 @@
                 document.getElementById('editTaskId').value = id;
                 document.getElementById('editTaskText').value = t.text;
                 document.getElementById('editTaskType').value = t.type;
+                document.getElementById('editTaskAssignedTo').value = t.assignedTo || '';
                 document.getElementById('editTaskHoursInput').value = '';
                 document.getElementById('editTaskMinutesInput').value = '';
                 document.getElementById('editTaskModal').style.display = 'flex';
@@ -1856,20 +1882,21 @@
     window.saveEditTask = () => {
         // Only Yono can edit tasks
         if(window.currentUserRole !== 'Yono') {
-            alert('Только Yono может редактировать задачи');
+            alert('Окан единсф может редактировать задачи');
             return;
         }
         
         const id = document.getElementById('editTaskId').value;
         const text = document.getElementById('editTaskText').value;
         const type = document.getElementById('editTaskType').value;
+        const assignedTo = document.getElementById('editTaskAssignedTo').value || null;
         const addHours = parseInt(document.getElementById('editTaskHoursInput').value) || 0;
         const addMinutes = parseInt(document.getElementById('editTaskMinutesInput').value) || 0;
         
         onValue(ref(db, `tasks/${id}`), (s) => {
             const t = s.val();
             if(t) {
-                const updates = { text, type };
+                const updates = { text, type, assignedTo };
                 if(addHours > 0 || addMinutes > 0) {
                     const addTotalMinutes = addHours * 60 + addMinutes;
                     updates.endTime = t.endTime + (addTotalMinutes * 60000);
@@ -2682,8 +2709,7 @@
         workTimeListenerTurbik = onValue(ref(db, 'worktime/turbik'), (snapshot) => {
             const data = snapshot.val();
             if(data) {
-                workTimeSecondsTurbik = data.totalSeconds || 0;
-                localStorage.setItem('turbikBaseSeconds', workTimeSecondsTurbik.toString());
+                // Новая логика - базируется только на startTime из Firebase
                 
                 const isRunning = data.isRunning || false;
                 
@@ -2704,7 +2730,6 @@
                     displayUpdateTimerTurbik = setInterval(() => {
                         if(workTimeStartTurbik) {
                             const elapsed = Math.floor((Date.now() - workTimeStartTurbik) / 1000);
-                            workTimeSecondsTurbik = parseInt(localStorage.getItem('turbikBaseSeconds') || '0') + elapsed;
                             updateWorkTimeDisplay('turbik');
                         }
                     }, 1000);
@@ -2738,8 +2763,7 @@
         workTimeListenerYono = onValue(ref(db, 'worktime/yono'), (snapshot) => {
             const data = snapshot.val();
             if(data) {
-                workTimeSecondsYono = data.totalSeconds || 0;
-                localStorage.setItem('yonoBaseSeconds', workTimeSecondsYono.toString());
+                // Новая логика - базируется только на startTime из Firebase
                 
                 const isRunning = data.isRunning || false;
                 
@@ -2760,7 +2784,6 @@
                     displayUpdateTimerYono = setInterval(() => {
                         if(workTimeStartYono) {
                             const elapsed = Math.floor((Date.now() - workTimeStartYono) / 1000);
-                            workTimeSecondsYono = parseInt(localStorage.getItem('yonoBaseSeconds') || '0') + elapsed;
                             updateWorkTimeDisplay('yono');
                         }
                     }, 1000);
@@ -2951,7 +2974,7 @@
 
 <!-- ВЕРСИЯ ПРИЛОЖЕНИЯ -->
 <div style="position: fixed; bottom: 0; right: 0; padding: 12px 16px; font-size: 10px; color: #666; background: rgba(0,0,0,0.3); border-radius: 8px 0 0 0; font-family: monospace; z-index: 100;">
-    version dev: 2.5
+    version dev: 1.5
 </div>
 
 </body>
