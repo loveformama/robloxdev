@@ -697,10 +697,10 @@
 <nav>
     <button class="nav-btn active" onclick="switchTab('tab-templates', this); playClickSound();"><i data-lucide="code"></i> Скрипты</button>
     <button class="nav-btn" onclick="switchTab('tab-tasks', this); playClickSound();"><i data-lucide="check-square"></i> Задачи</button>
+    <button class="nav-btn" onclick="switchTab('tab-progress', this); playClickSound();"><i data-lucide="bar-chart-3"></i> Прогресс</button>
     <button class="nav-btn" onclick="switchTab('tab-notes', this); playClickSound();"><i data-lucide="sticky-note"></i> Заметки</button>
     <button class="nav-btn" onclick="switchTab('tab-backups', this); playClickSound();"><i data-lucide="save"></i> Бэкапы</button>
     <button class="nav-btn" onclick="switchTab('tab-compare', this); playClickSound();"><i data-lucide="git-compare"></i> Сравнение</button>
-    <button class="nav-btn" onclick="switchTab('tab-progress', this); playClickSound();"><i data-lucide="bar-chart-3"></i> Прогресс</button>
     <button class="nav-btn" onclick="switchTab('tab-success', this); playClickSound();"><i data-lucide="trending-up"></i> Успехи</button>
     <div style="width: 1px; background: #222; margin: 5px 10px;"></div>
     <button class="nav-btn" id="login-btn-nav" onclick="toggleAuth(); playClickSound();"><i data-lucide="log-in"></i> Войти</button>
@@ -822,54 +822,54 @@
 
     <div id="tab-progress" class="content">
         <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 30px;">
-            <i data-lucide="zap" style="width: 32px; height: 32px; color: #666;"></i>
-            <h2 style="margin: 0; font-size: 24px; font-weight: 800;">Общий прогресс</h2>
+            <i data-lucide="zap" style="width: 32px; height: 32px; color: #fbbf24;"></i>
+            <h2 style="margin: 0; font-size: 24px; font-weight: 800; color: #fbbf24;">Общий прогресс</h2>
         </div>
         <div class="main-progress">
             <div id="totalProgressText" class="progress-text">0%</div>
             <div id="totalProgressBar" class="progress-fill"></div>
         </div>
         <div style="margin-top: 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
-            <div class="stat-card" style="background: #1a1a1a; border: 1px solid #333;">
-                <i data-lucide="check-circle-2" style="width: 32px; height: 32px; color: #666;"></i>
+            <div class="stat-card" style="background: linear-gradient(135deg, #1f2937, #111); border: 1px solid #375a7f;">
+                <i data-lucide="check-circle-2" style="width: 32px; height: 32px; color: #10b981;"></i>
                 <div style="flex: 1;">
-                    <div style="font-size: 12px; color: #666; text-transform: uppercase; font-weight: 600;">Выполнено заданий</div>
+                    <div style="font-size: 12px; color: #888; text-transform: uppercase; font-weight: 600;">Выполнено заданий</div>
                     <div style="display: flex; gap: 16px; margin-top: 12px; align-items: center;">
                         <div>
-                            <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Turbik</div>
-                            <div id="completedTasksTurbik" style="font-size: 24px; font-weight: 800; color: #888;">0</div>
+                            <div style="font-size: 12px; color: #64748b; margin-bottom: 4px;">Turbik</div>
+                            <div id="completedTasksTurbik" style="font-size: 24px; font-weight: 800; color: #3b82f6;">0</div>
                         </div>
-                        <div style="color: #333;">|</div>
+                        <div style="color: #444;">|</div>
                         <div>
-                            <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Yono</div>
-                            <div id="completedTasksYono" style="font-size: 24px; font-weight: 800; color: #888;">0</div>
+                            <div style="font-size: 12px; color: #64748b; margin-bottom: 4px;">Yono</div>
+                            <div id="completedTasksYono" style="font-size: 24px; font-weight: 800; color: #ef4444;">0</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         <div style="margin-top: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
-            <div class="stat-card" style="background: #1a1a1a; border: 1px solid #333; flex-direction: column; align-items: flex-start;">
+            <div class="stat-card" style="background: linear-gradient(135deg, #1e3a8a, #1e1b4b); border: 1px solid #3b82f6; flex-direction: column; align-items: flex-start;">
                 <div style="display: flex; align-items: center; gap: 12px; width: 100%; margin-bottom: 12px;">
-                    <i data-lucide="user" style="width: 28px; height: 28px; color: #666;"></i>
-                    <div style="font-size: 12px; color: #666; text-transform: uppercase; font-weight: 600;">Turbik - Время работы</div>
+                    <i data-lucide="user" style="width: 28px; height: 28px; color: #60a5fa;"></i>
+                    <div style="font-size: 12px; color: #93c5fd; text-transform: uppercase; font-weight: 600;">Turbik - Время работы</div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 12px; width: 100%;">
-                    <div id="workTimeTurbikDisplay" style="font-size: 28px; font-weight: 800; color: #888; font-family: monospace; flex: 1;">0ч 0м</div>
-                    <button id="pausePlayBtnTurbik" class="icon-btn" style="width: 40px; height: 40px; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(168, 85, 247, 0.4); flex-shrink: 0;" onclick="toggleWorkTimerTurbik(); playClickSound();" title="Play/Pause">
-                        <i data-lucide="play" style="width: 20px; height: 20px; color: #666;"></i>
+                    <div id="workTimeTurbikDisplay" style="font-size: 28px; font-weight: 800; color: #60a5fa; font-family: monospace; flex: 1; text-shadow: 0 0 10px rgba(96, 165, 250, 0.3);">0ч 0м</div>
+                    <button id="pausePlayBtnTurbik" class="icon-btn" style="width: 40px; height: 40px; background: rgba(59, 130, 246, 0.3); border: 2px solid #3b82f6; flex-shrink: 0; transition: 0.2s;" onclick="toggleWorkTimerTurbik(); playClickSound();" title="Play/Pause">
+                        <i data-lucide="play" style="width: 20px; height: 20px; color: #60a5fa;"></i>
                     </button>
                 </div>
             </div>
-            <div class="stat-card" style="background: #1a1a1a; border: 1px solid #333; flex-direction: column; align-items: flex-start;">
+            <div class="stat-card" style="background: linear-gradient(135deg, #7c2d12, #4c0519); border: 1px solid #ef4444; flex-direction: column; align-items: flex-start;">
                 <div style="display: flex; align-items: center; gap: 12px; width: 100%; margin-bottom: 12px;">
-                    <i data-lucide="user" style="width: 28px; height: 28px; color: #666;"></i>
-                    <div style="font-size: 12px; color: #666; text-transform: uppercase; font-weight: 600;">Yono - Время работы</div>
+                    <i data-lucide="user" style="width: 28px; height: 28px; color: #f87171;"></i>
+                    <div style="font-size: 12px; color: #fca5a5; text-transform: uppercase; font-weight: 600;">Yono - Время работы</div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 12px; width: 100%;">
-                    <div id="workTimeYonoDisplay" style="font-size: 28px; font-weight: 800; color: #888; font-family: monospace; flex: 1;">0ч 0м</div>
-                    <button id="pausePlayBtnYono" class="icon-btn" style="width: 40px; height: 40px; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(168, 85, 247, 0.4); flex-shrink: 0;" onclick="toggleWorkTimerYono(); playClickSound();" title="Play/Pause">
-                        <i data-lucide="play" style="width: 20px; height: 20px; color: #666;"></i>
+                    <div id="workTimeYonoDisplay" style="font-size: 28px; font-weight: 800; color: #f87171; font-family: monospace; flex: 1; text-shadow: 0 0 10px rgba(248, 113, 113, 0.3);">0ч 0м</div>
+                    <button id="pausePlayBtnYono" class="icon-btn" style="width: 40px; height: 40px; background: rgba(239, 68, 68, 0.3); border: 2px solid #ef4444; flex-shrink: 0; transition: 0.2s;" onclick="toggleWorkTimerYono(); playClickSound();" title="Play/Pause">
+                        <i data-lucide="play" style="width: 20px; height: 20px; color: #f87171;"></i>
                     </button>
                 </div>
             </div>
@@ -1783,18 +1783,26 @@
                 let assignedDisplay = '';
                 if(t.assignedTo) {
                     let assignColor = '#888';
+                    let assignBg = '#222';
+                    let assignIcon = '👤';
                     let assignText = '';
                     if(t.assignedTo === 'turbik') {
-                        assignColor = '#3b82f6';
-                        assignText = '👤 Turbik';
+                        assignColor = '#60a5fa';
+                        assignBg = 'rgba(59, 130, 246, 0.2)';
+                        assignIcon = '<i data-lucide="user-check" style="width:14px; height:14px; display:inline; margin-right:4px;"></i>';
+                        assignText = 'Turbik';
                     } else if(t.assignedTo === 'yono') {
-                        assignColor = '#ef4444';
-                        assignText = '👤 Yono';
+                        assignColor = '#f87171';
+                        assignBg = 'rgba(239, 68, 68, 0.2)';
+                        assignIcon = '<i data-lucide="user-check" style="width:14px; height:14px; display:inline; margin-right:4px;"></i>';
+                        assignText = 'Yono';
                     } else {
                         assignColor = '#10b981';
-                        assignText = '👥 Двоим';
+                        assignBg = 'rgba(16, 185, 129, 0.2)';
+                        assignIcon = '<i data-lucide="users" style="width:14px; height:14px; display:inline; margin-right:4px;"></i>';
+                        assignText = 'Двоим';
                     }
-                    assignedDisplay = `<div style="font-size:10px; padding:4px 8px; border-radius:6px; background:#222; margin-bottom:10px; color:${assignColor}; font-weight:600;">${assignText}</div>`;
+                    assignedDisplay = `<div style="font-size:11px; padding:6px 10px; border-radius:8px; background:${assignBg}; margin-bottom:10px; color:${assignColor}; font-weight:600; border-left: 3px solid ${assignColor}; display:inline-flex; align-items:center; gap:4px;">${assignIcon} ${assignText}</div>`;
                 }
 
                 div.innerHTML = `
@@ -1981,13 +1989,26 @@
     });
 
     window.copyText = (e, txt) => {
+        if(!e) return;
         e.stopPropagation();
+        if(e.preventDefault) e.preventDefault();
         playClickSound();
-        navigator.clipboard.writeText(txt);
-        const btn = e.currentTarget;
-        const oldHtml = btn.innerHTML;
-        btn.innerHTML = '<i data-lucide="check" style="color:var(--success)"></i>'; refreshIcons();
-        setTimeout(() => { btn.innerHTML = oldHtml; refreshIcons(); }, 1000);
+        try {
+            navigator.clipboard.writeText(txt).then(() => {
+                const btn = e.currentTarget;
+                if(!btn) return;
+                const oldHtml = btn.innerHTML;
+                btn.innerHTML = '<i data-lucide="check" style="color:var(--success)"></i>'; 
+                refreshIcons();
+                setTimeout(() => { btn.innerHTML = oldHtml; refreshIcons(); }, 1000);
+            }).catch(err => {
+                console.error('Copy failed:', err);
+                alert('Ошибка копирования');
+            });
+        } catch(err) {
+            console.error('Copy error:', err);
+            alert('Ошибка копирования');
+        }
     };
 
     let deletePath = '';
@@ -2930,7 +2951,7 @@
 
 <!-- ВЕРСИЯ ПРИЛОЖЕНИЯ -->
 <div style="position: fixed; bottom: 0; right: 0; padding: 12px 16px; font-size: 10px; color: #666; background: rgba(0,0,0,0.3); border-radius: 8px 0 0 0; font-family: monospace; z-index: 100;">
-    version dev: 11
+    version dev: 2.5
 </div>
 
 </body>
