@@ -943,63 +943,6 @@
         <button onclick="resetWorkTime(); playClickSound();" class="icon-btn" style="width:100%; height:50px; background:var(--danger); color:white;">Сброс времени</button>
     </div>
 </div>
-    <div id="adm-stats-form">
-        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Дней до релиза</label>
-        <input type="number" id="adm-days" class="search-bar" style="margin-bottom:15px" placeholder="10">
-        
-        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Стабильность проекта</label>
-        <select id="adm-stab" class="search-bar" style="margin-bottom:15px; background:#111;">
-            <option value="Низкая">Низкая</option>
-            <option value="Средняя">Средняя</option>
-            <option value="Высокая">Высокая</option>
-        </select>
-        
-        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Успеваемость</label>
-        <select id="adm-perf" class="search-bar" style="margin-bottom:15px; background:#111;">
-            <option value="Плохая">Плохая</option>
-            <option value="Средняя">Средняя</option>
-            <option value="Отличная">Отличная</option>
-        </select>
-        
-        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Прогресс Turbik</label>
-        <input type="number" id="adm-t" class="search-bar" style="margin-bottom:15px" placeholder="50" min="0" max="100">
-        
-        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Прогресс Yono</label>
-        <input type="number" id="adm-y" class="search-bar" style="margin-bottom:20px" placeholder="50" min="0" max="100">
-        
-        <button onclick="updateProjectData(); playClickSound();" class="icon-btn" style="width:100%; height:50px; background:var(--accent); color:white;">Обновить</button>
-    </div>
-    <div id="adm-task-form" style="display:none">
-        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Описание задачи</label>
-        <textarea id="taskText" class="search-bar" rows="3" placeholder="Описание..." style="margin-bottom:15px"></textarea>
-        
-        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Сложность</label>
-        <select id="taskType" class="search-bar" style="margin-bottom:15px; background:#111;">
-            <option value="Легкое">Легкое</option>
-            <option value="Среднее">Среднее</option>
-            <option value="Сложное">Сложное</option>
-        </select>
-        
-        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Время на задачу</label>
-        <div style="display:flex; gap:10px; margin-bottom:15px;">
-            <div style="flex:1;">
-                <input type="number" id="taskHoursInput" class="search-bar" placeholder="Часы" min="0" style="margin-bottom:0">
-            </div>
-            <div style="flex:1;">
-                <input type="number" id="taskMinutesInput" class="search-bar" placeholder="Минуты" min="0" max="59" style="margin-bottom:0">
-            </div>
-        </div>
-        
-        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Назначить</label>
-        <select id="taskAssignTo" class="search-bar" style="margin-bottom:20px; background:#111;">
-            <option value="both">Обоим (Turbik, Yono)</option>
-            <option value="turbik">Turbik</option>
-            <option value="yono">Yono</option>
-        </select>
-        
-        <button onclick="createTask(); playClickSound();" class="icon-btn" style="width:100%; height:50px; background:var(--success); color:white;">Создать задачу</button>
-    </div>
-</div>
 
 <div id="scriptView" onclick="this.style.display='none'">
     <div class="modal-content" onclick="event.stopPropagation()">
@@ -1310,6 +1253,7 @@
         document.getElementById(id).classList.add('active');
         btn.classList.add('active');
         if(id === 'tab-success' && chartInstance) chartInstance.update();
+        if(id === 'tab-progress') updateStatsDisplay();
         refreshIcons();
     };
 
@@ -1405,100 +1349,92 @@
             }
         }, { onlyOnce: true });
     };
-
-    onValue(ref(db, 'projectStats'), (snapshot) => {
-        const data = snapshot.val() || { days: 0, stab: '?', perf: '?', t: 0, y: 0 };
-        const daysLeft = data.releaseTimestamp ? Math.max(0, Math.ceil((data.releaseTimestamp - Date.now()) / 86400000)) : data.days;
-        const total = Math.min(100, Math.round((parseInt(data.t) + parseInt(data.y)) / 2));
-        document.getElementById('totalProgressBar').style.width = total + '%';
-        document.getElementById('totalProgressText').innerText = total + '%';
-        
-        // Считаем количество выполненных заданий сегодня
-        let completedTurbik = 0;
-        let completedYono = 0;
-        
-        onValue(ref(db, 'tasks'), (tasksSnapshot) => {
-            const today = new Date().toDateString();
-            tasksSnapshot.forEach(child => {
-                const task = child.val();
-                if(task.status === 'Выполнено' && task.completedAt) {
-                    const completedDate = new Date(task.completedAt).toDateString();
-                    if(completedDate === today) {
-                        // Если задача была назначена двоим, обоим добавляем очко
-                        if(task.assignedTo === 'turbik') {
-                            completedTurbik++;
-                        } else if(task.assignedTo === 'yono') {
-                            completedYono++;
-                        } else if(task.assignedTo === 'both') {
-                            completedTurbik++;
-                            completedYono++;
-                        }
-                        
-                        // Если есть информация о том, кто отметил как выполнено
-                        if(task.completedBy) {
-                            // Аннулируем и пересчитываем согласно кто отметил
-                            if(task.assignedTo === 'both') {
-                                // Если двоим - оба получают
+    
+    const updateStatsDisplay = () => {
+        onValue(ref(db, 'projectStats'), (snapshot) => {
+            const data = snapshot.val() || { days: 0, stab: '?', perf: '?', t: 0, y: 0 };
+            const daysLeft = data.releaseTimestamp ? Math.max(0, Math.ceil((data.releaseTimestamp - Date.now()) / 86400000)) : data.days;
+            const total = Math.min(100, Math.round((parseInt(data.t) + parseInt(data.y)) / 2));
+            document.getElementById('totalProgressBar').style.width = total + '%';
+            document.getElementById('totalProgressText').innerText = total + '%';
+            
+            // Считаем количество выполненных заданий сегодня
+            let completedTurbik = 0;
+            let completedYono = 0;
+            
+            onValue(ref(db, 'tasks'), (tasksSnapshot) => {
+                const today = new Date().toDateString();
+                tasksSnapshot.forEach(child => {
+                    const task = child.val();
+                    if(task.status === 'Выполнено' && task.completedAt) {
+                        const completedDate = new Date(task.completedAt).toDateString();
+                        if(completedDate === today) {
+                            // Если задача была назначена двоим, обоим добавляем очко
+                            if(task.assignedTo === 'turbik') {
+                                completedTurbik++;
+                            } else if(task.assignedTo === 'yono') {
+                                completedYono++;
+                            } else if(task.assignedTo === 'both') {
                                 completedTurbik++;
                                 completedYono++;
                             }
                         }
                     }
-                }
+                });
+                
+                document.getElementById('completedTasksTurbik').textContent = completedTurbik;
+                document.getElementById('completedTasksYono').textContent = completedYono;
             });
             
-            document.getElementById('completedTasksTurbik').textContent = completedTurbik;
-            document.getElementById('completedTasksYono').textContent = completedYono;
-        });
-        
-        document.getElementById('statsGrid').innerHTML = `
-            <div class="stat-card">
-                <div class="stat-icon"><i data-lucide="calendar-check"></i></div>
-                <div class="stat-content">
-                    <div class="stat-label">Релиз через</div>
-                    <div class="stat-value deadline">${daysLeft} д</div>
+            document.getElementById('statsGrid').innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-icon"><i data-lucide="calendar-check"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-label">Релиз через</div>
+                        <div class="stat-value deadline">${daysLeft} д</div>
+                    </div>
                 </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon"><i data-lucide="shield-alert"></i></div>
-                <div class="stat-content">
-                    <div class="stat-label">Стабильность</div>
-                    <div class="stat-value">${data.stab}</div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i data-lucide="shield-alert"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-label">Стабильность</div>
+                        <div class="stat-value">${data.stab}</div>
+                    </div>
                 </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon"><i data-lucide="activity"></i></div>
-                <div class="stat-content">
-                    <div class="stat-label">Успеваемость</div>
-                    <div class="stat-value">${data.perf}</div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i data-lucide="activity"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-label">Успеваемость</div>
+                        <div class="stat-value">${data.perf}</div>
+                    </div>
                 </div>
-            </div>
-            <div class="stat-card" style="grid-column: 1 / -1;">
-                <div class="stat-icon"><i data-lucide="users-round"></i></div>
-                <div class="stat-content">
-                    <div class="stat-label" style="margin-bottom: 12px;">Вклад за сегодня</div>
-                    <div style="display: flex; gap: 30px;">
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <i data-lucide="user" style="width: 20px; height: 20px; color: #ef4444;"></i>
-                            <div>
-                                <div style="font-size: 12px; color: #888;">Yono</div>
-                                <div style="font-size: 20px; font-weight: 800; color: #ef4444;">${data.y}%</div>
+                <div class="stat-card" style="grid-column: 1 / -1;">
+                    <div class="stat-icon"><i data-lucide="users-round"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-label" style="margin-bottom: 12px;">Вклад за сегодня</div>
+                        <div style="display: flex; gap: 30px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <i data-lucide="user" style="width: 20px; height: 20px; color: #ef4444;"></i>
+                                <div>
+                                    <div style="font-size: 12px; color: #888;">Yono</div>
+                                    <div style="font-size: 20px; font-weight: 800; color: #ef4444;">${data.y}%</div>
+                                </div>
                             </div>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <i data-lucide="user" style="width: 20px; height: 20px; color: #3b82f6;"></i>
-                            <div>
-                                <div style="font-size: 12px; color: #888;">Turbik</div>
-                                <div style="font-size: 20px; font-weight: 800; color: #3b82f6;">${data.t}%</div>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <i data-lucide="user" style="width: 20px; height: 20px; color: #3b82f6;"></i>
+                                <div>
+                                    <div style="font-size: 12px; color: #888;">Turbik</div>
+                                    <div style="font-size: 20px; font-weight: 800; color: #3b82f6;">${data.t}%</div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        `;
-        
-        lucide.createIcons();
-    });
+            `;
+            
+            lucide.createIcons();
+        });
+    };
 
     window.updateProjectData = () => {
         if(window.currentUserRole !== 'Yono') {
@@ -2588,7 +2524,7 @@
 
 <!-- ВЕРСИЯ ПРИЛОЖЕНИЯ -->
 <div style="position: fixed; bottom: 0; right: 0; padding: 12px 16px; font-size: 10px; color: #666; background: rgba(0,0,0,0.3); border-radius: 8px 0 0 0; font-family: monospace; z-index: 100;">
-    version dev: 1.5
+    version dev: 1.7
 </div>
 
 </body>
