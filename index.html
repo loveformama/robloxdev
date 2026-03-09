@@ -718,7 +718,13 @@
     </div>
 
     <div id="tab-tasks" class="content">
-        <div id="taskList" class="task-grid"></div>
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border);">
+            <i data-lucide="filter" style="width: 24px; height: 24px; color: var(--accent);"></i>
+            <button class="nav-btn" id="task-filter-current" style="padding: 8px 16px; margin: 0; color: white;" onclick="switchTaskFilter('current'); playClickSound();"><i data-lucide="play-circle" style="width: 16px; height: 16px;"></i> Текущие</button>
+            <button class="nav-btn" id="task-filter-completed" style="padding: 8px 16px; margin: 0; color: #666;" onclick="switchTaskFilter('completed'); playClickSound();"><i data-lucide="check-circle-2" style="width: 16px; height: 16px;"></i> Выполненые</button>
+        </div>
+        <div id="taskListCurrent" class="task-grid"></div>
+        <div id="taskListCompleted" class="task-grid" style="display: none;"></div>
     </div>
 
     <div id="tab-notes" class="content">
@@ -1544,12 +1550,32 @@
     let lastTasksState = {};
     let completedTasksTimers = {};
     
+    let currentTaskFilter = 'current';
+    
+    window.switchTaskFilter = (filter) => {
+        currentTaskFilter = filter;
+        playClickSound();
+        
+        // Обновляем активную кнопку
+        document.getElementById('task-filter-current').style.color = filter === 'current' ? 'white' : '#666';
+        document.getElementById('task-filter-completed').style.color = filter === 'completed' ? 'white' : '#666';
+        
+        // Показываем/скрываем списки
+        document.getElementById('taskListCurrent').style.display = filter === 'current' ? 'grid' : 'none';
+        document.getElementById('taskListCompleted').style.display = filter === 'completed' ? 'grid' : 'none';
+        
+        refreshIcons();
+    };
+    
     const setupTaskListener = () => {
         if(tasksListener) tasksListener();
         
         tasksListener = onValue(ref(db, 'tasks'), (snapshot) => {
-            const list = document.getElementById('taskList');
-            list.innerHTML = '';
+            const currentList = document.getElementById('taskListCurrent');
+            const completedList = document.getElementById('taskListCompleted');
+            currentList.innerHTML = '';
+            completedList.innerHTML = '';
+            
             const currentTasks = snapshot.val() || {};
             
             snapshot.forEach(child => {
@@ -1599,15 +1625,21 @@
                     <span class="task-type">${t.type}</span>
                     ${assignedDisplay}
                     <div style="font-weight:600; margin-bottom:10px;">${t.text}</div>
-                    <div class="timer ${t.status === 'Выполнено' ? 'paused' : ''}" id="timer-${t.id}">00:00</div>
+                    <div class="timer ${t.status === 'Выполнено' ? 'paused' : ''}" id="timer-${t.id}" style="${t.status === 'Выполнено' ? 'text-decoration: line-through; opacity: 0.6;' : ''}">00:00</div>
                     <div class="task-actions">
                         ${canChangeStatus ? `<button class="icon-btn btn-green" title="Готово" onclick="handleTaskBtn('${t.id}', 'done'); playClickSound();"><i data-lucide="check"></i></button>` : ''}
-                        ${canChangeStatus ? `<button class="icon-btn btn-yellow" title="В работу" onclick="handleTaskBtn('${t.id}', 'doing'); playClickSound();"><i data-lucide="play"></i></button>` : ''}
+                        ${canChangeStatus && t.status !== 'Выполнено' ? `<button class="icon-btn btn-yellow" title="В работу" onclick="handleTaskBtn('${t.id}', 'doing'); playClickSound();"><i data-lucide="play"></i></button>` : ''}
                         ${canEditDelete ? `<button class="icon-btn" title="Редактировать" onclick="editTask('${t.id}'); playClickSound();"><i data-lucide="edit-2"></i></button>` : ''}
                         ${canEditDelete ? `<button class="icon-btn btn-red" title="Удалить" onclick="askDelete(event, 'tasks/${t.id}'); playClickSound();"><i data-lucide="trash-2"></i></button>` : ''}
                     </div>
                 `;
-                list.append(div);
+                
+                if(t.status === 'Выполнено') {
+                    completedList.append(div);
+                } else {
+                    currentList.append(div);
+                }
+                
                 startTimer(t.id, t.endTime, t.status);
             });
             lastTasksState = currentTasks;
@@ -2524,7 +2556,7 @@
 
 <!-- ВЕРСИЯ ПРИЛОЖЕНИЯ -->
 <div style="position: fixed; bottom: 0; right: 0; padding: 12px 16px; font-size: 10px; color: #666; background: rgba(0,0,0,0.3); border-radius: 8px 0 0 0; font-family: monospace; z-index: 100;">
-    version dev: 1.7
+    version dev: 2.0
 </div>
 
 </body>
