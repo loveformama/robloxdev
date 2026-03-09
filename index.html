@@ -2377,6 +2377,10 @@
     let workTimeIsRunningYono = false;
     let workTimeSecondsTurbik = 0;
     let workTimeSecondsYono = 0;
+    let workTimeStartTurbik = null;  // Время запуска таймера
+    let workTimeStartYono = null;    // Время запуска таймера
+    let displayUpdateTimerTurbik = null;  // Таймер для обновления UI
+    let displayUpdateTimerYono = null;    // Таймер для обновления UI
     
     const formatTime = (seconds) => {
         const hours = Math.floor(seconds / 3600);
@@ -2409,42 +2413,52 @@
             btn.style.borderColor = 'rgba(34, 197, 94, 0.4)';
             btn.innerHTML = '<i data-lucide="pause" style="width: 20px; height: 20px; color: #666;"></i>';
             
-            // Запускаем таймер
-            if(workTimeTimerTurbik) clearInterval(workTimeTimerTurbik);
-            workTimeTimerTurbik = setInterval(() => {
-                workTimeSecondsTurbik++;
-                updateWorkTimeDisplay('turbik');
-                
-                // Сохраняем в Firebase (каждые 10 секунд, не каждую секунду)
-                if(workTimeSecondsTurbik % 10 === 0) {
-                    set(ref(db, 'worktime/turbik'), {
-                        totalSeconds: workTimeSecondsTurbik,
-                        isRunning: true,
-                        updatedAt: Date.now()
-                    });
-                }
-            }, 1000);
-            
-            // Сохраняем состояние запуска один раз
+            // Сохраняем время запуска в Firebase
+            workTimeStartTurbik = Date.now();
             set(ref(db, 'worktime/turbik'), {
                 totalSeconds: workTimeSecondsTurbik,
                 isRunning: true,
+                startTime: workTimeStartTurbik,
                 updatedAt: Date.now()
             });
+            
+            // Локальный таймер для обновления UI каждую секунду
+            if(displayUpdateTimerTurbik) clearInterval(displayUpdateTimerTurbik);
+            displayUpdateTimerTurbik = setInterval(() => {
+                if(workTimeStartTurbik) {
+                    const elapsed = Math.floor((Date.now() - workTimeStartTurbik) / 1000);
+                    workTimeSecondsTurbik = parseInt(localStorage.getItem('turbikBaseSeconds') || '0') + elapsed;
+                    updateWorkTimeDisplay('turbik');
+                    
+                    // Сохраняем в Firebase каждые 30 секунд
+                    if(workTimeSecondsTurbik % 30 === 0) {
+                        set(ref(db, 'worktime/turbik'), {
+                            totalSeconds: workTimeSecondsTurbik,
+                            isRunning: true,
+                            startTime: workTimeStartTurbik,
+                            updatedAt: Date.now()
+                        });
+                    }
+                }
+            }, 1000);
         } else {
             // Pause - меняем на плей
             btn.style.background = 'rgba(168, 85, 247, 0.2)';
             btn.style.borderColor = 'rgba(168, 85, 247, 0.4)';
             btn.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #666;"></i>';
             
-            if(workTimeTimerTurbik) clearInterval(workTimeTimerTurbik);
+            if(displayUpdateTimerTurbik) clearInterval(displayUpdateTimerTurbik);
             
-            // Сохраняем состояние паузы
+            // Сохраняем финальное время
+            localStorage.setItem('turbikBaseSeconds', workTimeSecondsTurbik.toString());
             set(ref(db, 'worktime/turbik'), {
                 totalSeconds: workTimeSecondsTurbik,
                 isRunning: false,
+                startTime: null,
                 updatedAt: Date.now()
             });
+            
+            workTimeStartTurbik = null;
         }
         
         lucide.createIcons();
@@ -2467,96 +2481,166 @@
             btn.style.borderColor = 'rgba(34, 197, 94, 0.4)';
             btn.innerHTML = '<i data-lucide="pause" style="width: 20px; height: 20px; color: #666;"></i>';
             
-            // Запускаем таймер
-            if(workTimeTimerYono) clearInterval(workTimeTimerYono);
-            workTimeTimerYono = setInterval(() => {
-                workTimeSecondsYono++;
-                updateWorkTimeDisplay('yono');
-                
-                // Сохраняем в Firebase (каждые 10 секунд, не каждую секунду)
-                if(workTimeSecondsYono % 10 === 0) {
-                    set(ref(db, 'worktime/yono'), {
-                        totalSeconds: workTimeSecondsYono,
-                        isRunning: true,
-                        updatedAt: Date.now()
-                    });
-                }
-            }, 1000);
-            
-            // Сохраняем состояние запуска один раз
+            // Сохраняем время запуска в Firebase
+            workTimeStartYono = Date.now();
             set(ref(db, 'worktime/yono'), {
                 totalSeconds: workTimeSecondsYono,
                 isRunning: true,
+                startTime: workTimeStartYono,
                 updatedAt: Date.now()
             });
+            
+            // Локальный таймер для обновления UI каждую секунду
+            if(displayUpdateTimerYono) clearInterval(displayUpdateTimerYono);
+            displayUpdateTimerYono = setInterval(() => {
+                if(workTimeStartYono) {
+                    const elapsed = Math.floor((Date.now() - workTimeStartYono) / 1000);
+                    workTimeSecondsYono = parseInt(localStorage.getItem('yonoBaseSeconds') || '0') + elapsed;
+                    updateWorkTimeDisplay('yono');
+                    
+                    // Сохраняем в Firebase каждые 30 секунд
+                    if(workTimeSecondsYono % 30 === 0) {
+                        set(ref(db, 'worktime/yono'), {
+                            totalSeconds: workTimeSecondsYono,
+                            isRunning: true,
+                            startTime: workTimeStartYono,
+                            updatedAt: Date.now()
+                        });
+                    }
+                }
+            }, 1000);
         } else {
             // Pause - меняем на плей
             btn.style.background = 'rgba(168, 85, 247, 0.2)';
             btn.style.borderColor = 'rgba(168, 85, 247, 0.4)';
             btn.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #666;"></i>';
             
-            if(workTimeTimerYono) clearInterval(workTimeTimerYono);
+            if(displayUpdateTimerYono) clearInterval(displayUpdateTimerYono);
             
-            // Сохраняем состояние паузы
+            // Сохраняем финальное время
+            localStorage.setItem('yonoBaseSeconds', workTimeSecondsYono.toString());
             set(ref(db, 'worktime/yono'), {
                 totalSeconds: workTimeSecondsYono,
                 isRunning: false,
+                startTime: null,
                 updatedAt: Date.now()
             });
+            
+            workTimeStartYono = null;
         }
         
         lucide.createIcons();
     };
     
     const setupWorkTimeListeners = () => {
-        // Слушаем время работы Turbik (только загружаем если не работает таймер)
+        // Слушаем время работы Turbik
         if(workTimeListenerTurbik) workTimeListenerTurbik();
         workTimeListenerTurbik = onValue(ref(db, 'worktime/turbik'), (snapshot) => {
             const data = snapshot.val();
-            if(data && !workTimeIsRunningTurbik) {
-                // Обновляем только если таймер не работает
+            if(data) {
                 workTimeSecondsTurbik = data.totalSeconds || 0;
-                updateWorkTimeDisplay('turbik');
+                localStorage.setItem('turbikBaseSeconds', workTimeSecondsTurbik.toString());
                 
-                const btn = document.getElementById('pausePlayBtnTurbik');
-                if(btn) {
-                    const isRunning = data.isRunning || false;
-                    if(isRunning) {
+                const isRunning = data.isRunning || false;
+                
+                // Если таймер запущен в Firebase, но у нас он не запущен локально, восстановим его
+                if(isRunning && !workTimeIsRunningTurbik && data.startTime) {
+                    workTimeIsRunningTurbik = true;
+                    workTimeStartTurbik = data.startTime;
+                    const btn = document.getElementById('pausePlayBtnTurbik');
+                    if(btn) {
                         btn.style.background = 'rgba(34, 197, 94, 0.2)';
                         btn.style.borderColor = 'rgba(34, 197, 94, 0.4)';
                         btn.innerHTML = '<i data-lucide="pause" style="width: 20px; height: 20px; color: #666;"></i>';
-                    } else {
+                        lucide.createIcons();
+                    }
+                    
+                    // Запустим локальный UI таймер
+                    if(displayUpdateTimerTurbik) clearInterval(displayUpdateTimerTurbik);
+                    displayUpdateTimerTurbik = setInterval(() => {
+                        if(workTimeStartTurbik) {
+                            const elapsed = Math.floor((Date.now() - workTimeStartTurbik) / 1000);
+                            workTimeSecondsTurbik = parseInt(localStorage.getItem('turbikBaseSeconds') || '0') + elapsed;
+                            updateWorkTimeDisplay('turbik');
+                        }
+                    }, 1000);
+                } else if(!isRunning && workTimeIsRunningTurbik) {
+                    // Таймер был остановлен снаружи
+                    workTimeIsRunningTurbik = false;
+                    if(displayUpdateTimerTurbik) clearInterval(displayUpdateTimerTurbik);
+                    const btn = document.getElementById('pausePlayBtnTurbik');
+                    if(btn) {
                         btn.style.background = 'rgba(168, 85, 247, 0.2)';
                         btn.style.borderColor = 'rgba(168, 85, 247, 0.4)';
                         btn.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #666;"></i>';
+                        lucide.createIcons();
                     }
-                    lucide.createIcons();
+                    workTimeStartTurbik = null;
+                } else if(!isRunning) {
+                    updateWorkTimeDisplay('turbik');
+                    const btn = document.getElementById('pausePlayBtnTurbik');
+                    if(btn) {
+                        btn.style.background = 'rgba(168, 85, 247, 0.2)';
+                        btn.style.borderColor = 'rgba(168, 85, 247, 0.4)';
+                        btn.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #666;"></i>';
+                        lucide.createIcons();
+                    }
                 }
             }
         });
         
-        // Слушаем время работы Yono (только загружаем если не работает таймер)
+        // Слушаем время работы Yono
         if(workTimeListenerYono) workTimeListenerYono();
         workTimeListenerYono = onValue(ref(db, 'worktime/yono'), (snapshot) => {
             const data = snapshot.val();
-            if(data && !workTimeIsRunningYono) {
-                // Обновляем только если таймер не работает
+            if(data) {
                 workTimeSecondsYono = data.totalSeconds || 0;
-                updateWorkTimeDisplay('yono');
+                localStorage.setItem('yonoBaseSeconds', workTimeSecondsYono.toString());
                 
-                const btn = document.getElementById('pausePlayBtnYono');
-                if(btn) {
-                    const isRunning = data.isRunning || false;
-                    if(isRunning) {
+                const isRunning = data.isRunning || false;
+                
+                // Если таймер запущен в Firebase, но у нас он не запущен локально, восстановим его
+                if(isRunning && !workTimeIsRunningYono && data.startTime) {
+                    workTimeIsRunningYono = true;
+                    workTimeStartYono = data.startTime;
+                    const btn = document.getElementById('pausePlayBtnYono');
+                    if(btn) {
                         btn.style.background = 'rgba(34, 197, 94, 0.2)';
                         btn.style.borderColor = 'rgba(34, 197, 94, 0.4)';
                         btn.innerHTML = '<i data-lucide="pause" style="width: 20px; height: 20px; color: #666;"></i>';
-                    } else {
+                        lucide.createIcons();
+                    }
+                    
+                    // Запустим локальный UI таймер
+                    if(displayUpdateTimerYono) clearInterval(displayUpdateTimerYono);
+                    displayUpdateTimerYono = setInterval(() => {
+                        if(workTimeStartYono) {
+                            const elapsed = Math.floor((Date.now() - workTimeStartYono) / 1000);
+                            workTimeSecondsYono = parseInt(localStorage.getItem('yonoBaseSeconds') || '0') + elapsed;
+                            updateWorkTimeDisplay('yono');
+                        }
+                    }, 1000);
+                } else if(!isRunning && workTimeIsRunningYono) {
+                    // Таймер был остановлен снаружи
+                    workTimeIsRunningYono = false;
+                    if(displayUpdateTimerYono) clearInterval(displayUpdateTimerYono);
+                    const btn = document.getElementById('pausePlayBtnYono');
+                    if(btn) {
                         btn.style.background = 'rgba(168, 85, 247, 0.2)';
                         btn.style.borderColor = 'rgba(168, 85, 247, 0.4)';
                         btn.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #666;"></i>';
+                        lucide.createIcons();
                     }
-                    lucide.createIcons();
+                    workTimeStartYono = null;
+                } else if(!isRunning) {
+                    updateWorkTimeDisplay('yono');
+                    const btn = document.getElementById('pausePlayBtnYono');
+                    if(btn) {
+                        btn.style.background = 'rgba(168, 85, 247, 0.2)';
+                        btn.style.borderColor = 'rgba(168, 85, 247, 0.4)';
+                        btn.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #666;"></i>';
+                        lucide.createIcons();
+                    }
                 }
             }
         });
@@ -2715,7 +2799,7 @@
 
 <!-- ВЕРСИЯ ПРИЛОЖЕНИЯ -->
 <div style="position: fixed; bottom: 0; right: 0; padding: 12px 16px; font-size: 10px; color: #666; background: rgba(0,0,0,0.3); border-radius: 8px 0 0 0; font-family: monospace; z-index: 100;">
-    version dev: 1.5
+    version dev: 10.0
 </div>
 
 </body>
