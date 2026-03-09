@@ -1371,7 +1371,8 @@
     };
     
     const updateStatsDisplay = () => {
-        onValue(ref(db, 'projectStats'), (snapshot) => {
+        // Используем get() для одноразового чтения вместо onValue чтобы избежать множественных слушателей
+        get(ref(db, 'projectStats')).then((snapshot) => {
             const data = snapshot.val() || { days: 0, stab: '?', perf: '?', t: 0, y: 0 };
             const daysLeft = data.releaseTimestamp ? Math.max(0, Math.ceil((data.releaseTimestamp - Date.now()) / 86400000)) : data.days;
             const total = Math.min(100, Math.round((parseInt(data.t) + parseInt(data.y)) / 2));
@@ -1382,7 +1383,7 @@
             let completedTurbik = 0;
             let completedYono = 0;
             
-            onValue(ref(db, 'tasks'), (tasksSnapshot) => {
+            get(ref(db, 'tasks')).then((tasksSnapshot) => {
                 const today = new Date().toDateString();
                 tasksSnapshot.forEach(child => {
                     const task = child.val();
@@ -1421,55 +1422,55 @@
                     contributionYono = Math.round(contributionYono * (100 / totalContribution));
                 }
                 
-                document.getElementById('statsGrid').innerHTML = `
-                    <div class="stat-card">
-                        <div class="stat-icon"><i data-lucide="calendar-check"></i></div>
-                        <div class="stat-content">
-                            <div class="stat-label">Релиз через</div>
-                            <div class="stat-value deadline">${daysLeft} д</div>
+                    document.getElementById('statsGrid').innerHTML = `
+                        <div class="stat-card">
+                            <div class="stat-icon"><i data-lucide="calendar-check" style="color: #666;"></i></div>
+                            <div class="stat-content">
+                                <div class="stat-label">Релиз через</div>
+                                <div class="stat-value deadline">${daysLeft} д</div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon"><i data-lucide="shield-alert"></i></div>
-                        <div class="stat-content">
-                            <div class="stat-label">Стабильность</div>
-                            <div class="stat-value">${data.stab}</div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i data-lucide="shield-alert" style="color: #666;"></i></div>
+                            <div class="stat-content">
+                                <div class="stat-label">Стабильность</div>
+                                <div class="stat-value">${data.stab}</div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon"><i data-lucide="activity"></i></div>
-                        <div class="stat-content">
-                            <div class="stat-label">Успеваемость</div>
-                            <div class="stat-value">${data.perf}</div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i data-lucide="activity" style="color: #666;"></i></div>
+                            <div class="stat-content">
+                                <div class="stat-label">Успеваемость</div>
+                                <div class="stat-value">${data.perf}</div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="stat-card" style="grid-column: 1 / -1;">
-                        <div class="stat-icon"><i data-lucide="users-round"></i></div>
-                        <div class="stat-content">
-                            <div class="stat-label" style="margin-bottom: 12px;">Вклад за сегодня</div>
-                            <div style="display: flex; gap: 30px;">
-                                <div style="display: flex; align-items: center; gap: 12px;">
-                                    <i data-lucide="user" style="width: 20px; height: 20px; color: #ef4444;"></i>
-                                    <div>
-                                        <div style="font-size: 12px; color: #888;">Yono</div>
-                                        <div style="font-size: 20px; font-weight: 800; color: #ef4444;">${contributionYono}%</div>
+                        <div class="stat-card" style="grid-column: 1 / -1;">
+                            <div class="stat-icon"><i data-lucide="users-round" style="color: #666;"></i></div>
+                            <div class="stat-content">
+                                <div class="stat-label" style="margin-bottom: 12px;">Вклад за сегодня</div>
+                                <div style="display: flex; gap: 30px;">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <i data-lucide="user" style="width: 20px; height: 20px; color: #999;"></i>
+                                        <div>
+                                            <div style="font-size: 12px; color: #888;">Yono</div>
+                                            <div style="font-size: 20px; font-weight: 800; color: #aaa;">${contributionYono}%</div>
+                                        </div>
                                     </div>
-                                </div>
-                                <div style="display: flex; align-items: center; gap: 12px;">
-                                    <i data-lucide="user" style="width: 20px; height: 20px; color: #3b82f6;"></i>
-                                    <div>
-                                        <div style="font-size: 12px; color: #888;">Turbik</div>
-                                        <div style="font-size: 20px; font-weight: 800; color: #3b82f6;">${contributionTurbik}%</div>
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <i data-lucide="user" style="width: 20px; height: 20px; color: #999;"></i>
+                                        <div>
+                                            <div style="font-size: 12px; color: #888;">Turbik</div>
+                                            <div style="font-size: 20px; font-weight: 800; color: #aaa;">${contributionTurbik}%</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                `;
-                
-                lucide.createIcons();
-            });
-        });
+                    `;
+                    
+                    lucide.createIcons();
+                }).catch(err => console.error('Ошибка чтения tasks:', err));
+        }).catch(err => console.error('Ошибка чтения projectStats:', err));
     };
 
     window.updateProjectData = () => {
@@ -2370,12 +2371,18 @@
     
     // Функция для управления таймером Turbik
     window.toggleWorkTimerTurbik = () => {
+        // Только Turbik может управлять своим таймером
+        if(window.currentUserEmail !== 'seniorturbik@gmail.com') {
+            alert('Только Turbik может управлять своим таймером');
+            return;
+        }
+        
         workTimeIsRunningTurbik = !workTimeIsRunningTurbik;
         const btn = document.getElementById('pausePlayBtnTurbik');
         const icon = btn.querySelector('i');
         
         if(workTimeIsRunningTurbik) {
-            // Play
+            // Play -> Pause
             btn.style.background = 'rgba(34, 197, 94, 0.2)';
             btn.style.borderColor = 'rgba(34, 197, 94, 0.4)';
             icon.setAttribute('data-lucide', 'pause');
@@ -2414,12 +2421,18 @@
     
     // Функция для управления таймером Yono
     window.toggleWorkTimerYono = () => {
+        // Только Yono может управлять своим таймером
+        if(window.currentUserEmail !== 'glebushkameet@gmail.com') {
+            alert('Только Yono может управлять своим таймером');
+            return;
+        }
+        
         workTimeIsRunningYono = !workTimeIsRunningYono;
         const btn = document.getElementById('pausePlayBtnYono');
         const icon = btn.querySelector('i');
         
         if(workTimeIsRunningYono) {
-            // Play
+            // Play -> Pause
             btn.style.background = 'rgba(34, 197, 94, 0.2)';
             btn.style.borderColor = 'rgba(34, 197, 94, 0.4)';
             icon.setAttribute('data-lucide', 'pause');
@@ -2481,6 +2494,18 @@
                     }
                     lucide.createIcons();
                 }
+            } else {
+                // Инициализируем если данных еще нет
+                workTimeSecondsTurbik = 0;
+                workTimeIsRunningTurbik = false;
+                const btn = document.getElementById('pausePlayBtnTurbik');
+                if(btn) {
+                    const icon = btn.querySelector('i');
+                    icon.setAttribute('data-lucide', 'play');
+                    btn.style.background = 'rgba(168, 85, 247, 0.2)';
+                    btn.style.borderColor = 'rgba(168, 85, 247, 0.4)';
+                    lucide.createIcons();
+                }
             }
         });
         
@@ -2506,6 +2531,18 @@
                         btn.style.borderColor = 'rgba(168, 85, 247, 0.4)';
                         icon.setAttribute('data-lucide', 'play');
                     }
+                    lucide.createIcons();
+                }
+            } else {
+                // Инициализируем если данных еще нет
+                workTimeSecondsYono = 0;
+                workTimeIsRunningYono = false;
+                const btn = document.getElementById('pausePlayBtnYono');
+                if(btn) {
+                    const icon = btn.querySelector('i');
+                    icon.setAttribute('data-lucide', 'play');
+                    btn.style.background = 'rgba(168, 85, 247, 0.2)';
+                    btn.style.borderColor = 'rgba(168, 85, 247, 0.4)';
                     lucide.createIcons();
                 }
             }
@@ -2663,7 +2700,7 @@
 
 <!-- ВЕРСИЯ ПРИЛОЖЕНИЯ -->
 <div style="position: fixed; bottom: 0; right: 0; padding: 12px 16px; font-size: 10px; color: #666; background: rgba(0,0,0,0.3); border-radius: 8px 0 0 0; font-family: monospace; z-index: 100;">
-    version dev: 1.9
+    version dev: 1.5
 </div>
 
 </body>
