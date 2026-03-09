@@ -825,17 +825,32 @@
         </div>
         <div style="margin-top: 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
             <div class="stat-card" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2);">
-                <i data-lucide="clock" style="width: 32px; height: 32px; color: #3b82f6;"></i>
-                <div>
-                    <div style="font-size: 12px; color: #888; text-transform: uppercase; font-weight: 600;">Время работы Turbik</div>
-                    <div id="workTimeTurbik" style="font-size: 26px; font-weight: 800; color: #3b82f6; margin-top: 8px;">0ч 0м</div>
+                <i data-lucide="check-circle-2" style="width: 32px; height: 32px; color: #3b82f6;"></i>
+                <div style="flex: 1;">
+                    <div style="font-size: 12px; color: #888; text-transform: uppercase; font-weight: 600;">Выполнено заданий</div>
+                    <div style="display: flex; gap: 16px; margin-top: 12px; align-items: center;">
+                        <div>
+                            <div style="font-size: 12px; color: #888; margin-bottom: 4px;">Turbik</div>
+                            <div id="completedTasksTurbik" style="font-size: 24px; font-weight: 800; color: #3b82f6;">0</div>
+                        </div>
+                        <div style="color: #444;">|</div>
+                        <div>
+                            <div style="font-size: 12px; color: #888; margin-bottom: 4px;">Yono</div>
+                            <div id="completedTasksYono" style="font-size: 24px; font-weight: 800; color: #ef4444;">0</div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="stat-card" style="background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.2);">
-                <i data-lucide="clock" style="width: 32px; height: 32px; color: #a855f7;"></i>
+                <i data-lucide="timer" style="width: 32px; height: 32px; color: #a855f7;"></i>
                 <div>
-                    <div style="font-size: 12px; color: #888; text-transform: uppercase; font-weight: 600;">Время работы Yono</div>
-                    <div id="workTimeYono" style="font-size: 26px; font-weight: 800; color: #a855f7; margin-top: 8px;">0ч 0м</div>
+                    <div style="font-size: 12px; color: #888; text-transform: uppercase; font-weight: 600;">Время работы</div>
+                    <div style="display: flex; align-items: center; gap: 10px; margin-top: 12px;">
+                        <div id="workTimeDisplay" style="font-size: 24px; font-weight: 800; color: #a855f7; font-family: monospace;">0ч 0м</div>
+                        <button id="pausePlayBtn" class="icon-btn" style="width: 36px; height: 36px; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(168, 85, 247, 0.4);" onclick="toggleWorkTimer(); playClickSound();" title="Play/Pause">
+                            <i data-lucide="play" style="width: 18px; height: 18px; color: #a855f7;"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -854,7 +869,80 @@
     <div style="display:flex; border-bottom: 1px solid #222; margin-bottom: 20px;">
         <button onclick="setAdminTab('stats'); playClickSound();" id="btn-adm-stats" style="flex:1; padding:10px; background:none; border:none; color:white; cursor:pointer;">Статы</button>
         <button onclick="setAdminTab('task'); playClickSound();" id="btn-adm-task" style="flex:1; padding:10px; background:none; border:none; color:#555; cursor:pointer;">Новая задача</button>
+        <button onclick="setAdminTab('time'); playClickSound();" id="btn-adm-time" style="flex:1; padding:10px; background:none; border:none; color:#555; cursor:pointer;">Время</button>
     </div>
+    <div id="adm-stats-form">
+        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Дней до релиза</label>
+        <input type="number" id="adm-days" class="search-bar" style="margin-bottom:15px" placeholder="10">
+        
+        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Стабильность проекта</label>
+        <select id="adm-stab" class="search-bar" style="margin-bottom:15px; background:#111;">
+            <option value="Низкая">Низкая</option>
+            <option value="Средняя">Средняя</option>
+            <option value="Высокая">Высокая</option>
+        </select>
+        
+        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Успеваемость</label>
+        <select id="adm-perf" class="search-bar" style="margin-bottom:15px; background:#111;">
+            <option value="Плохая">Плохая</option>
+            <option value="Средняя">Средняя</option>
+            <option value="Отличная">Отличная</option>
+        </select>
+        
+        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Прогресс Turbik</label>
+        <input type="number" id="adm-t" class="search-bar" style="margin-bottom:15px" placeholder="50" min="0" max="100">
+        
+        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Прогресс Yono</label>
+        <input type="number" id="adm-y" class="search-bar" style="margin-bottom:20px" placeholder="50" min="0" max="100">
+        
+        <button onclick="updateProjectData(); playClickSound();" class="icon-btn" style="width:100%; height:50px; background:var(--accent); color:white;">Обновить</button>
+    </div>
+    <div id="adm-task-form" style="display:none">
+        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Описание задачи</label>
+        <textarea id="taskText" class="search-bar" rows="3" placeholder="Описание..." style="margin-bottom:15px"></textarea>
+        
+        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Сложность</label>
+        <select id="taskType" class="search-bar" style="margin-bottom:15px; background:#111;">
+            <option value="Легкое">Легкое</option>
+            <option value="Среднее">Среднее</option>
+            <option value="Сложное">Сложное</option>
+        </select>
+        
+        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Время на задачу</label>
+        <div style="display:flex; gap:10px; margin-bottom:15px;">
+            <div style="flex:1;">
+                <input type="number" id="taskHoursInput" class="search-bar" placeholder="Часы" min="0" style="margin-bottom:0">
+            </div>
+            <div style="flex:1;">
+                <input type="number" id="taskMinutesInput" class="search-bar" placeholder="Минуты" min="0" max="59" style="margin-bottom:0">
+            </div>
+        </div>
+        
+        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Назначить</label>
+        <select id="taskAssignTo" class="search-bar" style="margin-bottom:20px; background:#111;">
+            <option value="both">Обоим (Turbik, Yono)</option>
+            <option value="turbik">Turbik</option>
+            <option value="yono">Yono</option>
+        </select>
+        
+        <button onclick="createTask(); playClickSound();" class="icon-btn" style="width:100%; height:50px; background:var(--success); color:white;">Создать задачу</button>
+    </div>
+    <div id="adm-time-form" style="display:none">
+        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Редактировать время работы</label>
+        <div style="display:flex; gap:10px; margin-bottom:15px;">
+            <div style="flex:1;">
+                <label style="font-size:10px; color:#888; display:block; margin-bottom:5px;">Часы</label>
+                <input type="number" id="editTimeHours" class="search-bar" value="0" min="0" style="margin-bottom:0">
+            </div>
+            <div style="flex:1;">
+                <label style="font-size:10px; color:#888; display:block; margin-bottom:5px;">Минуты</label>
+                <input type="number" id="editTimeMinutes" class="search-bar" value="0" min="0" max="59" style="margin-bottom:0">
+            </div>
+        </div>
+        <button onclick="setWorkTime(); playClickSound();" class="icon-btn" style="width:100%; height:50px; background:var(--accent); color:white; margin-bottom:10px;">Установить время</button>
+        <button onclick="resetWorkTime(); playClickSound();" class="icon-btn" style="width:100%; height:50px; background:var(--danger); color:white;">Сброс времени</button>
+    </div>
+</div>
     <div id="adm-stats-form">
         <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Дней до релиза</label>
         <input type="number" id="adm-days" class="search-bar" style="margin-bottom:15px" placeholder="10">
@@ -1228,9 +1316,80 @@
     window.setAdminTab = (type) => {
         document.getElementById('adm-stats-form').style.display = type === 'stats' ? 'block' : 'none';
         document.getElementById('adm-task-form').style.display = type === 'task' ? 'block' : 'none';
+        document.getElementById('adm-time-form').style.display = type === 'time' ? 'block' : 'none';
         document.getElementById('btn-adm-stats').style.color = type === 'stats' ? 'white' : '#555';
         document.getElementById('btn-adm-task').style.color = type === 'task' ? 'white' : '#555';
+        document.getElementById('btn-adm-time').style.color = type === 'time' ? 'white' : '#555';
         if(type === 'stats') prefillStats();
+        if(type === 'time') prefillTime();
+    };
+    
+    const prefillTime = () => {
+        onValue(ref(db, 'worktime/current'), (snapshot) => {
+            const data = snapshot.val();
+            if(data && data.totalSeconds) {
+                const hours = Math.floor(data.totalSeconds / 3600);
+                const minutes = Math.floor((data.totalSeconds % 3600) / 60);
+                document.getElementById('editTimeHours').value = hours;
+                document.getElementById('editTimeMinutes').value = minutes;
+            }
+        }, { onlyOnce: true });
+    };
+    
+    window.setWorkTime = () => {
+        if(window.currentUserRole !== 'Yono') {
+            alert('Только Yono может редактировать время');
+            return;
+        }
+        
+        const hours = parseInt(document.getElementById('editTimeHours').value) || 0;
+        const minutes = parseInt(document.getElementById('editTimeMinutes').value) || 0;
+        const totalSeconds = hours * 3600 + minutes * 60;
+        
+        playClickSound();
+        workTimeSeconds = totalSeconds;
+        updateWorkTimeDisplay();
+        
+        set(ref(db, 'worktime/current'), {
+            totalSeconds: totalSeconds,
+            isRunning: false,
+            updatedAt: Date.now()
+        });
+        
+        closeAdmin();
+    };
+    
+    window.resetWorkTime = () => {
+        if(window.currentUserRole !== 'Yono') {
+            alert('Только Yono может редактировать время');
+            return;
+        }
+        
+        if(confirm('Вы уверены? Время будет сброшено на 0.')) {
+            playClickSound();
+            workTimeSeconds = 0;
+            workTimeIsRunning = false;
+            updateWorkTimeDisplay();
+            
+            if(workTimeTimer) clearInterval(workTimeTimer);
+            
+            const btn = document.getElementById('pausePlayBtn');
+            if(btn) {
+                btn.style.background = 'rgba(168, 85, 247, 0.2)';
+                btn.style.borderColor = 'rgba(168, 85, 247, 0.4)';
+                const icon = btn.querySelector('i');
+                icon.setAttribute('data-lucide', 'play');
+                lucide.createIcons();
+            }
+            
+            set(ref(db, 'worktime/current'), {
+                totalSeconds: 0,
+                isRunning: false,
+                updatedAt: Date.now()
+            });
+            
+            closeAdmin();
+        }
     };
 
     const prefillStats = () => {
@@ -1254,81 +1413,91 @@
         document.getElementById('totalProgressBar').style.width = total + '%';
         document.getElementById('totalProgressText').innerText = total + '%';
         
-        // Считаем общее время работы сегодня
-        let totalTimeToday = 0;
+        // Считаем количество выполненных заданий сегодня
+        let completedTurbik = 0;
+        let completedYono = 0;
+        
         onValue(ref(db, 'tasks'), (tasksSnapshot) => {
             const today = new Date().toDateString();
             tasksSnapshot.forEach(child => {
                 const task = child.val();
                 if(task.status === 'Выполнено' && task.completedAt) {
                     const completedDate = new Date(task.completedAt).toDateString();
-                    if(completedDate === today && task.endTime) {
-                        // Берём время которое было отведено на задачу
-                        const timeSpent = task.endTime - (task.createdAt || 0);
-                        totalTimeToday += Math.max(0, timeSpent);
+                    if(completedDate === today) {
+                        // Если задача была назначена двоим, обоим добавляем очко
+                        if(task.assignedTo === 'turbik') {
+                            completedTurbik++;
+                        } else if(task.assignedTo === 'yono') {
+                            completedYono++;
+                        } else if(task.assignedTo === 'both') {
+                            completedTurbik++;
+                            completedYono++;
+                        }
+                        
+                        // Если есть информация о том, кто отметил как выполнено
+                        if(task.completedBy) {
+                            // Аннулируем и пересчитываем согласно кто отметил
+                            if(task.assignedTo === 'both') {
+                                // Если двоим - оба получают
+                                completedTurbik++;
+                                completedYono++;
+                            }
+                        }
                     }
                 }
             });
             
-            const hoursToday = Math.floor(totalTimeToday / 3600000);
-            const minutesToday = Math.floor((totalTimeToday % 3600000) / 60000);
-            const timeStr = hoursToday > 0 ? `${hoursToday}ч ${minutesToday}м` : `${minutesToday}м`;
-            
-            document.getElementById('statsGrid').innerHTML = `
-                <div class="stat-card">
-                    <div class="stat-icon"><i data-lucide="calendar-check"></i></div>
-                    <div class="stat-content">
-                        <div class="stat-label">Релиз через</div>
-                        <div class="stat-value deadline">${daysLeft} д</div>
-                    </div>
+            document.getElementById('completedTasksTurbik').textContent = completedTurbik;
+            document.getElementById('completedTasksYono').textContent = completedYono;
+        });
+        
+        document.getElementById('statsGrid').innerHTML = `
+            <div class="stat-card">
+                <div class="stat-icon"><i data-lucide="calendar-check"></i></div>
+                <div class="stat-content">
+                    <div class="stat-label">Релиз через</div>
+                    <div class="stat-value deadline">${daysLeft} д</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i data-lucide="shield-alert"></i></div>
-                    <div class="stat-content">
-                        <div class="stat-label">Стабильность</div>
-                        <div class="stat-value">${data.stab}</div>
-                    </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i data-lucide="shield-alert"></i></div>
+                <div class="stat-content">
+                    <div class="stat-label">Стабильность</div>
+                    <div class="stat-value">${data.stab}</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i data-lucide="activity"></i></div>
-                    <div class="stat-content">
-                        <div class="stat-label">Успеваемость</div>
-                        <div class="stat-value">${data.perf}</div>
-                    </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i data-lucide="activity"></i></div>
+                <div class="stat-content">
+                    <div class="stat-label">Успеваемость</div>
+                    <div class="stat-value">${data.perf}</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i data-lucide="hourglass"></i></div>
-                    <div class="stat-content">
-                        <div class="stat-label">Время сегодня</div>
-                        <div class="stat-value">${timeStr}</div>
-                    </div>
-                </div>
-                <div class="stat-card" style="grid-column: 1 / -1;">
-                    <div class="stat-icon"><i data-lucide="users-round"></i></div>
-                    <div class="stat-content">
-                        <div class="stat-label" style="margin-bottom: 12px;">Вклад за сегодня</div>
-                        <div style="display: flex; gap: 30px;">
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <i data-lucide="user" style="width: 20px; height: 20px; color: #ef4444;"></i>
-                                <div>
-                                    <div style="font-size: 12px; color: #888;">Yono</div>
-                                    <div style="font-size: 20px; font-weight: 800; color: #ef4444;">${data.y}%</div>
-                                </div>
+            </div>
+            <div class="stat-card" style="grid-column: 1 / -1;">
+                <div class="stat-icon"><i data-lucide="users-round"></i></div>
+                <div class="stat-content">
+                    <div class="stat-label" style="margin-bottom: 12px;">Вклад за сегодня</div>
+                    <div style="display: flex; gap: 30px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <i data-lucide="user" style="width: 20px; height: 20px; color: #ef4444;"></i>
+                            <div>
+                                <div style="font-size: 12px; color: #888;">Yono</div>
+                                <div style="font-size: 20px; font-weight: 800; color: #ef4444;">${data.y}%</div>
                             </div>
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <i data-lucide="user" style="width: 20px; height: 20px; color: #3b82f6;"></i>
-                                <div>
-                                    <div style="font-size: 12px; color: #888;">Turbik</div>
-                                    <div style="font-size: 20px; font-weight: 800; color: #3b82f6;">${data.t}%</div>
-                                </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <i data-lucide="user" style="width: 20px; height: 20px; color: #3b82f6;"></i>
+                            <div>
+                                <div style="font-size: 12px; color: #888;">Turbik</div>
+                                <div style="font-size: 20px; font-weight: 800; color: #3b82f6;">${data.t}%</div>
                             </div>
                         </div>
                     </div>
                 </div>
-            `;
-            
-            lucide.createIcons();
-        });
+            </div>
+        `;
+        
+        lucide.createIcons();
     });
 
     window.updateProjectData = () => {
@@ -1608,6 +1777,7 @@
                 const updates = { status: newStatus };
                 if(newStatus === 'Выполнено') {
                     updates.completedAt = Date.now();
+                    updates.completedBy = window.currentUserEmail; // Записываем кто отметил как выполнено
                 }
                 update(ref(db, `tasks/${id}`), updates);
             } else if(action === 'doing') {
@@ -2177,24 +2347,93 @@
     };
 
     let workTimeListenerTurbik, workTimeListenerYono;
+    let workTimeTimer = null;
+    let workTimeIsRunning = false;
+    let workTimeSeconds = 0;
+    
+    const formatTime = (seconds) => {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        return `${hours}ч ${minutes}м`;
+    };
+    
+    const updateWorkTimeDisplay = () => {
+        document.getElementById('workTimeDisplay').textContent = formatTime(workTimeSeconds);
+    };
+    
+    window.toggleWorkTimer = () => {
+        if(window.currentUserRole !== 'Yono') {
+            alert('Только Yono может управлять временем работы');
+            return;
+        }
+        
+        workTimeIsRunning = !workTimeIsRunning;
+        const btn = document.getElementById('pausePlayBtn');
+        const icon = btn.querySelector('i');
+        
+        if(workTimeIsRunning) {
+            // Play
+            btn.style.background = 'rgba(34, 197, 94, 0.2)';
+            btn.style.borderColor = 'rgba(34, 197, 94, 0.4)';
+            icon.setAttribute('data-lucide', 'pause');
+            
+            // Запускаем таймер
+            if(workTimeTimer) clearInterval(workTimeTimer);
+            workTimeTimer = setInterval(() => {
+                workTimeSeconds++;
+                updateWorkTimeDisplay();
+                
+                // Сохраняем в Firebase
+                set(ref(db, 'worktime/current'), {
+                    totalSeconds: workTimeSeconds,
+                    isRunning: true,
+                    updatedAt: Date.now()
+                });
+            }, 1000);
+        } else {
+            // Pause
+            btn.style.background = 'rgba(168, 85, 247, 0.2)';
+            btn.style.borderColor = 'rgba(168, 85, 247, 0.4)';
+            icon.setAttribute('data-lucide', 'play');
+            
+            if(workTimeTimer) clearInterval(workTimeTimer);
+            
+            // Сохраняем состояние паузы
+            set(ref(db, 'worktime/current'), {
+                totalSeconds: workTimeSeconds,
+                isRunning: false,
+                updatedAt: Date.now()
+            });
+        }
+        
+        lucide.createIcons();
+    };
     
     const setupWorkTimeListeners = () => {
-        const formatTime = (seconds) => {
-            const hours = Math.floor(seconds / 3600);
-            const minutes = Math.floor((seconds % 3600) / 60);
-            return `${hours}ч ${minutes}м`;
-        };
-        
-        workTimeListenerTurbik = onValue(ref(db, `worktime/turbik`), (snapshot) => {
+        // Слушаем общее время работы
+        onValue(ref(db, 'worktime/current'), (snapshot) => {
             const data = snapshot.val();
-            const seconds = (data && data.totalSeconds) ? data.totalSeconds : 0;
-            document.getElementById('workTimeTurbik').textContent = formatTime(seconds);
-        });
-        
-        workTimeListenerYono = onValue(ref(db, `worktime/yono`), (snapshot) => {
-            const data = snapshot.val();
-            const seconds = (data && data.totalSeconds) ? data.totalSeconds : 0;
-            document.getElementById('workTimeYono').textContent = formatTime(seconds);
+            if(data) {
+                workTimeSeconds = data.totalSeconds || 0;
+                workTimeIsRunning = data.isRunning || false;
+                updateWorkTimeDisplay();
+                
+                // Обновляем кнопку в зависимости от статуса
+                const btn = document.getElementById('pausePlayBtn');
+                if(btn && window.currentUserRole === 'Yono') {
+                    const icon = btn.querySelector('i');
+                    if(workTimeIsRunning) {
+                        btn.style.background = 'rgba(34, 197, 94, 0.2)';
+                        btn.style.borderColor = 'rgba(34, 197, 94, 0.4)';
+                        icon.setAttribute('data-lucide', 'pause');
+                    } else {
+                        btn.style.background = 'rgba(168, 85, 247, 0.2)';
+                        btn.style.borderColor = 'rgba(168, 85, 247, 0.4)';
+                        icon.setAttribute('data-lucide', 'play');
+                    }
+                    lucide.createIcons();
+                }
+            }
         });
     };
     
@@ -2349,9 +2588,8 @@
 
 <!-- ВЕРСИЯ ПРИЛОЖЕНИЯ -->
 <div style="position: fixed; bottom: 0; right: 0; padding: 12px 16px; font-size: 10px; color: #666; background: rgba(0,0,0,0.3); border-radius: 8px 0 0 0; font-family: monospace; z-index: 100;">
-    version dev: 4.0
+    version dev: 1.5
 </div>
 
 </body>
 </html>
-
