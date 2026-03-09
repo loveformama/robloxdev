@@ -822,7 +822,7 @@
 
     <div id="tab-progress" class="content">
         <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 30px;">
-            <i data-lucide="zap" style="width: 32px; height: 32px; color: var(--accent);"></i>
+            <i data-lucide="zap" style="width: 32px; height: 32px; color: #666;"></i>
             <h2 style="margin: 0; font-size: 24px; font-weight: 800;">Общий прогресс</h2>
         </div>
         <div class="main-progress">
@@ -830,46 +830,46 @@
             <div id="totalProgressBar" class="progress-fill"></div>
         </div>
         <div style="margin-top: 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
-            <div class="stat-card" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2);">
-                <i data-lucide="check-circle-2" style="width: 32px; height: 32px; color: #3b82f6;"></i>
+            <div class="stat-card" style="background: #1a1a1a; border: 1px solid #333;">
+                <i data-lucide="check-circle-2" style="width: 32px; height: 32px; color: #666;"></i>
                 <div style="flex: 1;">
-                    <div style="font-size: 12px; color: #888; text-transform: uppercase; font-weight: 600;">Выполнено заданий</div>
+                    <div style="font-size: 12px; color: #666; text-transform: uppercase; font-weight: 600;">Выполнено заданий</div>
                     <div style="display: flex; gap: 16px; margin-top: 12px; align-items: center;">
                         <div>
-                            <div style="font-size: 12px; color: #888; margin-bottom: 4px;">Turbik</div>
-                            <div id="completedTasksTurbik" style="font-size: 24px; font-weight: 800; color: #3b82f6;">0</div>
+                            <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Turbik</div>
+                            <div id="completedTasksTurbik" style="font-size: 24px; font-weight: 800; color: #888;">0</div>
                         </div>
-                        <div style="color: #444;">|</div>
+                        <div style="color: #333;">|</div>
                         <div>
-                            <div style="font-size: 12px; color: #888; margin-bottom: 4px;">Yono</div>
-                            <div id="completedTasksYono" style="font-size: 24px; font-weight: 800; color: #ef4444;">0</div>
+                            <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Yono</div>
+                            <div id="completedTasksYono" style="font-size: 24px; font-weight: 800; color: #888;">0</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         <div style="margin-top: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
-            <div class="stat-card" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); flex-direction: column; align-items: flex-start;">
+            <div class="stat-card" style="background: #1a1a1a; border: 1px solid #333; flex-direction: column; align-items: flex-start;">
                 <div style="display: flex; align-items: center; gap: 12px; width: 100%; margin-bottom: 12px;">
-                    <i data-lucide="user" style="width: 28px; height: 28px; color: #3b82f6;"></i>
-                    <div style="font-size: 12px; color: #888; text-transform: uppercase; font-weight: 600;">Turbik - Время работы</div>
+                    <i data-lucide="user" style="width: 28px; height: 28px; color: #666;"></i>
+                    <div style="font-size: 12px; color: #666; text-transform: uppercase; font-weight: 600;">Turbik - Время работы</div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 12px; width: 100%;">
-                    <div id="workTimeTurbikDisplay" style="font-size: 28px; font-weight: 800; color: #3b82f6; font-family: monospace; flex: 1;">0ч 0м</div>
-                    <button id="pausePlayBtnTurbik" class="icon-btn" style="width: 40px; height: 40px; background: rgba(59, 130, 246, 0.3); border: 1px solid rgba(59, 130, 246, 0.5); flex-shrink: 0;" onclick="toggleWorkTimerTurbik(); playClickSound();" title="Play/Pause">
-                        <i data-lucide="play" style="width: 20px; height: 20px; color: #3b82f6;"></i>
+                    <div id="workTimeTurbikDisplay" style="font-size: 28px; font-weight: 800; color: #888; font-family: monospace; flex: 1;">0ч 0м</div>
+                    <button id="pausePlayBtnTurbik" class="icon-btn" style="width: 40px; height: 40px; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(168, 85, 247, 0.4); flex-shrink: 0;" onclick="toggleWorkTimerTurbik(); playClickSound();" title="Play/Pause">
+                        <i data-lucide="play" style="width: 20px; height: 20px; color: #666;"></i>
                     </button>
                 </div>
             </div>
-            <div class="stat-card" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); flex-direction: column; align-items: flex-start;">
+            <div class="stat-card" style="background: #1a1a1a; border: 1px solid #333; flex-direction: column; align-items: flex-start;">
                 <div style="display: flex; align-items: center; gap: 12px; width: 100%; margin-bottom: 12px;">
-                    <i data-lucide="user" style="width: 28px; height: 28px; color: #ef4444;"></i>
-                    <div style="font-size: 12px; color: #888; text-transform: uppercase; font-weight: 600;">Yono - Время работы</div>
+                    <i data-lucide="user" style="width: 28px; height: 28px; color: #666;"></i>
+                    <div style="font-size: 12px; color: #666; text-transform: uppercase; font-weight: 600;">Yono - Время работы</div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 12px; width: 100%;">
-                    <div id="workTimeYonoDisplay" style="font-size: 28px; font-weight: 800; color: #ef4444; font-family: monospace; flex: 1;">0ч 0м</div>
-                    <button id="pausePlayBtnYono" class="icon-btn" style="width: 40px; height: 40px; background: rgba(239, 68, 68, 0.3); border: 1px solid rgba(239, 68, 68, 0.5); flex-shrink: 0;" onclick="toggleWorkTimerYono(); playClickSound();" title="Play/Pause">
-                        <i data-lucide="play" style="width: 20px; height: 20px; color: #ef4444;"></i>
+                    <div id="workTimeYonoDisplay" style="font-size: 28px; font-weight: 800; color: #888; font-family: monospace; flex: 1;">0ч 0м</div>
+                    <button id="pausePlayBtnYono" class="icon-btn" style="width: 40px; height: 40px; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(168, 85, 247, 0.4); flex-shrink: 0;" onclick="toggleWorkTimerYono(); playClickSound();" title="Play/Pause">
+                        <i data-lucide="play" style="width: 20px; height: 20px; color: #666;"></i>
                     </button>
                 </div>
             </div>
@@ -1370,107 +1370,130 @@
         }, { onlyOnce: true });
     };
     
-    const updateStatsDisplay = () => {
-        // Используем get() для одноразового чтения вместо onValue чтобы избежать множественных слушателей
-        get(ref(db, 'projectStats')).then((snapshot) => {
-            const data = snapshot.val() || { days: 0, stab: '?', perf: '?', t: 0, y: 0 };
-            const daysLeft = data.releaseTimestamp ? Math.max(0, Math.ceil((data.releaseTimestamp - Date.now()) / 86400000)) : data.days;
-            const total = Math.min(100, Math.round((parseInt(data.t) + parseInt(data.y)) / 2));
+    // Глобальные переменные для слушателей статистики
+    let projectStatsListener = null;
+    let statsTasksListener = null;
+    let completedTasksCountTurbik = 0;
+    let completedTasksCountYono = 0;
+
+    const renderStatsDisplay = (data) => {
+        const daysLeft = data.releaseTimestamp ? Math.max(0, Math.ceil((data.releaseTimestamp - Date.now()) / 86400000)) : data.days;
+        const total = Math.min(100, Math.round((parseInt(data.t) + parseInt(data.y)) / 2));
+        
+        if(document.getElementById('totalProgressBar')) {
             document.getElementById('totalProgressBar').style.width = total + '%';
             document.getElementById('totalProgressText').innerText = total + '%';
-            
-            // Считаем количество выполненных заданий сегодня
-            let completedTurbik = 0;
-            let completedYono = 0;
-            
-            get(ref(db, 'tasks')).then((tasksSnapshot) => {
-                const today = new Date().toDateString();
-                tasksSnapshot.forEach(child => {
-                    const task = child.val();
-                    if(task.status === 'Выполнено' && task.completedAt) {
-                        const completedDate = new Date(task.completedAt).toDateString();
-                        if(completedDate === today) {
-                            // Если задача была назначена двоим, обоим добавляем очко
-                            if(task.assignedTo === 'turbik') {
-                                completedTurbik++;
-                            } else if(task.assignedTo === 'yono') {
-                                completedYono++;
-                            } else if(task.assignedTo === 'both') {
-                                completedTurbik++;
-                                completedYono++;
-                            }
-                        }
-                    }
-                });
-                
-                document.getElementById('completedTasksTurbik').textContent = completedTurbik;
-                document.getElementById('completedTasksYono').textContent = completedYono;
-                
-                // Автоматически считаем вклад
-                // Формула: (Выполненные задачи * 10) + (часы работы * 5) 
-                // Максимум за час = 5%, максимум за задачу = 10%
-                const hoursWorkedTurbik = workTimeSecondsTurbik / 3600;
-                const hoursWorkedYono = workTimeSecondsYono / 3600;
-                
-                let contributionTurbik = Math.min(100, Math.round((completedTurbik * 10) + (hoursWorkedTurbik * 5)));
-                let contributionYono = Math.min(100, Math.round((completedYono * 10) + (hoursWorkedYono * 5)));
-                
-                // Нормализуем так чтобы сумма не превышала 100%
-                const totalContribution = contributionTurbik + contributionYono;
-                if(totalContribution > 100) {
-                    contributionTurbik = Math.round(contributionTurbik * (100 / totalContribution));
-                    contributionYono = Math.round(contributionYono * (100 / totalContribution));
-                }
-                
-                    document.getElementById('statsGrid').innerHTML = `
-                        <div class="stat-card">
-                            <div class="stat-icon"><i data-lucide="calendar-check" style="color: #666;"></i></div>
-                            <div class="stat-content">
-                                <div class="stat-label">Релиз через</div>
-                                <div class="stat-value deadline">${daysLeft} д</div>
+        }
+        
+        // Автоматически считаем вклад
+        const hoursWorkedTurbik = workTimeSecondsTurbik / 3600;
+        const hoursWorkedYono = workTimeSecondsYono / 3600;
+        
+        let contributionTurbik = Math.min(100, Math.round((completedTasksCountTurbik * 10) + (hoursWorkedTurbik * 5)));
+        let contributionYono = Math.min(100, Math.round((completedTasksCountYono * 10) + (hoursWorkedYono * 5)));
+        
+        // Нормализуем так чтобы сумма не превышала 100%
+        const totalContribution = contributionTurbik + contributionYono;
+        if(totalContribution > 100) {
+            contributionTurbik = Math.round(contributionTurbik * (100 / totalContribution));
+            contributionYono = Math.round(contributionYono * (100 / totalContribution));
+        }
+        
+        if(document.getElementById('statsGrid')) {
+            document.getElementById('statsGrid').innerHTML = `
+                <div class="stat-card" style="background: #1a1a1a; border: 1px solid #333;">
+                    <div class="stat-icon"><i data-lucide="calendar-check" style="color: #666;"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-label">Релиз через</div>
+                        <div class="stat-value deadline">${daysLeft} д</div>
+                    </div>
+                </div>
+                <div class="stat-card" style="background: #1a1a1a; border: 1px solid #333;">
+                    <div class="stat-icon"><i data-lucide="shield-alert" style="color: #666;"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-label">Стабильность</div>
+                        <div class="stat-value">${data.stab}</div>
+                    </div>
+                </div>
+                <div class="stat-card" style="background: #1a1a1a; border: 1px solid #333;">
+                    <div class="stat-icon"><i data-lucide="activity" style="color: #666;"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-label">Успеваемость</div>
+                        <div class="stat-value">${data.perf}</div>
+                    </div>
+                </div>
+                <div class="stat-card" style="grid-column: 1 / -1; background: #1a1a1a; border: 1px solid #333;">
+                    <div class="stat-icon"><i data-lucide="users-round" style="color: #666;"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-label" style="margin-bottom: 12px;">Вклад за сегодня</div>
+                        <div style="display: flex; gap: 30px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <i data-lucide="user" style="width: 20px; height: 20px; color: #888;"></i>
+                                <div>
+                                    <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Yono</div>
+                                    <div style="font-size: 20px; font-weight: 800; color: #888;">${contributionYono}%</div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon"><i data-lucide="shield-alert" style="color: #666;"></i></div>
-                            <div class="stat-content">
-                                <div class="stat-label">Стабильность</div>
-                                <div class="stat-value">${data.stab}</div>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon"><i data-lucide="activity" style="color: #666;"></i></div>
-                            <div class="stat-content">
-                                <div class="stat-label">Успеваемость</div>
-                                <div class="stat-value">${data.perf}</div>
-                            </div>
-                        </div>
-                        <div class="stat-card" style="grid-column: 1 / -1;">
-                            <div class="stat-icon"><i data-lucide="users-round" style="color: #666;"></i></div>
-                            <div class="stat-content">
-                                <div class="stat-label" style="margin-bottom: 12px;">Вклад за сегодня</div>
-                                <div style="display: flex; gap: 30px;">
-                                    <div style="display: flex; align-items: center; gap: 12px;">
-                                        <i data-lucide="user" style="width: 20px; height: 20px; color: #999;"></i>
-                                        <div>
-                                            <div style="font-size: 12px; color: #888;">Yono</div>
-                                            <div style="font-size: 20px; font-weight: 800; color: #aaa;">${contributionYono}%</div>
-                                        </div>
-                                    </div>
-                                    <div style="display: flex; align-items: center; gap: 12px;">
-                                        <i data-lucide="user" style="width: 20px; height: 20px; color: #999;"></i>
-                                        <div>
-                                            <div style="font-size: 12px; color: #888;">Turbik</div>
-                                            <div style="font-size: 20px; font-weight: 800; color: #aaa;">${contributionTurbik}%</div>
-                                        </div>
-                                    </div>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <i data-lucide="user" style="width: 20px; height: 20px; color: #888;"></i>
+                                <div>
+                                    <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Turbik</div>
+                                    <div style="font-size: 20px; font-weight: 800; color: #888;">${contributionTurbik}%</div>
                                 </div>
                             </div>
                         </div>
-                    `;
-                    
-                    lucide.createIcons();
-                }).catch(err => console.error('Ошибка чтения tasks:', err));
-        }).catch(err => console.error('Ошибка чтения projectStats:', err));
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+    };
+
+    const setupStatsListeners = () => {
+        // Слушаем projectStats
+        if(projectStatsListener) projectStatsListener();
+        projectStatsListener = onValue(ref(db, 'projectStats'), (snapshot) => {
+            const data = snapshot.val() || { days: 0, stab: '?', perf: '?', t: 0, y: 0 };
+            renderStatsDisplay(data);
+        });
+        
+        // Слушаем задачи для подсчета выполненных
+        if(statsTasksListener) statsTasksListener();
+        statsTasksListener = onValue(ref(db, 'tasks'), (tasksSnapshot) => {
+            const today = new Date().toDateString();
+            completedTasksCountTurbik = 0;
+            completedTasksCountYono = 0;
+            
+            tasksSnapshot.forEach(child => {
+                const task = child.val();
+                if(task.status === 'Выполнено' && task.completedAt) {
+                    const completedDate = new Date(task.completedAt).toDateString();
+                    if(completedDate === today) {
+                        if(task.assignedTo === 'turbik') {
+                            completedTasksCountTurbik++;
+                        } else if(task.assignedTo === 'yono') {
+                            completedTasksCountYono++;
+                        } else if(task.assignedTo === 'both') {
+                            completedTasksCountTurbik++;
+                            completedTasksCountYono++;
+                        }
+                    }
+                }
+            });
+            
+            document.getElementById('completedTasksTurbik').textContent = completedTasksCountTurbik;
+            document.getElementById('completedTasksYono').textContent = completedTasksCountYono;
+            
+            // Обновляем отображение с новыми счетами
+            onValue(ref(db, 'projectStats'), (snapshot) => {
+                const data = snapshot.val() || { days: 0, stab: '?', perf: '?', t: 0, y: 0 };
+                renderStatsDisplay(data);
+            }, {onlyOnce: true});
+        });
+    };
+
+    const updateStatsDisplay = () => {
+        setupStatsListeners();
     };
 
     window.updateProjectData = () => {
@@ -2382,10 +2405,11 @@
         const icon = btn.querySelector('i');
         
         if(workTimeIsRunningTurbik) {
-            // Play -> Pause
+            // Play - меняем на паузу
             btn.style.background = 'rgba(34, 197, 94, 0.2)';
             btn.style.borderColor = 'rgba(34, 197, 94, 0.4)';
             icon.setAttribute('data-lucide', 'pause');
+            icon.setAttribute('aria-label', 'Pause');
             
             // Запускаем таймер
             if(workTimeTimerTurbik) clearInterval(workTimeTimerTurbik);
@@ -2393,18 +2417,28 @@
                 workTimeSecondsTurbik++;
                 updateWorkTimeDisplay('turbik');
                 
-                // Сохраняем в Firebase
-                set(ref(db, 'worktime/turbik'), {
-                    totalSeconds: workTimeSecondsTurbik,
-                    isRunning: true,
-                    updatedAt: Date.now()
-                });
+                // Сохраняем в Firebase (каждые 10 секунд, не каждую секунду)
+                if(workTimeSecondsTurbik % 10 === 0) {
+                    set(ref(db, 'worktime/turbik'), {
+                        totalSeconds: workTimeSecondsTurbik,
+                        isRunning: true,
+                        updatedAt: Date.now()
+                    });
+                }
             }, 1000);
+            
+            // Сохраняем состояние запуска один раз
+            set(ref(db, 'worktime/turbik'), {
+                totalSeconds: workTimeSecondsTurbik,
+                isRunning: true,
+                updatedAt: Date.now()
+            });
         } else {
-            // Pause
+            // Pause - меняем на плей
             btn.style.background = 'rgba(168, 85, 247, 0.2)';
             btn.style.borderColor = 'rgba(168, 85, 247, 0.4)';
             icon.setAttribute('data-lucide', 'play');
+            icon.setAttribute('aria-label', 'Play');
             
             if(workTimeTimerTurbik) clearInterval(workTimeTimerTurbik);
             
@@ -2432,10 +2466,11 @@
         const icon = btn.querySelector('i');
         
         if(workTimeIsRunningYono) {
-            // Play -> Pause
+            // Play - меняем на паузу
             btn.style.background = 'rgba(34, 197, 94, 0.2)';
             btn.style.borderColor = 'rgba(34, 197, 94, 0.4)';
             icon.setAttribute('data-lucide', 'pause');
+            icon.setAttribute('aria-label', 'Pause');
             
             // Запускаем таймер
             if(workTimeTimerYono) clearInterval(workTimeTimerYono);
@@ -2443,18 +2478,28 @@
                 workTimeSecondsYono++;
                 updateWorkTimeDisplay('yono');
                 
-                // Сохраняем в Firebase
-                set(ref(db, 'worktime/yono'), {
-                    totalSeconds: workTimeSecondsYono,
-                    isRunning: true,
-                    updatedAt: Date.now()
-                });
+                // Сохраняем в Firebase (каждые 10 секунд, не каждую секунду)
+                if(workTimeSecondsYono % 10 === 0) {
+                    set(ref(db, 'worktime/yono'), {
+                        totalSeconds: workTimeSecondsYono,
+                        isRunning: true,
+                        updatedAt: Date.now()
+                    });
+                }
             }, 1000);
+            
+            // Сохраняем состояние запуска один раз
+            set(ref(db, 'worktime/yono'), {
+                totalSeconds: workTimeSecondsYono,
+                isRunning: true,
+                updatedAt: Date.now()
+            });
         } else {
-            // Pause
+            // Pause - меняем на плей
             btn.style.background = 'rgba(168, 85, 247, 0.2)';
             btn.style.borderColor = 'rgba(168, 85, 247, 0.4)';
             icon.setAttribute('data-lucide', 'play');
+            icon.setAttribute('aria-label', 'Play');
             
             if(workTimeTimerYono) clearInterval(workTimeTimerYono);
             
@@ -2470,20 +2515,20 @@
     };
     
     const setupWorkTimeListeners = () => {
-        // Слушаем время работы Turbik
+        // Слушаем время работы Turbik (только загружаем если не работает таймер)
         if(workTimeListenerTurbik) workTimeListenerTurbik();
         workTimeListenerTurbik = onValue(ref(db, 'worktime/turbik'), (snapshot) => {
             const data = snapshot.val();
-            if(data) {
+            if(data && !workTimeIsRunningTurbik) {
+                // Обновляем только если таймер не работает
                 workTimeSecondsTurbik = data.totalSeconds || 0;
-                workTimeIsRunningTurbik = data.isRunning || false;
                 updateWorkTimeDisplay('turbik');
                 
-                // Обновляем кнопку в зависимости от статуса
                 const btn = document.getElementById('pausePlayBtnTurbik');
                 if(btn) {
                     const icon = btn.querySelector('i');
-                    if(workTimeIsRunningTurbik) {
+                    const isRunning = data.isRunning || false;
+                    if(isRunning) {
                         btn.style.background = 'rgba(34, 197, 94, 0.2)';
                         btn.style.borderColor = 'rgba(34, 197, 94, 0.4)';
                         icon.setAttribute('data-lucide', 'pause');
@@ -2492,37 +2537,25 @@
                         btn.style.borderColor = 'rgba(168, 85, 247, 0.4)';
                         icon.setAttribute('data-lucide', 'play');
                     }
-                    lucide.createIcons();
-                }
-            } else {
-                // Инициализируем если данных еще нет
-                workTimeSecondsTurbik = 0;
-                workTimeIsRunningTurbik = false;
-                const btn = document.getElementById('pausePlayBtnTurbik');
-                if(btn) {
-                    const icon = btn.querySelector('i');
-                    icon.setAttribute('data-lucide', 'play');
-                    btn.style.background = 'rgba(168, 85, 247, 0.2)';
-                    btn.style.borderColor = 'rgba(168, 85, 247, 0.4)';
                     lucide.createIcons();
                 }
             }
         });
         
-        // Слушаем время работы Yono
+        // Слушаем время работы Yono (только загружаем если не работает таймер)
         if(workTimeListenerYono) workTimeListenerYono();
         workTimeListenerYono = onValue(ref(db, 'worktime/yono'), (snapshot) => {
             const data = snapshot.val();
-            if(data) {
+            if(data && !workTimeIsRunningYono) {
+                // Обновляем только если таймер не работает
                 workTimeSecondsYono = data.totalSeconds || 0;
-                workTimeIsRunningYono = data.isRunning || false;
                 updateWorkTimeDisplay('yono');
                 
-                // Обновляем кнопку в зависимости от статуса
                 const btn = document.getElementById('pausePlayBtnYono');
                 if(btn) {
                     const icon = btn.querySelector('i');
-                    if(workTimeIsRunningYono) {
+                    const isRunning = data.isRunning || false;
+                    if(isRunning) {
                         btn.style.background = 'rgba(34, 197, 94, 0.2)';
                         btn.style.borderColor = 'rgba(34, 197, 94, 0.4)';
                         icon.setAttribute('data-lucide', 'pause');
@@ -2531,18 +2564,6 @@
                         btn.style.borderColor = 'rgba(168, 85, 247, 0.4)';
                         icon.setAttribute('data-lucide', 'play');
                     }
-                    lucide.createIcons();
-                }
-            } else {
-                // Инициализируем если данных еще нет
-                workTimeSecondsYono = 0;
-                workTimeIsRunningYono = false;
-                const btn = document.getElementById('pausePlayBtnYono');
-                if(btn) {
-                    const icon = btn.querySelector('i');
-                    icon.setAttribute('data-lucide', 'play');
-                    btn.style.background = 'rgba(168, 85, 247, 0.2)';
-                    btn.style.borderColor = 'rgba(168, 85, 247, 0.4)';
                     lucide.createIcons();
                 }
             }
@@ -2554,10 +2575,12 @@
         document.addEventListener('DOMContentLoaded', () => {
             setupCompareSyncListeners();
             setupWorkTimeListeners();
+            setupStatsListeners();
         });
     } else {
         setupCompareSyncListeners();
         setupWorkTimeListeners();
+        setupStatsListeners();
     }
     
     // Отобразить курсор пользователя
@@ -2700,7 +2723,7 @@
 
 <!-- ВЕРСИЯ ПРИЛОЖЕНИЯ -->
 <div style="position: fixed; bottom: 0; right: 0; padding: 12px 16px; font-size: 10px; color: #666; background: rgba(0,0,0,0.3); border-radius: 8px 0 0 0; font-family: monospace; z-index: 100;">
-    version dev: 1.5
+    version dev: 6.5
 </div>
 
 </body>
