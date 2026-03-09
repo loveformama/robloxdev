@@ -847,16 +847,30 @@
                     </div>
                 </div>
             </div>
-            <div class="stat-card" style="background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.2);">
-                <i data-lucide="timer" style="width: 32px; height: 32px; color: #a855f7;"></i>
-                <div>
-                    <div style="font-size: 12px; color: #888; text-transform: uppercase; font-weight: 600;">Время работы</div>
-                    <div style="display: flex; align-items: center; gap: 10px; margin-top: 12px;">
-                        <div id="workTimeDisplay" style="font-size: 24px; font-weight: 800; color: #a855f7; font-family: monospace;">0ч 0м</div>
-                        <button id="pausePlayBtn" class="icon-btn" style="width: 36px; height: 36px; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(168, 85, 247, 0.4);" onclick="toggleWorkTimer(); playClickSound();" title="Play/Pause">
-                            <i data-lucide="play" style="width: 18px; height: 18px; color: #a855f7;"></i>
-                        </button>
-                    </div>
+        </div>
+        <div style="margin-top: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+            <div class="stat-card" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); flex-direction: column; align-items: flex-start;">
+                <div style="display: flex; align-items: center; gap: 12px; width: 100%; margin-bottom: 12px;">
+                    <i data-lucide="user" style="width: 28px; height: 28px; color: #3b82f6;"></i>
+                    <div style="font-size: 12px; color: #888; text-transform: uppercase; font-weight: 600;">Turbik - Время работы</div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px; width: 100%;">
+                    <div id="workTimeTurbikDisplay" style="font-size: 28px; font-weight: 800; color: #3b82f6; font-family: monospace; flex: 1;">0ч 0м</div>
+                    <button id="pausePlayBtnTurbik" class="icon-btn" style="width: 40px; height: 40px; background: rgba(59, 130, 246, 0.3); border: 1px solid rgba(59, 130, 246, 0.5); flex-shrink: 0;" onclick="toggleWorkTimerTurbik(); playClickSound();" title="Play/Pause">
+                        <i data-lucide="play" style="width: 20px; height: 20px; color: #3b82f6;"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="stat-card" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); flex-direction: column; align-items: flex-start;">
+                <div style="display: flex; align-items: center; gap: 12px; width: 100%; margin-bottom: 12px;">
+                    <i data-lucide="user" style="width: 28px; height: 28px; color: #ef4444;"></i>
+                    <div style="font-size: 12px; color: #888; text-transform: uppercase; font-weight: 600;">Yono - Время работы</div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px; width: 100%;">
+                    <div id="workTimeYonoDisplay" style="font-size: 28px; font-weight: 800; color: #ef4444; font-family: monospace; flex: 1;">0ч 0м</div>
+                    <button id="pausePlayBtnYono" class="icon-btn" style="width: 40px; height: 40px; background: rgba(239, 68, 68, 0.3); border: 1px solid rgba(239, 68, 68, 0.5); flex-shrink: 0;" onclick="toggleWorkTimerYono(); playClickSound();" title="Play/Pause">
+                        <i data-lucide="play" style="width: 20px; height: 20px; color: #ef4444;"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -1390,55 +1404,71 @@
                 
                 document.getElementById('completedTasksTurbik').textContent = completedTurbik;
                 document.getElementById('completedTasksYono').textContent = completedYono;
-            });
-            
-            document.getElementById('statsGrid').innerHTML = `
-                <div class="stat-card">
-                    <div class="stat-icon"><i data-lucide="calendar-check"></i></div>
-                    <div class="stat-content">
-                        <div class="stat-label">Релиз через</div>
-                        <div class="stat-value deadline">${daysLeft} д</div>
+                
+                // Автоматически считаем вклад
+                // Формула: (Выполненные задачи * 10) + (часы работы * 5) 
+                // Максимум за час = 5%, максимум за задачу = 10%
+                const hoursWorkedTurbik = workTimeSecondsTurbik / 3600;
+                const hoursWorkedYono = workTimeSecondsYono / 3600;
+                
+                let contributionTurbik = Math.min(100, Math.round((completedTurbik * 10) + (hoursWorkedTurbik * 5)));
+                let contributionYono = Math.min(100, Math.round((completedYono * 10) + (hoursWorkedYono * 5)));
+                
+                // Нормализуем так чтобы сумма не превышала 100%
+                const totalContribution = contributionTurbik + contributionYono;
+                if(totalContribution > 100) {
+                    contributionTurbik = Math.round(contributionTurbik * (100 / totalContribution));
+                    contributionYono = Math.round(contributionYono * (100 / totalContribution));
+                }
+                
+                document.getElementById('statsGrid').innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-icon"><i data-lucide="calendar-check"></i></div>
+                        <div class="stat-content">
+                            <div class="stat-label">Релиз через</div>
+                            <div class="stat-value deadline">${daysLeft} д</div>
+                        </div>
                     </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i data-lucide="shield-alert"></i></div>
-                    <div class="stat-content">
-                        <div class="stat-label">Стабильность</div>
-                        <div class="stat-value">${data.stab}</div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i data-lucide="shield-alert"></i></div>
+                        <div class="stat-content">
+                            <div class="stat-label">Стабильность</div>
+                            <div class="stat-value">${data.stab}</div>
+                        </div>
                     </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i data-lucide="activity"></i></div>
-                    <div class="stat-content">
-                        <div class="stat-label">Успеваемость</div>
-                        <div class="stat-value">${data.perf}</div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i data-lucide="activity"></i></div>
+                        <div class="stat-content">
+                            <div class="stat-label">Успеваемость</div>
+                            <div class="stat-value">${data.perf}</div>
+                        </div>
                     </div>
-                </div>
-                <div class="stat-card" style="grid-column: 1 / -1;">
-                    <div class="stat-icon"><i data-lucide="users-round"></i></div>
-                    <div class="stat-content">
-                        <div class="stat-label" style="margin-bottom: 12px;">Вклад за сегодня</div>
-                        <div style="display: flex; gap: 30px;">
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <i data-lucide="user" style="width: 20px; height: 20px; color: #ef4444;"></i>
-                                <div>
-                                    <div style="font-size: 12px; color: #888;">Yono</div>
-                                    <div style="font-size: 20px; font-weight: 800; color: #ef4444;">${data.y}%</div>
+                    <div class="stat-card" style="grid-column: 1 / -1;">
+                        <div class="stat-icon"><i data-lucide="users-round"></i></div>
+                        <div class="stat-content">
+                            <div class="stat-label" style="margin-bottom: 12px;">Вклад за сегодня</div>
+                            <div style="display: flex; gap: 30px;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <i data-lucide="user" style="width: 20px; height: 20px; color: #ef4444;"></i>
+                                    <div>
+                                        <div style="font-size: 12px; color: #888;">Yono</div>
+                                        <div style="font-size: 20px; font-weight: 800; color: #ef4444;">${contributionYono}%</div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <i data-lucide="user" style="width: 20px; height: 20px; color: #3b82f6;"></i>
-                                <div>
-                                    <div style="font-size: 12px; color: #888;">Turbik</div>
-                                    <div style="font-size: 20px; font-weight: 800; color: #3b82f6;">${data.t}%</div>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <i data-lucide="user" style="width: 20px; height: 20px; color: #3b82f6;"></i>
+                                    <div>
+                                        <div style="font-size: 12px; color: #888;">Turbik</div>
+                                        <div style="font-size: 20px; font-weight: 800; color: #3b82f6;">${contributionTurbik}%</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            `;
-            
-            lucide.createIcons();
+                `;
+                
+                lucide.createIcons();
+            });
         });
     };
 
@@ -2314,10 +2344,15 @@
         });
     };
 
+    // Переменные для таймеров каждого пользователя
     let workTimeListenerTurbik, workTimeListenerYono;
-    let workTimeTimer = null;
-    let workTimeIsRunning = false;
-    let workTimeSeconds = 0;
+    
+    let workTimeTimerTurbik = null;
+    let workTimeTimerYono = null;
+    let workTimeIsRunningTurbik = false;
+    let workTimeIsRunningYono = false;
+    let workTimeSecondsTurbik = 0;
+    let workTimeSecondsYono = 0;
     
     const formatTime = (seconds) => {
         const hours = Math.floor(seconds / 3600);
@@ -2325,35 +2360,35 @@
         return `${hours}ч ${minutes}м`;
     };
     
-    const updateWorkTimeDisplay = () => {
-        document.getElementById('workTimeDisplay').textContent = formatTime(workTimeSeconds);
+    const updateWorkTimeDisplay = (user) => {
+        if(user === 'turbik') {
+            document.getElementById('workTimeTurbikDisplay').textContent = formatTime(workTimeSecondsTurbik);
+        } else if(user === 'yono') {
+            document.getElementById('workTimeYonoDisplay').textContent = formatTime(workTimeSecondsYono);
+        }
     };
     
-    window.toggleWorkTimer = () => {
-        if(window.currentUserRole !== 'Yono') {
-            alert('Только Yono может управлять временем работы');
-            return;
-        }
-        
-        workTimeIsRunning = !workTimeIsRunning;
-        const btn = document.getElementById('pausePlayBtn');
+    // Функция для управления таймером Turbik
+    window.toggleWorkTimerTurbik = () => {
+        workTimeIsRunningTurbik = !workTimeIsRunningTurbik;
+        const btn = document.getElementById('pausePlayBtnTurbik');
         const icon = btn.querySelector('i');
         
-        if(workTimeIsRunning) {
+        if(workTimeIsRunningTurbik) {
             // Play
             btn.style.background = 'rgba(34, 197, 94, 0.2)';
             btn.style.borderColor = 'rgba(34, 197, 94, 0.4)';
             icon.setAttribute('data-lucide', 'pause');
             
             // Запускаем таймер
-            if(workTimeTimer) clearInterval(workTimeTimer);
-            workTimeTimer = setInterval(() => {
-                workTimeSeconds++;
-                updateWorkTimeDisplay();
+            if(workTimeTimerTurbik) clearInterval(workTimeTimerTurbik);
+            workTimeTimerTurbik = setInterval(() => {
+                workTimeSecondsTurbik++;
+                updateWorkTimeDisplay('turbik');
                 
                 // Сохраняем в Firebase
-                set(ref(db, 'worktime/current'), {
-                    totalSeconds: workTimeSeconds,
+                set(ref(db, 'worktime/turbik'), {
+                    totalSeconds: workTimeSecondsTurbik,
                     isRunning: true,
                     updatedAt: Date.now()
                 });
@@ -2364,11 +2399,55 @@
             btn.style.borderColor = 'rgba(168, 85, 247, 0.4)';
             icon.setAttribute('data-lucide', 'play');
             
-            if(workTimeTimer) clearInterval(workTimeTimer);
+            if(workTimeTimerTurbik) clearInterval(workTimeTimerTurbik);
             
             // Сохраняем состояние паузы
-            set(ref(db, 'worktime/current'), {
-                totalSeconds: workTimeSeconds,
+            set(ref(db, 'worktime/turbik'), {
+                totalSeconds: workTimeSecondsTurbik,
+                isRunning: false,
+                updatedAt: Date.now()
+            });
+        }
+        
+        lucide.createIcons();
+    };
+    
+    // Функция для управления таймером Yono
+    window.toggleWorkTimerYono = () => {
+        workTimeIsRunningYono = !workTimeIsRunningYono;
+        const btn = document.getElementById('pausePlayBtnYono');
+        const icon = btn.querySelector('i');
+        
+        if(workTimeIsRunningYono) {
+            // Play
+            btn.style.background = 'rgba(34, 197, 94, 0.2)';
+            btn.style.borderColor = 'rgba(34, 197, 94, 0.4)';
+            icon.setAttribute('data-lucide', 'pause');
+            
+            // Запускаем таймер
+            if(workTimeTimerYono) clearInterval(workTimeTimerYono);
+            workTimeTimerYono = setInterval(() => {
+                workTimeSecondsYono++;
+                updateWorkTimeDisplay('yono');
+                
+                // Сохраняем в Firebase
+                set(ref(db, 'worktime/yono'), {
+                    totalSeconds: workTimeSecondsYono,
+                    isRunning: true,
+                    updatedAt: Date.now()
+                });
+            }, 1000);
+        } else {
+            // Pause
+            btn.style.background = 'rgba(168, 85, 247, 0.2)';
+            btn.style.borderColor = 'rgba(168, 85, 247, 0.4)';
+            icon.setAttribute('data-lucide', 'play');
+            
+            if(workTimeTimerYono) clearInterval(workTimeTimerYono);
+            
+            // Сохраняем состояние паузы
+            set(ref(db, 'worktime/yono'), {
+                totalSeconds: workTimeSecondsYono,
                 isRunning: false,
                 updatedAt: Date.now()
             });
@@ -2378,19 +2457,47 @@
     };
     
     const setupWorkTimeListeners = () => {
-        // Слушаем общее время работы
-        onValue(ref(db, 'worktime/current'), (snapshot) => {
+        // Слушаем время работы Turbik
+        if(workTimeListenerTurbik) workTimeListenerTurbik();
+        workTimeListenerTurbik = onValue(ref(db, 'worktime/turbik'), (snapshot) => {
             const data = snapshot.val();
             if(data) {
-                workTimeSeconds = data.totalSeconds || 0;
-                workTimeIsRunning = data.isRunning || false;
-                updateWorkTimeDisplay();
+                workTimeSecondsTurbik = data.totalSeconds || 0;
+                workTimeIsRunningTurbik = data.isRunning || false;
+                updateWorkTimeDisplay('turbik');
                 
                 // Обновляем кнопку в зависимости от статуса
-                const btn = document.getElementById('pausePlayBtn');
-                if(btn && window.currentUserRole === 'Yono') {
+                const btn = document.getElementById('pausePlayBtnTurbik');
+                if(btn) {
                     const icon = btn.querySelector('i');
-                    if(workTimeIsRunning) {
+                    if(workTimeIsRunningTurbik) {
+                        btn.style.background = 'rgba(34, 197, 94, 0.2)';
+                        btn.style.borderColor = 'rgba(34, 197, 94, 0.4)';
+                        icon.setAttribute('data-lucide', 'pause');
+                    } else {
+                        btn.style.background = 'rgba(168, 85, 247, 0.2)';
+                        btn.style.borderColor = 'rgba(168, 85, 247, 0.4)';
+                        icon.setAttribute('data-lucide', 'play');
+                    }
+                    lucide.createIcons();
+                }
+            }
+        });
+        
+        // Слушаем время работы Yono
+        if(workTimeListenerYono) workTimeListenerYono();
+        workTimeListenerYono = onValue(ref(db, 'worktime/yono'), (snapshot) => {
+            const data = snapshot.val();
+            if(data) {
+                workTimeSecondsYono = data.totalSeconds || 0;
+                workTimeIsRunningYono = data.isRunning || false;
+                updateWorkTimeDisplay('yono');
+                
+                // Обновляем кнопку в зависимости от статуса
+                const btn = document.getElementById('pausePlayBtnYono');
+                if(btn) {
+                    const icon = btn.querySelector('i');
+                    if(workTimeIsRunningYono) {
                         btn.style.background = 'rgba(34, 197, 94, 0.2)';
                         btn.style.borderColor = 'rgba(34, 197, 94, 0.4)';
                         icon.setAttribute('data-lucide', 'pause');
@@ -2556,7 +2663,7 @@
 
 <!-- ВЕРСИЯ ПРИЛОЖЕНИЯ -->
 <div style="position: fixed; bottom: 0; right: 0; padding: 12px 16px; font-size: 10px; color: #666; background: rgba(0,0,0,0.3); border-radius: 8px 0 0 0; font-family: monospace; z-index: 100;">
-    version dev: 2.0
+    version dev: 1.9
 </div>
 
 </body>
