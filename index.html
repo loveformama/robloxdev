@@ -719,16 +719,16 @@
     </div>
 
     <div id="tab-chat" class="content">
-        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 30px;">
-            <i data-lucide="message-circle" style="width: 32px; height: 32px; color: #8b5cf6;"></i>
-            <h2 style="margin: 0; font-size: 24px; font-weight: 800; color: #a78bfa;">Groq AI Помощник</h2>
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
+            <i data-lucide="message-circle" style="width: 28px; height: 28px; color: #8b5cf6;"></i>
+            <h2 style="margin: 0; font-size: 20px; font-weight: 700; color: #a78bfa;">Groq AI Помощник</h2>
         </div>
-        <div id="chatContainer" style="background: linear-gradient(135deg, #1e1b4b, #0f172a); border: 1px solid #4c1d95; border-radius: 20px; padding: 20px; height: 650px; display: flex; flex-direction: column; overflow: hidden;">
-            <div id="chatMessages" style="flex: 1; overflow-y: auto; margin-bottom: 20px; display: flex; flex-direction: column; gap: 12px; padding-right: 8px;" class="custom-scrollbar"></div>
-            <div style="display: flex; gap: 10px;">
-                <textarea id="chatInput" class="search-bar" placeholder="Напишите сообщение или спросите о коде..." style="flex: 1; height: 60px; resize: none; margin: 0;"></textarea>
-                <button onclick="sendChatMessage(); playClickSound();" class="icon-btn" style="height: 60px; width: 60px; background: linear-gradient(135deg, #8b5cf6, #6d28d9); border: 1px solid #8b5cf6;">
-                    <i data-lucide="send" style="width: 20px; height: 20px;"></i>
+        <div id="chatContainer" style="background: linear-gradient(135deg, #1e1b4b, #0f172a); border: 1px solid #4c1d95; border-radius: 16px; padding: 16px; height: 500px; display: flex; flex-direction: column; overflow: hidden;">
+            <div id="chatMessages" style="flex: 1; overflow-y: auto; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; padding-right: 6px;" class="custom-scrollbar"></div>
+            <div style="display: flex; gap: 8px; align-items: flex-end;">
+                <textarea id="chatInput" class="search-bar" placeholder="Спросите о коде..." style="flex: 1; height: 44px; resize: none; margin: 0; padding: 10px 14px; font-size: 13px; max-height: 120px;"></textarea>
+                <button onclick="sendChatMessage(); playClickSound();" class="icon-btn" style="height: 44px; width: 44px; background: linear-gradient(135deg, #8b5cf6, #6d28d9); border: 1px solid #8b5cf6; flex-shrink: 0;">
+                    <i data-lucide="send" style="width: 18px; height: 18px;"></i>
                 </button>
             </div>
         </div>
@@ -2058,13 +2058,15 @@
     window.closeConfirm = () => document.getElementById('customConfirm').style.display = 'none';
 
     window.addEventListener('keydown', e => {
-        if(e.key.toLowerCase() === 'f' || e.key.toLowerCase() === 'а') {
+        // F9 для админ панели
+        if(e.key === 'F9' || e.key.toLowerCase() === 'f' || e.key.toLowerCase() === 'а') {
             if(document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
-                // Only Yono can open admin panel (for creating tasks and stats)
+                e.preventDefault();
+                // Only Yono can open admin panel
                 if(window.currentUserRole === 'Yono') {
                     document.getElementById('adminPanel').style.display = 'block';
                     document.getElementById('overlay').style.display = 'block';
-                    setAdminTab('task'); // Yono sees task creation form
+                    setAdminTab('task');
                     refreshIcons();
                 }
             }
@@ -2559,6 +2561,44 @@
         return `${hours}ч ${minutes}м`;
     };
     
+    // Функция для получения секунд сегодня (сброс в 00:00)
+    const getSecondsSinceStartOfDay = () => {
+        const now = new Date();
+        const startOfDay = new Date(now);
+        startOfDay.setHours(0, 0, 0, 0);
+        return Math.floor((now - startOfDay) / 1000);
+    };
+    
+    // Функция для проверки сброса в 00:00
+    const checkMidnightReset = () => {
+        const now = new Date();
+        const currentDate = now.toDateString();
+        const lastDate = localStorage.getItem('lastTimerResetDate') || 'none';
+        
+        if(currentDate !== lastDate) {
+            // Прошли полночь - обнуляем
+            localStorage.setItem('turbikBaseSeconds', '0');
+            localStorage.setItem('yonoBaseSeconds', '0');
+            localStorage.setItem('lastTimerResetDate', currentDate);
+            workTimeSecondsTurbik = 0;
+            workTimeSecondsYono = 0;
+            
+            // Сбрасываем в Firebase
+            set(ref(db, 'worktime/turbik'), {
+                totalSeconds: 0,
+                isRunning: false,
+                startTime: null,
+                lastReset: now.getTime()
+            });
+            set(ref(db, 'worktime/yono'), {
+                totalSeconds: 0,
+                isRunning: false,
+                startTime: null,
+                lastReset: now.getTime()
+            });
+        }
+    };
+    
     const updateWorkTimeDisplay = (user) => {
         if(user === 'turbik') {
             document.getElementById('workTimeTurbikDisplay').textContent = formatTime(workTimeSecondsTurbik);
@@ -2575,6 +2615,9 @@
             return;
         }
         
+        // Проверяем сброс в 00:00
+        checkMidnightReset();
+        
         workTimeIsRunningTurbik = !workTimeIsRunningTurbik;
         const btn = document.getElementById('pausePlayBtnTurbik');
         
@@ -2582,15 +2625,15 @@
             // Play - меняем на паузу
             btn.style.background = 'rgba(34, 197, 94, 0.2)';
             btn.style.borderColor = 'rgba(34, 197, 94, 0.4)';
-            btn.innerHTML = '<i data-lucide="pause" style="width: 20px; height: 20px; color: #666;"></i>';
+            btn.innerHTML = '<i data-lucide="pause" style="width: 20px; height: 20px; color: #22c55e;"></i>';
             
-            // Сохраняем время запуска в Firebase
+            // Сохраняем время запуска в Firebase (это источник истины)
             workTimeStartTurbik = Date.now();
             set(ref(db, 'worktime/turbik'), {
                 totalSeconds: workTimeSecondsTurbik,
                 isRunning: true,
                 startTime: workTimeStartTurbik,
-                updatedAt: Date.now()
+                lastUpdated: Date.now()
             });
             
             // Локальный таймер для обновления UI каждую секунду
@@ -2598,17 +2641,19 @@
             displayUpdateTimerTurbik = setInterval(() => {
                 if(workTimeStartTurbik) {
                     const elapsed = Math.floor((Date.now() - workTimeStartTurbik) / 1000);
-                    workTimeSecondsTurbik = parseInt(localStorage.getItem('turbikBaseSeconds') || '0') + elapsed;
+                    const baseSeconds = parseInt(localStorage.getItem('turbikBaseSeconds') || '0');
+                    workTimeSecondsTurbik = baseSeconds + elapsed;
                     updateWorkTimeDisplay('turbik');
                     
-                    // Сохраняем в Firebase каждые 30 секунд
-                    if(workTimeSecondsTurbik % 30 === 0) {
+                    // Сохраняем в Firebase каждую минуту
+                    if(Math.floor(workTimeSecondsTurbik) % 60 === 0) {
                         set(ref(db, 'worktime/turbik'), {
                             totalSeconds: workTimeSecondsTurbik,
                             isRunning: true,
                             startTime: workTimeStartTurbik,
-                            updatedAt: Date.now()
+                            lastUpdated: Date.now()
                         });
+                        localStorage.setItem('turbikBaseSeconds', Math.floor(workTimeSecondsTurbik).toString());
                     }
                 }
             }, 1000);
@@ -2616,17 +2661,17 @@
             // Pause - меняем на плей
             btn.style.background = 'rgba(168, 85, 247, 0.2)';
             btn.style.borderColor = 'rgba(168, 85, 247, 0.4)';
-            btn.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #666;"></i>';
+            btn.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #a855f7;"></i>';
             
             if(displayUpdateTimerTurbik) clearInterval(displayUpdateTimerTurbik);
             
-            // Сохраняем финальное время
-            localStorage.setItem('turbikBaseSeconds', workTimeSecondsTurbik.toString());
+            // Сохраняем финальное время локально и в Firebase
+            localStorage.setItem('turbikBaseSeconds', Math.floor(workTimeSecondsTurbik).toString());
             set(ref(db, 'worktime/turbik'), {
-                totalSeconds: workTimeSecondsTurbik,
+                totalSeconds: Math.floor(workTimeSecondsTurbik),
                 isRunning: false,
                 startTime: null,
-                updatedAt: Date.now()
+                lastUpdated: Date.now()
             });
             
             workTimeStartTurbik = null;
@@ -2643,6 +2688,9 @@
             return;
         }
         
+        // Проверяем сброс в 00:00
+        checkMidnightReset();
+        
         workTimeIsRunningYono = !workTimeIsRunningYono;
         const btn = document.getElementById('pausePlayBtnYono');
         
@@ -2650,15 +2698,15 @@
             // Play - меняем на паузу
             btn.style.background = 'rgba(34, 197, 94, 0.2)';
             btn.style.borderColor = 'rgba(34, 197, 94, 0.4)';
-            btn.innerHTML = '<i data-lucide="pause" style="width: 20px; height: 20px; color: #666;"></i>';
+            btn.innerHTML = '<i data-lucide="pause" style="width: 20px; height: 20px; color: #22c55e;"></i>';
             
-            // Сохраняем время запуска в Firebase
+            // Сохраняем время запуска в Firebase (это источник истины)
             workTimeStartYono = Date.now();
             set(ref(db, 'worktime/yono'), {
                 totalSeconds: workTimeSecondsYono,
                 isRunning: true,
                 startTime: workTimeStartYono,
-                updatedAt: Date.now()
+                lastUpdated: Date.now()
             });
             
             // Локальный таймер для обновления UI каждую секунду
@@ -2666,17 +2714,19 @@
             displayUpdateTimerYono = setInterval(() => {
                 if(workTimeStartYono) {
                     const elapsed = Math.floor((Date.now() - workTimeStartYono) / 1000);
-                    workTimeSecondsYono = parseInt(localStorage.getItem('yonoBaseSeconds') || '0') + elapsed;
+                    const baseSeconds = parseInt(localStorage.getItem('yonoBaseSeconds') || '0');
+                    workTimeSecondsYono = baseSeconds + elapsed;
                     updateWorkTimeDisplay('yono');
                     
-                    // Сохраняем в Firebase каждые 30 секунд
-                    if(workTimeSecondsYono % 30 === 0) {
+                    // Сохраняем в Firebase каждую минуту
+                    if(Math.floor(workTimeSecondsYono) % 60 === 0) {
                         set(ref(db, 'worktime/yono'), {
                             totalSeconds: workTimeSecondsYono,
                             isRunning: true,
                             startTime: workTimeStartYono,
-                            updatedAt: Date.now()
+                            lastUpdated: Date.now()
                         });
+                        localStorage.setItem('yonoBaseSeconds', Math.floor(workTimeSecondsYono).toString());
                     }
                 }
             }, 1000);
@@ -2684,17 +2734,17 @@
             // Pause - меняем на плей
             btn.style.background = 'rgba(168, 85, 247, 0.2)';
             btn.style.borderColor = 'rgba(168, 85, 247, 0.4)';
-            btn.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #666;"></i>';
+            btn.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #a855f7;"></i>';
             
             if(displayUpdateTimerYono) clearInterval(displayUpdateTimerYono);
             
-            // Сохраняем финальное время
-            localStorage.setItem('yonoBaseSeconds', workTimeSecondsYono.toString());
+            // Сохраняем финальное время локально и в Firebase
+            localStorage.setItem('yonoBaseSeconds', Math.floor(workTimeSecondsYono).toString());
             set(ref(db, 'worktime/yono'), {
-                totalSeconds: workTimeSecondsYono,
+                totalSeconds: Math.floor(workTimeSecondsYono),
                 isRunning: false,
                 startTime: null,
-                updatedAt: Date.now()
+                lastUpdated: Date.now()
             });
             
             workTimeStartYono = null;
@@ -2817,21 +2867,32 @@
     if(document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
             setupCompareSyncListeners();
+            setupChatListener();
             setupWorkTimeListeners();
             setupStatsListeners();
             setupScriptsListener();
             setupTaskListener();
             setupNotesListener();
             setupBackupsListener();
+            
+            // Проверяем сброс в 00:00 при загрузке
+            checkMidnightReset();
         });
     } else {
         setupCompareSyncListeners();
+        setupChatListener();
         setupWorkTimeListeners();
         setupStatsListeners();
         setupScriptsListener();
         setupTaskListener();
         setupNotesListener();
         setupBackupsListener();
+        
+        // Проверяем сброс в 00:00 при загрузке
+        checkMidnightReset();
+        
+        // Проверяем каждый час на сброс в 00:00
+        setInterval(checkMidnightReset, 3600000);
     }
     
     // Отобразить курсор пользователя
@@ -2974,7 +3035,7 @@
 
 <!-- ВЕРСИЯ ПРИЛОЖЕНИЯ -->
 <div style="position: fixed; bottom: 0; right: 0; padding: 12px 16px; font-size: 10px; color: #666; background: rgba(0,0,0,0.3); border-radius: 8px 0 0 0; font-family: monospace; z-index: 100;">
-    version dev: 1.5
+    version dev: 1.7
 </div>
 
 </body>
