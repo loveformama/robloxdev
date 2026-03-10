@@ -822,54 +822,54 @@
 
     <div id="tab-progress" class="content">
         <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 30px;">
-            <i data-lucide="zap" style="width: 32px; height: 32px; color: #fbbf24;"></i>
-            <h2 style="margin: 0; font-size: 24px; font-weight: 800; color: #fbbf24;">Общий прогресс</h2>
+            <i data-lucide="zap" style="width: 32px; height: 32px; color: #9ca3af;"></i>
+            <h2 style="margin: 0; font-size: 24px; font-weight: 800; color: #d1d5db;">Общий прогресс</h2>
         </div>
         <div class="main-progress">
             <div id="totalProgressText" class="progress-text">0%</div>
             <div id="totalProgressBar" class="progress-fill"></div>
         </div>
         <div style="margin-top: 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
-            <div class="stat-card" style="background: linear-gradient(135deg, #1f2937, #111); border: 1px solid #375a7f;">
-                <i data-lucide="check-circle-2" style="width: 32px; height: 32px; color: #10b981;"></i>
+            <div class="stat-card" style="background: #151b28; border: 1px solid #2d3b4f;">
+                <i data-lucide="check-circle-2" style="width: 32px; height: 32px; color: #6b7280;"></i>
                 <div style="flex: 1;">
-                    <div style="font-size: 12px; color: #888; text-transform: uppercase; font-weight: 600;">Выполнено заданий</div>
+                    <div style="font-size: 12px; color: #9ca3af; text-transform: uppercase; font-weight: 600;">Выполнено заданий</div>
                     <div style="display: flex; gap: 16px; margin-top: 12px; align-items: center;">
                         <div>
-                            <div style="font-size: 12px; color: #64748b; margin-bottom: 4px;">Turbik</div>
-                            <div id="completedTasksTurbik" style="font-size: 24px; font-weight: 800; color: #3b82f6;">0</div>
+                            <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Turbik</div>
+                            <div id="completedTasksTurbik" style="font-size: 24px; font-weight: 800; color: #9ca3af;">0</div>
                         </div>
-                        <div style="color: #444;">|</div>
+                        <div style="color: #374151;">|</div>
                         <div>
-                            <div style="font-size: 12px; color: #64748b; margin-bottom: 4px;">Yono</div>
-                            <div id="completedTasksYono" style="font-size: 24px; font-weight: 800; color: #ef4444;">0</div>
+                            <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Yono</div>
+                            <div id="completedTasksYono" style="font-size: 24px; font-weight: 800; color: #9ca3af;">0</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         <div style="margin-top: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
-            <div class="stat-card" style="background: linear-gradient(135deg, #1e3a8a, #1e1b4b); border: 1px solid #3b82f6; flex-direction: column; align-items: flex-start;">
+            <div class="stat-card" style="background: #151b28; border: 1px solid #2d3b4f; flex-direction: column; align-items: flex-start;">
                 <div style="display: flex; align-items: center; gap: 12px; width: 100%; margin-bottom: 12px;">
-                    <i data-lucide="user" style="width: 28px; height: 28px; color: #60a5fa;"></i>
-                    <div style="font-size: 12px; color: #93c5fd; text-transform: uppercase; font-weight: 600;">Turbik - Время работы</div>
+                    <i data-lucide="user" style="width: 28px; height: 28px; color: #9ca3af;"></i>
+                    <div style="font-size: 12px; color: #d1d5db; text-transform: uppercase; font-weight: 600;">Turbik - Время работы</div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 12px; width: 100%;">
-                    <div id="workTimeTurbikDisplay" style="font-size: 28px; font-weight: 800; color: #60a5fa; font-family: monospace; flex: 1; text-shadow: 0 0 10px rgba(96, 165, 250, 0.3);">0ч 0м</div>
-                    <button id="pausePlayBtnTurbik" class="icon-btn" style="width: 40px; height: 40px; background: rgba(59, 130, 246, 0.3); border: 2px solid #3b82f6; flex-shrink: 0; transition: 0.2s;" onclick="toggleWorkTimerTurbik(); playClickSound();" title="Play/Pause">
-                        <i data-lucide="play" style="width: 20px; height: 20px; color: #60a5fa;"></i>
+                    <div id="workTimeTurbikDisplay" style="font-size: 28px; font-weight: 800; color: #b8bcc8; font-family: monospace; flex: 1; text-shadow: none;">0ч 0м</div>
+                    <button id="pausePlayBtnTurbik" class="icon-btn" style="width: 40px; height: 40px; background: #2d3b4f; border: 1px solid #3f4f63; flex-shrink: 0; transition: 0.2s;" onclick="toggleWorkTimerTurbik(); playClickSound();" title="Play/Pause">
+                        <i data-lucide="play" style="width: 20px; height: 20px; color: #9ca3af;"></i>
                     </button>
                 </div>
             </div>
-            <div class="stat-card" style="background: linear-gradient(135deg, #7c2d12, #4c0519); border: 1px solid #ef4444; flex-direction: column; align-items: flex-start;">
+            <div class="stat-card" style="background: #151b28; border: 1px solid #2d3b4f; flex-direction: column; align-items: flex-start;">
                 <div style="display: flex; align-items: center; gap: 12px; width: 100%; margin-bottom: 12px;">
-                    <i data-lucide="user" style="width: 28px; height: 28px; color: #f87171;"></i>
-                    <div style="font-size: 12px; color: #fca5a5; text-transform: uppercase; font-weight: 600;">Yono - Время работы</div>
+                    <i data-lucide="user" style="width: 28px; height: 28px; color: #9ca3af;"></i>
+                    <div style="font-size: 12px; color: #d1d5db; text-transform: uppercase; font-weight: 600;">Yono - Время работы</div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 12px; width: 100%;">
-                    <div id="workTimeYonoDisplay" style="font-size: 28px; font-weight: 800; color: #f87171; font-family: monospace; flex: 1; text-shadow: 0 0 10px rgba(248, 113, 113, 0.3);">0ч 0м</div>
-                    <button id="pausePlayBtnYono" class="icon-btn" style="width: 40px; height: 40px; background: rgba(239, 68, 68, 0.3); border: 2px solid #ef4444; flex-shrink: 0; transition: 0.2s;" onclick="toggleWorkTimerYono(); playClickSound();" title="Play/Pause">
-                        <i data-lucide="play" style="width: 20px; height: 20px; color: #f87171;"></i>
+                    <div id="workTimeYonoDisplay" style="font-size: 28px; font-weight: 800; color: #b8bcc8; font-family: monospace; flex: 1; text-shadow: none;">0ч 0м</div>
+                    <button id="pausePlayBtnYono" class="icon-btn" style="width: 40px; height: 40px; background: #2d3b4f; border: 1px solid #3f4f63; flex-shrink: 0; transition: 0.2s;" onclick="toggleWorkTimerYono(); playClickSound();" title="Play/Pause">
+                        <i data-lucide="play" style="width: 20px; height: 20px; color: #9ca3af;"></i>
                     </button>
                 </div>
             </div>
@@ -2548,10 +2548,116 @@
     let displayUpdateTimerTurbik = null;  // Таймер для обновления UI
     let displayUpdateTimerYono = null;    // Таймер для обновления UI
     
+    // Функция для получения текущей даты в киевском времени (UTC+2)
+    const getKievDate = () => {
+        const now = new Date();
+        const kievTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Kyiv' }));
+        return kievTime.toDateString();
+    };
+    
+    // Функция для очистки таймеров при смене дня
+    const checkAndResetDailyTimers = () => {
+        const lastResetDate = localStorage.getItem('lastTimerResetDate');
+        const todayDate = getKievDate();
+        
+        if(lastResetDate !== todayDate) {
+            // День поменялся, очищаем таймеры
+            workTimeSecondsTurbik = 0;
+            workTimeSecondsYono = 0;
+            workTimeIsRunningTurbik = false;
+            workTimeIsRunningYono = false;
+            
+            localStorage.setItem('turbikBaseSeconds', '0');
+            localStorage.setItem('yonoBaseSeconds', '0');
+            localStorage.setItem('lastTimerResetDate', todayDate);
+            
+            // Очищаем таймеры если они работали
+            if(displayUpdateTimerTurbik) clearInterval(displayUpdateTimerTurbik);
+            if(displayUpdateTimerYono) clearInterval(displayUpdateTimerYono);
+            workTimeStartTurbik = null;
+            workTimeStartYono = null;
+            
+            // Обновляем UI
+            updateWorkTimeDisplay('turbik');
+            updateWorkTimeDisplay('yono');
+            
+            // Обновляем кнопки
+            const btnTurbik = document.getElementById('pausePlayBtnTurbik');
+            if(btnTurbik) {
+                btnTurbik.style.background = '#2d3b4f';
+                btnTurbik.style.borderColor = '#3f4f63';
+                btnTurbik.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #9ca3af;"></i>';
+            }
+            
+            const btnYono = document.getElementById('pausePlayBtnYono');
+            if(btnYono) {
+                btnYono.style.background = '#2d3b4f';
+                btnYono.style.borderColor = '#3f4f63';
+                btnYono.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #9ca3af;"></i>';
+            }
+            
+            // Очищаем в Firebase
+            set(ref(db, 'worktime/turbik'), {
+                totalSeconds: 0,
+                isRunning: false,
+                startTime: null,
+                updatedAt: Date.now()
+            });
+            set(ref(db, 'worktime/yono'), {
+                totalSeconds: 0,
+                isRunning: false,
+                startTime: null,
+                updatedAt: Date.now()
+            });
+            
+            lucide.createIcons();
+        }
+    };
+    
     const formatTime = (seconds) => {
         const hours = Math.floor(seconds / 3600);
         const minutes = Math.floor((seconds % 3600) / 60);
         return `${hours}ч ${minutes}м`;
+    };
+    
+    const initializeButtonStates = () => {
+        // Initialize Turbik button
+        onValue(ref(db, 'worktime/turbik'), (snapshot) => {
+            const data = snapshot.val();
+            const btn = document.getElementById('pausePlayBtnTurbik');
+            if(!btn) return;
+            
+            const isRunning = data && data.isRunning;
+            if(isRunning) {
+                btn.style.background = 'rgba(34, 197, 94, 0.2)';
+                btn.style.borderColor = 'rgba(34, 197, 94, 0.4)';
+                btn.innerHTML = '<i data-lucide="pause" style="width: 20px; height: 20px; color: #666;"></i>';
+            } else {
+                btn.style.background = '#2d3b4f';
+                btn.style.borderColor = '#3f4f63';
+                btn.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #9ca3af;"></i>';
+            }
+            lucide.createIcons();
+        }, { onlyOnce: true });
+        
+        // Initialize Yono button
+        onValue(ref(db, 'worktime/yono'), (snapshot) => {
+            const data = snapshot.val();
+            const btn = document.getElementById('pausePlayBtnYono');
+            if(!btn) return;
+            
+            const isRunning = data && data.isRunning;
+            if(isRunning) {
+                btn.style.background = 'rgba(34, 197, 94, 0.2)';
+                btn.style.borderColor = 'rgba(34, 197, 94, 0.4)';
+                btn.innerHTML = '<i data-lucide="pause" style="width: 20px; height: 20px; color: #666;"></i>';
+            } else {
+                btn.style.background = '#2d3b4f';
+                btn.style.borderColor = '#3f4f63';
+                btn.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #9ca3af;"></i>';
+            }
+            lucide.createIcons();
+        }, { onlyOnce: true });
     };
     
     const updateWorkTimeDisplay = (user) => {
@@ -2609,9 +2715,9 @@
             }, 1000);
         } else {
             // Pause - меняем на плей
-            btn.style.background = 'rgba(168, 85, 247, 0.2)';
-            btn.style.borderColor = 'rgba(168, 85, 247, 0.4)';
-            btn.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #666;"></i>';
+            btn.style.background = '#2d3b4f';
+            btn.style.borderColor = '#3f4f63';
+            btn.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #9ca3af;"></i>';
             
             if(displayUpdateTimerTurbik) clearInterval(displayUpdateTimerTurbik);
             
@@ -2677,9 +2783,9 @@
             }, 1000);
         } else {
             // Pause - меняем на плей
-            btn.style.background = 'rgba(168, 85, 247, 0.2)';
-            btn.style.borderColor = 'rgba(168, 85, 247, 0.4)';
-            btn.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #666;"></i>';
+            btn.style.background = '#2d3b4f';
+            btn.style.borderColor = '#3f4f63';
+            btn.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #9ca3af;"></i>';
             
             if(displayUpdateTimerYono) clearInterval(displayUpdateTimerYono);
             
@@ -2699,6 +2805,11 @@
     };
     
     const setupWorkTimeListeners = () => {
+        // Проверяем и очищаем таймеры если был переход в новый день
+        checkAndResetDailyTimers();
+        
+        // Инициализируем кнопки при загрузке слушателей
+        initializeButtonStates();
         // Слушаем время работы Turbik
         if(workTimeListenerTurbik) workTimeListenerTurbik();
         workTimeListenerTurbik = onValue(ref(db, 'worktime/turbik'), (snapshot) => {
@@ -2736,9 +2847,9 @@
                     if(displayUpdateTimerTurbik) clearInterval(displayUpdateTimerTurbik);
                     const btn = document.getElementById('pausePlayBtnTurbik');
                     if(btn) {
-                        btn.style.background = 'rgba(168, 85, 247, 0.2)';
-                        btn.style.borderColor = 'rgba(168, 85, 247, 0.4)';
-                        btn.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #666;"></i>';
+                        btn.style.background = '#2d3b4f';
+                        btn.style.borderColor = '#3f4f63';
+                        btn.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #9ca3af;"></i>';
                         lucide.createIcons();
                     }
                     workTimeStartTurbik = null;
@@ -2746,9 +2857,9 @@
                     updateWorkTimeDisplay('turbik');
                     const btn = document.getElementById('pausePlayBtnTurbik');
                     if(btn) {
-                        btn.style.background = 'rgba(168, 85, 247, 0.2)';
-                        btn.style.borderColor = 'rgba(168, 85, 247, 0.4)';
-                        btn.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #666;"></i>';
+                        btn.style.background = '#2d3b4f';
+                        btn.style.borderColor = '#3f4f63';
+                        btn.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #9ca3af;"></i>';
                         lucide.createIcons();
                     }
                 }
@@ -2792,9 +2903,9 @@
                     if(displayUpdateTimerYono) clearInterval(displayUpdateTimerYono);
                     const btn = document.getElementById('pausePlayBtnYono');
                     if(btn) {
-                        btn.style.background = 'rgba(168, 85, 247, 0.2)';
-                        btn.style.borderColor = 'rgba(168, 85, 247, 0.4)';
-                        btn.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #666;"></i>';
+                        btn.style.background = '#2d3b4f';
+                        btn.style.borderColor = '#3f4f63';
+                        btn.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #9ca3af;"></i>';
                         lucide.createIcons();
                     }
                     workTimeStartYono = null;
@@ -2802,9 +2913,9 @@
                     updateWorkTimeDisplay('yono');
                     const btn = document.getElementById('pausePlayBtnYono');
                     if(btn) {
-                        btn.style.background = 'rgba(168, 85, 247, 0.2)';
-                        btn.style.borderColor = 'rgba(168, 85, 247, 0.4)';
-                        btn.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #666;"></i>';
+                        btn.style.background = '#2d3b4f';
+                        btn.style.borderColor = '#3f4f63';
+                        btn.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #9ca3af;"></i>';
                         lucide.createIcons();
                     }
                 }
@@ -2815,6 +2926,7 @@
     // Инициализируем слушатели при загрузке
     if(document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
+            checkAndResetDailyTimers();
             setupCompareSyncListeners();
             setupWorkTimeListeners();
             setupStatsListeners();
@@ -2822,8 +2934,12 @@
             setupTaskListener();
             setupNotesListener();
             setupBackupsListener();
+            
+            // Проверяем смену дня каждый час
+            setInterval(checkAndResetDailyTimers, 3600000);
         });
     } else {
+        checkAndResetDailyTimers();
         setupCompareSyncListeners();
         setupWorkTimeListeners();
         setupStatsListeners();
@@ -2831,6 +2947,9 @@
         setupTaskListener();
         setupNotesListener();
         setupBackupsListener();
+        
+        // Проверяем смену дня каждый час
+        setInterval(checkAndResetDailyTimers, 3600000);
     }
     
     // Отобразить курсор пользователя
@@ -2978,4 +3097,3 @@
 
 </body>
 </html>
-
