@@ -940,6 +940,7 @@
     <div class="modal-content" style="width:450px; padding:30px; margin-top:100px;">
         <h3 style="margin-top:0">Новый скрипт</h3>
         <input type="text" id="newName" class="search-bar" placeholder="Название" style="margin-bottom:10px">
+        <input type="text" id="newDescription" class="search-bar" placeholder="Описание шаблона (необязательно)" style="margin-bottom:10px">
         <textarea id="newCode" class="search-bar" rows="8" placeholder="Код..." style="margin-bottom:20px; font-family:monospace;"></textarea>
         <button onclick="saveNewScript(); playClickSound();" class="icon-btn" style="width:100%; height:50px; background:var(--accent); color:white;">Сохранить</button>
     </div>
@@ -990,6 +991,9 @@
         
         <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Название</label>
         <input type="text" id="editScriptName" class="search-bar" placeholder="Название скрипта..." style="margin-bottom:15px">
+        
+        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Описание</label>
+        <input type="text" id="editScriptDescription" class="search-bar" placeholder="Описание шаблона (необязательно)" style="margin-bottom:15px">
         
         <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Код</label>
         <textarea id="editScriptCode" class="search-bar" rows="15" placeholder="Код..." style="margin-bottom:20px; font-family:monospace; font-size:12px;"></textarea>
@@ -1594,7 +1598,8 @@
                     ${dateStr ? `<div style="font-size:11px; color:#666; margin-bottom:12px; display:flex; align-items:center; gap:6px;">${dateStr}</div>` : ''}
                     <div class="task-actions">
                         <button class="icon-btn" onclick="viewScript(event, '${s.id}')"><i data-lucide="eye"></i></button>
-                        <button class="icon-btn" onclick="copyText(event, \`${s.code.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)"><i data-lucide="copy"></i></button>
+                        <button class="icon-btn" onclick="copyScriptCode(event, '${s.id}')" title="Копировать весь скрипт"><i data-lucide="copy"></i></button>
+                        <button class="icon-btn" onclick="useScriptTemplate(event, '${s.id}')" title="Использовать как шаблон"><i data-lucide="hexagon"></i></button>
                         <button class="icon-btn" onclick="editScript('${s.id}'); playClickSound();"><i data-lucide="edit-2"></i></button>
                         <button class="icon-btn ${s.pinned ? 'btn-yellow' : ''}" onclick="togglePinScript('${s.id}'); playClickSound();" title="Закрепить"><i data-lucide="pin"></i></button>
                         <button class="icon-btn btn-red" onclick="askDelete(event, 'scripts/${s.id}')"><i data-lucide="trash-2"></i></button>
@@ -1619,7 +1624,41 @@
             if(s) {
                 document.getElementById('viewTitle').innerText = s.name;
                 document.getElementById('viewCode').innerText = s.code;
+                if(s.description) {
+                    document.getElementById('viewCode').innerText = `Описание: ${s.description}\n\n${s.code}`;
+                }
                 document.getElementById('scriptView').style.display = 'block';
+            }
+        }, {onlyOnce: true});
+    };
+
+    window.copyScriptCode = (e, id) => {
+        if(e && e.stopPropagation) e.stopPropagation();
+        onValue(ref(db, `scripts/${id}`), (snapshot) => {
+            const s = snapshot.val();
+            if(s && s.code) {
+                navigator.clipboard.writeText(s.code).then(() => {
+                    playClickSound();
+                    if(e && e.currentTarget) {
+                        const old = e.currentTarget.innerHTML;
+                        e.currentTarget.innerHTML = '<i data-lucide="check"></i>';
+                        refreshIcons();
+                        setTimeout(() => { e.currentTarget.innerHTML = old; refreshIcons(); }, 1000);
+                    }
+                }).catch(err => console.error('Clipboard error:', err));
+            }
+        }, {onlyOnce: true});
+    };
+
+    window.useScriptTemplate = (e, id) => {
+        if(e && e.stopPropagation) e.stopPropagation();
+        onValue(ref(db, `scripts/${id}`), (snapshot) => {
+            const s = snapshot.val();
+            if(s) {
+                document.getElementById('newName').value = s.name || '';
+                document.getElementById('newDescription').value = s.description || '';
+                document.getElementById('newCode').value = s.code || '';
+                document.getElementById('addModal').style.display = 'flex';
             }
         }, {onlyOnce: true});
     };
@@ -1630,6 +1669,7 @@
             if(s) {
                 document.getElementById('editScriptId').value = id;
                 document.getElementById('editScriptName').value = s.name;
+                document.getElementById('editScriptDescription').value = s.description || '';
                 document.getElementById('editScriptCode').value = s.code;
                 document.getElementById('editScriptModal').style.display = 'flex';
             }
@@ -1638,7 +1678,8 @@
 
     window.saveEditScript = () => {
         const id = document.getElementById('editScriptId').value;
-        const name = document.getElementById('editScriptName').value;
+        const name = document.getElementById('editScriptName').value.trim();
+        const description = document.getElementById('editScriptDescription').value.trim();
         const code = document.getElementById('editScriptCode').value;
         
         if(name && code) {
@@ -1647,12 +1688,15 @@
                 const s = snapshot.val();
                 set(ref(db, `scripts/${id}`), {
                     name,
+                    description,
                     code,
                     createdAt: s.createdAt || Date.now(),
                     pinned: s.pinned || false
                 });
                 document.getElementById('editScriptModal').style.display = 'none';
             }, {onlyOnce: true});
+        } else {
+            alert('Укажите название и код скрипта');
         }
     };
 
@@ -1669,19 +1713,24 @@
     };
 
     window.saveNewScript = () => {
-        const name = document.getElementById('newName').value;
+        const name = document.getElementById('newName').value.trim();
+        const description = document.getElementById('newDescription').value.trim();
         const code = document.getElementById('newCode').value;
-        if(name && code) { 
+        if(name && code) {
             playClickSound();
-            push(ref(db, 'scripts'), { 
-                name, 
+            push(ref(db, 'scripts'), {
+                name,
+                description,
                 code,
                 createdAt: Date.now(),
                 pinned: false
-            }); 
+            });
             document.getElementById('newName').value = '';
+            document.getElementById('newDescription').value = '';
             document.getElementById('newCode').value = '';
-            closeAdmin(); 
+            closeAdmin();
+        } else {
+            alert('Укажите название и код скрипта');
         }
     };
 
@@ -3123,7 +3172,7 @@
 
 <!-- ВЕРСИЯ ПРИЛОЖЕНИЯ -->
 <div style="position: fixed; bottom: 0; right: 0; padding: 12px 16px; font-size: 10px; color: #666; background: rgba(0,0,0,0.3); border-radius: 8px 0 0 0; font-family: monospace; z-index: 100;">
-    version dev: 1.5
+    version dev: 1.0
 </div>
 
 </body>
