@@ -707,7 +707,7 @@
     <div id="userBalance" style="margin-left: 16px; color: #ccc; font-size: 13px; display: flex; align-items: center; gap: 10px;">
         <i data-lucide="droplet" style="width: 16px; height: 16px; color:#60a5fa"></i>
         <span id="balanceElixirs">Элексиры: 0</span>
-        <i data-lucide="coin" style="width: 16px; height: 16px; color:#f59e0b"></i>
+        <i data-lucide="dollar-sign" style="width: 16px; height: 16px; color:#f59e0b"></i>
         <span id="balanceRobux">Робуксы: 0</span>
         <i data-lucide="ticket" style="width: 16px; height: 16px; color:#8b5cf6"></i>
         <span id="balanceCoupons">Купоны: 0</span>
@@ -767,7 +767,7 @@
         <!-- HEADER -->
         <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border);">
             <div style="background: var(--accent); width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px var(--accent-glow);">
-                <i data-lucide="git-diff" style="color: white; width: 22px; height: 22px;"></i>
+                <i data-lucide="git-branch" style="color: white; width: 22px; height: 22px;"></i>
             </div>
             <div>
                 <h2 style="margin: 0; font-size: 20px; font-weight: 800;">Умное Сравнение <span style="font-size: 12px; color: #555; font-weight: 400; margin-left: 5px;">v1.5</span></h2>
@@ -870,7 +870,7 @@
         </div>
     </div>
 
-    <div id="tab-milky" class="content" style="display:none;">
+    <div id="tab-milky" class="content">
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; margin-bottom: 20px;">
             <div class="card" style="padding: 18px;">
                 <h3 style="margin: 0 0 10px 0; color: #c4b5fd;">Млечный путь</h3>
@@ -3003,9 +3003,11 @@
     
     const updateWorkTimeDisplay = (user) => {
         if(user === 'turbik') {
-            document.getElementById('workTimeTurbikDisplay').textContent = formatTime(workTimeSecondsTurbik);
+            const el = document.getElementById('workTimeTurbikDisplay');
+            if(el) el.textContent = formatTime(workTimeSecondsTurbik);
         } else if(user === 'yono') {
-            document.getElementById('workTimeYonoDisplay').textContent = formatTime(workTimeSecondsYono);
+            const el = document.getElementById('workTimeYonoDisplay');
+            if(el) el.textContent = formatTime(workTimeSecondsYono);
         }
     };
     
@@ -3433,7 +3435,7 @@
 
 <!-- ВЕРСИЯ ПРИЛОЖЕНИЯ -->
 <div style="position: fixed; bottom: 0; right: 0; padding: 12px 16px; font-size: 10px; color: #666; background: rgba(0,0,0,0.3); border-radius: 8px 0 0 0; font-family: monospace; z-index: 100;">
-    version dev: 190
+    version dev: 1.5
 </div>
 
 </body>
