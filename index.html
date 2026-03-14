@@ -167,7 +167,9 @@
         .card:hover { border-color: #444; transform: scale(1.02); }
         
         /* КАРТОЧКА ЗАДАЧИ */
-        .task-card { border-left: 4px solid var(--accent); }
+        .task-card { border-left: 4px solid var(--accent); min-height: 120px; display: flex; flex-direction: column; justify-content: space-between; }
+        .task-card h4 { margin: 0 0 6px 0; font-size: 18px; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .task-card .task-text { margin-bottom: 10px; font-weight: 600; color: #ccc; max-height: 3.5em; overflow: hidden; text-overflow: ellipsis; white-space: pre-wrap; }
         .task-status-label { font-size: 10px; color: var(--accent); font-weight: 800; text-transform: uppercase; margin-bottom: 5px; display: block; }
         .task-type { font-size: 10px; padding: 4px 8px; border-radius: 6px; background: #222; margin-bottom: 10px; display: inline-block; text-transform: uppercase; font-weight: bold;}
         .timer { color: var(--danger); font-weight: 800; font-family: monospace; font-size: 18px; margin: 10px 0; text-shadow: 0 0 10px rgba(239, 68, 68, 0.3); }
@@ -1599,7 +1601,6 @@
                     <div class="task-actions">
                         <button class="icon-btn" onclick="viewScript(event, '${s.id}')"><i data-lucide="eye"></i></button>
                         <button class="icon-btn" onclick="copyScriptCode(event, '${s.id}')" title="Копировать весь скрипт"><i data-lucide="copy"></i></button>
-                        <button class="icon-btn" onclick="useScriptTemplate(event, '${s.id}')" title="Использовать как шаблон"><i data-lucide="hexagon"></i></button>
                         <button class="icon-btn" onclick="editScript('${s.id}'); playClickSound();"><i data-lucide="edit-2"></i></button>
                         <button class="icon-btn ${s.pinned ? 'btn-yellow' : ''}" onclick="togglePinScript('${s.id}'); playClickSound();" title="Закрепить"><i data-lucide="pin"></i></button>
                         <button class="icon-btn btn-red" onclick="askDelete(event, 'scripts/${s.id}')"><i data-lucide="trash-2"></i></button>
@@ -1646,19 +1647,6 @@
                         setTimeout(() => { e.currentTarget.innerHTML = old; refreshIcons(); }, 1000);
                     }
                 }).catch(err => console.error('Clipboard error:', err));
-            }
-        }, {onlyOnce: true});
-    };
-
-    window.useScriptTemplate = (e, id) => {
-        if(e && e.stopPropagation) e.stopPropagation();
-        onValue(ref(db, `scripts/${id}`), (snapshot) => {
-            const s = snapshot.val();
-            if(s) {
-                document.getElementById('newName').value = s.name || '';
-                document.getElementById('newDescription').value = s.description || '';
-                document.getElementById('newCode').value = s.code || '';
-                document.getElementById('addModal').style.display = 'flex';
             }
         }, {onlyOnce: true});
     };
@@ -1815,8 +1803,10 @@
         
         tasksListener = onValue(ref(db, 'tasks'), (snapshot) => {
             const currentList = document.getElementById('taskListCurrent');
+            const overdueList = document.getElementById('taskListOverdue');
             const completedList = document.getElementById('taskListCompleted');
             currentList.innerHTML = '';
+            overdueList.innerHTML = '';
             completedList.innerHTML = '';
             
             const currentTasks = snapshot.val() || {};
@@ -1875,8 +1865,8 @@
                     <span class="task-status-label">Статус: ${t.status}</span>
                     <span class="task-type">${t.type}</span>
                     ${assignedDisplay}
-                    ${t.title ? `<div style="font-size: 14px; font-weight: 800; color: #fff; margin-bottom:6px;">${t.title}</div>` : ''}
-                    <div style="font-weight:600; margin-bottom:10px;">${t.text}</div>
+                    ${t.title ? `<h4>${t.title}</h4>` : ''}
+                    ${t.text ? `<div class="task-text">${t.text}</div>` : ''}
                     <div class="timer ${t.status === 'Выполнено' ? 'paused' : ''}" id="timer-${t.id}" style="${t.status === 'Выполнено' ? 'text-decoration: line-through; opacity: 0.6;' : ''}">00:00</div>
                     <div class="task-actions">
                         ${canChangeStatus ? `<button class="icon-btn btn-green" title="Готово" onclick="handleTaskBtn('${t.id}', 'done'); playClickSound();"><i data-lucide="check"></i></button>` : ''}
@@ -3172,7 +3162,7 @@
 
 <!-- ВЕРСИЯ ПРИЛОЖЕНИЯ -->
 <div style="position: fixed; bottom: 0; right: 0; padding: 12px 16px; font-size: 10px; color: #666; background: rgba(0,0,0,0.3); border-radius: 8px 0 0 0; font-family: monospace; z-index: 100;">
-    version dev: 1.5
+    version dev: 1.6
 </div>
 
 </body>
