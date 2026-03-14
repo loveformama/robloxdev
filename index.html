@@ -721,9 +721,11 @@
         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border);">
             <i data-lucide="filter" style="width: 24px; height: 24px; color: var(--accent);"></i>
             <button class="nav-btn" id="task-filter-current" style="padding: 8px 16px; margin: 0; color: white;" onclick="switchTaskFilter('current'); playClickSound();"><i data-lucide="play-circle" style="width: 16px; height: 16px;"></i> Текущие</button>
+            <button class="nav-btn" id="task-filter-overdue" style="padding: 8px 16px; margin: 0; color: #666;" onclick="switchTaskFilter('overdue'); playClickSound();"><i data-lucide="alert-circle" style="width: 16px; height: 16px;"></i> Пропущенные</button>
             <button class="nav-btn" id="task-filter-completed" style="padding: 8px 16px; margin: 0; color: #666;" onclick="switchTaskFilter('completed'); playClickSound();"><i data-lucide="check-circle-2" style="width: 16px; height: 16px;"></i> Выполненые</button>
         </div>
         <div id="taskListCurrent" class="task-grid"></div>
+        <div id="taskListOverdue" class="task-grid" style="display: none;"></div>
         <div id="taskListCompleted" class="task-grid" style="display: none;"></div>
     </div>
 
@@ -891,6 +893,8 @@
         <button onclick="updateProjectData(); playClickSound();" class="icon-btn" style="width:100%; height:50px; background:var(--accent); color:white;">Обновить</button>
     </div>
     <div id="adm-task-form" style="display:none">
+        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Название задачи (опционально)</label>
+        <input type="text" id="taskTitle" class="search-bar" placeholder="Название задачи" style="margin-bottom:15px;">
         <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Описание задачи</label>
         <textarea id="taskText" class="search-bar" rows="3" placeholder="Описание..." style="margin-bottom:15px"></textarea>
         
@@ -946,6 +950,8 @@
         <h3 style="margin-top:0">Редактировать задачу</h3>
         <input type="hidden" id="editTaskId">
         
+        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Название задачи (опционально)</label>
+        <input type="text" id="editTaskTitle" class="search-bar" placeholder="Название задачи" style="margin-bottom:15px;">
         <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Описание</label>
         <textarea id="editTaskText" class="search-bar" rows="3" placeholder="Описание задачи..." style="margin-bottom:15px"></textarea>
         
@@ -1263,12 +1269,81 @@
     window.setAdminTab = (type) => {
         document.getElementById('adm-stats-form').style.display = type === 'stats' ? 'block' : 'none';
         document.getElementById('adm-task-form').style.display = type === 'task' ? 'block' : 'none';
+        document.getElementById('adm-time-form').style.display = type === 'time' ? 'block' : 'none';
         document.getElementById('btn-adm-stats').style.color = type === 'stats' ? 'white' : '#555';
         document.getElementById('btn-adm-task').style.color = type === 'task' ? 'white' : '#555';
+        document.getElementById('btn-adm-time').style.color = type === 'time' ? 'white' : '#555';
         if(type === 'stats') prefillStats();
+        if(type === 'time') prefillTime();
     };
     
-
+    const prefillTime = () => {
+        onValue(ref(db, 'worktime/current'), (snapshot) => {
+            const data = snapshot.val();
+            if(data && data.totalSeconds) {
+                const hours = Math.floor(data.totalSeconds / 3600);
+                const minutes = Math.floor((data.totalSeconds % 3600) / 60);
+                document.getElementById('editTimeHours').value = hours;
+                document.getElementById('editTimeMinutes').value = minutes;
+            }
+        }, { onlyOnce: true });
+    };
+    
+    window.setWorkTime = () => {
+        if(window.currentUserRole !== 'Yono') {
+            alert('Только Yono может редактировать время');
+            return;
+        }
+        
+        const hours = parseInt(document.getElementById('editTimeHours').value) || 0;
+        const minutes = parseInt(document.getElementById('editTimeMinutes').value) || 0;
+        const totalSeconds = hours * 3600 + minutes * 60;
+        
+        playClickSound();
+        workTimeSeconds = totalSeconds;
+        updateWorkTimeDisplay();
+        
+        set(ref(db, 'worktime/current'), {
+            totalSeconds: totalSeconds,
+            isRunning: false,
+            updatedAt: Date.now()
+        });
+        
+        closeAdmin();
+    };
+    
+    window.resetWorkTime = () => {
+        if(window.currentUserRole !== 'Yono') {
+            alert('Только Yono может редактировать время');
+            return;
+        }
+        
+        if(confirm('Вы уверены? Время будет сброшено на 0.')) {
+            playClickSound();
+            workTimeSeconds = 0;
+            workTimeIsRunning = false;
+            updateWorkTimeDisplay();
+            
+            if(workTimeTimer) clearInterval(workTimeTimer);
+            
+            const btn = document.getElementById('pausePlayBtn');
+            if(btn) {
+                btn.style.background = 'rgba(168, 85, 247, 0.2)';
+                btn.style.borderColor = 'rgba(168, 85, 247, 0.4)';
+                const icon = btn.querySelector('i');
+                icon.setAttribute('data-lucide', 'play');
+                lucide.createIcons();
+            }
+            
+            set(ref(db, 'worktime/current'), {
+                totalSeconds: 0,
+                isRunning: false,
+                updatedAt: Date.now()
+            });
+            
+            closeAdmin();
+        }
+    };
 
     const prefillStats = () => {
         onValue(ref(db, 'projectStats'), (snapshot) => {
@@ -1289,6 +1364,9 @@
     let statsTasksListener = null;
     let completedTasksCountTurbik = 0;
     let completedTasksCountYono = 0;
+    let totalTasksCount = 0;
+    let currentTasksCount = 0;
+    let overdueTasksCount = 0;
 
     const renderStatsDisplay = (data) => {
         const daysLeft = data.releaseTimestamp ? Math.max(0, Math.ceil((data.releaseTimestamp - Date.now()) / 86400000)) : data.days;
@@ -1300,8 +1378,11 @@
         }
         
         // Автоматически считаем вклад
-        let contributionTurbik = Math.min(100, completedTasksCountTurbik * 10);
-        let contributionYono = Math.min(100, completedTasksCountYono * 10);
+        const hoursWorkedTurbik = workTimeSecondsTurbik / 3600;
+        const hoursWorkedYono = workTimeSecondsYono / 3600;
+        
+        let contributionTurbik = Math.min(100, Math.round((completedTasksCountTurbik * 10) + (hoursWorkedTurbik * 5)));
+        let contributionYono = Math.min(100, Math.round((completedTasksCountYono * 10) + (hoursWorkedYono * 5)));
         
         // Нормализуем так чтобы сумма не превышала 100%
         const totalContribution = contributionTurbik + contributionYono;
@@ -1331,6 +1412,27 @@
                     <div class="stat-content">
                         <div class="stat-label">Успеваемость</div>
                         <div class="stat-value">${data.perf}</div>
+                    </div>
+                </div>
+                <div class="stat-card" style="background: #1a1a1a; border: 1px solid #333;">
+                    <div class="stat-icon"><i data-lucide="list-check" style="color: #666;"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-label">Всего задач</div>
+                        <div class="stat-value">${totalTasksCount}</div>
+                    </div>
+                </div>
+                <div class="stat-card" style="background: #1a1a1a; border: 1px solid #333;">
+                    <div class="stat-icon"><i data-lucide="play-circle" style="color: #666;"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-label">В процессе</div>
+                        <div class="stat-value">${currentTasksCount}</div>
+                    </div>
+                </div>
+                <div class="stat-card" style="background: #1a1a1a; border: 1px solid #333;">
+                    <div class="stat-icon"><i data-lucide="clock" style="color: #666;"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-label">Просрочено</div>
+                        <div class="stat-value" style="color: #ef4444;">${overdueTasksCount}</div>
                     </div>
                 </div>
                 <div class="stat-card" style="grid-column: 1 / -1; background: #1a1a1a; border: 1px solid #333;">
@@ -1374,9 +1476,19 @@
             const today = new Date().toDateString();
             completedTasksCountTurbik = 0;
             completedTasksCountYono = 0;
+            totalTasksCount = 0;
+            currentTasksCount = 0;
+            overdueTasksCount = 0;
             
             tasksSnapshot.forEach(child => {
                 const task = child.val();
+                totalTasksCount++;
+
+                const isCompleted = task.status === 'Выполнено';
+                const isOverdue = !isCompleted && task.endTime && Date.now() > task.endTime;
+                if(isOverdue) overdueTasksCount++;
+                if(!isCompleted && !isOverdue) currentTasksCount++;
+
                 if(task.status === 'Выполнено' && task.completedAt) {
                     const completedDate = new Date(task.completedAt).toDateString();
                     if(completedDate === today) {
@@ -1580,23 +1692,32 @@
             return;
         }
         
-        const text = document.getElementById('taskText').value;
+        const title = document.getElementById('taskTitle').value.trim();
+        const text = document.getElementById('taskText').value.trim();
         const type = document.getElementById('taskType').value;
         const hours = parseInt(document.getElementById('taskHoursInput').value) || 0;
         const minutes = parseInt(document.getElementById('taskMinutesInput').value) || 0;
         const assignTo = document.getElementById('taskAssignTo').value;
         
-        if(!text || (hours === 0 && minutes === 0)) {
-            alert('Укажите описание и время');
+        if(!title && !text) {
+            alert('Укажите заголовок или описание задачи');
             return;
         }
         
         playClickSound();
         const totalMinutes = hours * 60 + minutes;
-        const endTime = Date.now() + (totalMinutes * 60000);
-        const deadlineDate = new Date(endTime).toLocaleString();
+        const endTime = totalMinutes > 0 ? Date.now() + (totalMinutes * 60000) : null;
+        const deadlineDate = endTime ? new Date(endTime).toLocaleString() : 'без срока';
         
-        push(ref(db, 'tasks'), { text, type, endTime, status: 'В очереди', createdAt: Date.now(), assignedTo: assignTo });
+        push(ref(db, 'tasks'), {
+            title: title || '',
+            text,
+            type,
+            endTime,
+            status: 'В очереди',
+            createdAt: Date.now(),
+            assignedTo: assignTo
+        });
         sendNotify("Новая задача!", `Выполнить до: ${deadlineDate}`);
         
         // Отправляем уведомление в реальное время для всех через broadcast
@@ -1608,6 +1729,7 @@
         });
         
         // Очищаем форму
+        document.getElementById('taskTitle').value = '';
         document.getElementById('taskText').value = '';
         document.getElementById('taskType').value = 'Легкое';
         document.getElementById('taskHoursInput').value = '';
@@ -1625,15 +1747,17 @@
     window.switchTaskFilter = (filter) => {
         currentTaskFilter = filter;
         playClickSound();
-        
+
         // Обновляем активную кнопку
         document.getElementById('task-filter-current').style.color = filter === 'current' ? 'white' : '#666';
+        document.getElementById('task-filter-overdue').style.color = filter === 'overdue' ? 'white' : '#666';
         document.getElementById('task-filter-completed').style.color = filter === 'completed' ? 'white' : '#666';
-        
+
         // Показываем/скрываем списки
         document.getElementById('taskListCurrent').style.display = filter === 'current' ? 'grid' : 'none';
+        document.getElementById('taskListOverdue').style.display = filter === 'overdue' ? 'grid' : 'none';
         document.getElementById('taskListCompleted').style.display = filter === 'completed' ? 'grid' : 'none';
-        
+
         refreshIcons();
     };
     
@@ -1702,6 +1826,7 @@
                     <span class="task-status-label">Статус: ${t.status}</span>
                     <span class="task-type">${t.type}</span>
                     ${assignedDisplay}
+                    ${t.title ? `<div style="font-size: 14px; font-weight: 800; color: #fff; margin-bottom:6px;">${t.title}</div>` : ''}
                     <div style="font-weight:600; margin-bottom:10px;">${t.text}</div>
                     <div class="timer ${t.status === 'Выполнено' ? 'paused' : ''}" id="timer-${t.id}" style="${t.status === 'Выполнено' ? 'text-decoration: line-through; opacity: 0.6;' : ''}">00:00</div>
                     <div class="task-actions">
@@ -1714,6 +1839,14 @@
                 
                 if(t.status === 'Выполнено') {
                     completedList.append(div);
+                } else if(t.endTime && Date.now() > t.endTime) {
+                    div.querySelector('.task-status-label').innerText = `Статус: Пропущено`;
+                    div.style.borderColor = '#ef4444';
+                    if(div.querySelector('.timer')) {
+                        div.querySelector('.timer').innerText = '⚠️ Просрочено';
+                        div.querySelector('.timer').style.color = '#ef4444';
+                    }
+                    document.getElementById('taskListOverdue').append(div);
                 } else {
                     currentList.append(div);
                 }
@@ -1737,6 +1870,7 @@
             const t = s.val();
             if(t) {
                 document.getElementById('editTaskId').value = id;
+                document.getElementById('editTaskTitle').value = t.title || '';
                 document.getElementById('editTaskText').value = t.text;
                 document.getElementById('editTaskType').value = t.type;
                 document.getElementById('editTaskAssignTo').value = t.assignedTo || 'both';
@@ -1755,6 +1889,7 @@
         }
         
         const id = document.getElementById('editTaskId').value;
+        const title = document.getElementById('editTaskTitle').value.trim();
         const text = document.getElementById('editTaskText').value;
         const type = document.getElementById('editTaskType').value;
         const assignedTo = document.getElementById('editTaskAssignTo').value;
@@ -1764,7 +1899,7 @@
         onValue(ref(db, `tasks/${id}`), (s) => {
             const t = s.val();
             if(t) {
-                const updates = { text, type, assignedTo };
+                const updates = { title, text, type, assignedTo };
                 if(addHours > 0 || addMinutes > 0) {
                     const addTotalMinutes = addHours * 60 + addMinutes;
                     updates.endTime = t.endTime + (addTotalMinutes * 60000);
@@ -1797,6 +1932,16 @@
                 return;
             }
             
+            if(!end) {
+                el.innerText = 'Без срока';
+                el.style.color = '#9ca3af';
+                el.classList.remove('paused');
+                if(timerIntervals[id]) {
+                    clearInterval(timerIntervals[id]);
+                    delete timerIntervals[id];
+                }
+                return;
+            }
             const diff = end - Date.now();
             const totalSeconds = Math.floor(diff / 1000);
             
@@ -2420,6 +2565,20 @@
         });
     };
 
+    // Переменные для таймеров каждого пользователя
+    let workTimeListenerTurbik, workTimeListenerYono;
+    
+    let workTimeTimerTurbik = null;
+    let workTimeTimerYono = null;
+    let workTimeIsRunningTurbik = false;
+    let workTimeIsRunningYono = false;
+    let workTimeSecondsTurbik = 0;
+    let workTimeSecondsYono = 0;
+    let workTimeStartTurbik = null;  // Время запуска таймера
+    let workTimeStartYono = null;    // Время запуска таймера
+    let displayUpdateTimerTurbik = null;  // Таймер для обновления UI
+    let displayUpdateTimerYono = null;    // Таймер для обновления UI
+    
     // Функция для получения текущей даты в киевском времени (UTC+2)
     const getKievDate = () => {
         const now = new Date();
@@ -2427,23 +2586,401 @@
         return kievTime.toDateString();
     };
     
+    // Функция для очистки таймеров при смене дня
+    const checkAndResetDailyTimers = () => {
+        const lastResetDate = localStorage.getItem('lastTimerResetDate');
+        const todayDate = getKievDate();
+        
+        if(lastResetDate !== todayDate) {
+            // День поменялся, очищаем таймеры
+            workTimeSecondsTurbik = 0;
+            workTimeSecondsYono = 0;
+            workTimeIsRunningTurbik = false;
+            workTimeIsRunningYono = false;
+            
+            localStorage.setItem('turbikBaseSeconds', '0');
+            localStorage.setItem('yonoBaseSeconds', '0');
+            localStorage.setItem('lastTimerResetDate', todayDate);
+            
+            // Очищаем таймеры если они работали
+            if(displayUpdateTimerTurbik) clearInterval(displayUpdateTimerTurbik);
+            if(displayUpdateTimerYono) clearInterval(displayUpdateTimerYono);
+            workTimeStartTurbik = null;
+            workTimeStartYono = null;
+            
+            // Обновляем UI
+            updateWorkTimeDisplay('turbik');
+            updateWorkTimeDisplay('yono');
+            
+            // Обновляем кнопки
+            const btnTurbik = document.getElementById('pausePlayBtnTurbik');
+            if(btnTurbik) {
+                btnTurbik.style.background = '#2d3b4f';
+                btnTurbik.style.borderColor = '#3f4f63';
+                btnTurbik.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #9ca3af;"></i>';
+            }
+            
+            const btnYono = document.getElementById('pausePlayBtnYono');
+            if(btnYono) {
+                btnYono.style.background = '#2d3b4f';
+                btnYono.style.borderColor = '#3f4f63';
+                btnYono.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #9ca3af;"></i>';
+            }
+            
+            // Очищаем в Firebase
+            set(ref(db, 'worktime/turbik'), {
+                totalSeconds: 0,
+                isRunning: false,
+                startTime: null,
+                updatedAt: Date.now()
+            });
+            set(ref(db, 'worktime/yono'), {
+                totalSeconds: 0,
+                isRunning: false,
+                startTime: null,
+                updatedAt: Date.now()
+            });
+            
+            lucide.createIcons();
+        }
+    };
+    
+    const formatTime = (seconds) => {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        return `${hours}ч ${minutes}м`;
+    };
+    
+    const initializeButtonStates = () => {
+        // Initialize Turbik button
+        onValue(ref(db, 'worktime/turbik'), (snapshot) => {
+            const data = snapshot.val();
+            const btn = document.getElementById('pausePlayBtnTurbik');
+            if(!btn) return;
+            
+            const isRunning = data && data.isRunning;
+            if(isRunning) {
+                btn.style.background = 'rgba(34, 197, 94, 0.2)';
+                btn.style.borderColor = 'rgba(34, 197, 94, 0.4)';
+                btn.innerHTML = '<i data-lucide="pause" style="width: 20px; height: 20px; color: #666;"></i>';
+            } else {
+                btn.style.background = '#2d3b4f';
+                btn.style.borderColor = '#3f4f63';
+                btn.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #9ca3af;"></i>';
+            }
+            lucide.createIcons();
+        }, { onlyOnce: true });
+        
+        // Initialize Yono button
+        onValue(ref(db, 'worktime/yono'), (snapshot) => {
+            const data = snapshot.val();
+            const btn = document.getElementById('pausePlayBtnYono');
+            if(!btn) return;
+            
+            const isRunning = data && data.isRunning;
+            if(isRunning) {
+                btn.style.background = 'rgba(34, 197, 94, 0.2)';
+                btn.style.borderColor = 'rgba(34, 197, 94, 0.4)';
+                btn.innerHTML = '<i data-lucide="pause" style="width: 20px; height: 20px; color: #666;"></i>';
+            } else {
+                btn.style.background = '#2d3b4f';
+                btn.style.borderColor = '#3f4f63';
+                btn.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #9ca3af;"></i>';
+            }
+            lucide.createIcons();
+        }, { onlyOnce: true });
+    };
+    
+    const updateWorkTimeDisplay = (user) => {
+        if(user === 'turbik') {
+            document.getElementById('workTimeTurbikDisplay').textContent = formatTime(workTimeSecondsTurbik);
+        } else if(user === 'yono') {
+            document.getElementById('workTimeYonoDisplay').textContent = formatTime(workTimeSecondsYono);
+        }
+    };
+    
+    // Функция для управления таймером Turbik
+    window.toggleWorkTimerTurbik = () => {
+        // Только Turbik может управлять своим таймером
+        if(window.currentUserEmail !== 'seniorturbik@gmail.com') {
+            alert('Только Turbik может управлять своим таймером');
+            return;
+        }
+        
+        workTimeIsRunningTurbik = !workTimeIsRunningTurbik;
+        const btn = document.getElementById('pausePlayBtnTurbik');
+        
+        if(workTimeIsRunningTurbik) {
+            // Play - меняем на паузу
+            btn.style.background = 'rgba(34, 197, 94, 0.2)';
+            btn.style.borderColor = 'rgba(34, 197, 94, 0.4)';
+            btn.innerHTML = '<i data-lucide="pause" style="width: 20px; height: 20px; color: #666;"></i>';
+            
+            // Сохраняем время запуска в Firebase
+            workTimeStartTurbik = Date.now();
+            set(ref(db, 'worktime/turbik'), {
+                totalSeconds: workTimeSecondsTurbik,
+                isRunning: true,
+                startTime: workTimeStartTurbik,
+                updatedAt: Date.now()
+            });
+            
+            // Локальный таймер для обновления UI каждую секунду
+            if(displayUpdateTimerTurbik) clearInterval(displayUpdateTimerTurbik);
+            displayUpdateTimerTurbik = setInterval(() => {
+                if(workTimeStartTurbik) {
+                    const elapsed = Math.floor((Date.now() - workTimeStartTurbik) / 1000);
+                    workTimeSecondsTurbik = parseInt(localStorage.getItem('turbikBaseSeconds') || '0') + elapsed;
+                    updateWorkTimeDisplay('turbik');
+                    
+                    // Сохраняем в Firebase каждые 30 секунд
+                    if(workTimeSecondsTurbik % 30 === 0) {
+                        set(ref(db, 'worktime/turbik'), {
+                            totalSeconds: workTimeSecondsTurbik,
+                            isRunning: true,
+                            startTime: workTimeStartTurbik,
+                            updatedAt: Date.now()
+                        });
+                    }
+                }
+            }, 1000);
+        } else {
+            // Pause - меняем на плей
+            btn.style.background = '#2d3b4f';
+            btn.style.borderColor = '#3f4f63';
+            btn.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #9ca3af;"></i>';
+            
+            if(displayUpdateTimerTurbik) clearInterval(displayUpdateTimerTurbik);
+            
+            // Сохраняем финальное время
+            localStorage.setItem('turbikBaseSeconds', workTimeSecondsTurbik.toString());
+            set(ref(db, 'worktime/turbik'), {
+                totalSeconds: workTimeSecondsTurbik,
+                isRunning: false,
+                startTime: null,
+                updatedAt: Date.now()
+            });
+            
+            workTimeStartTurbik = null;
+        }
+        
+        lucide.createIcons();
+    };
+    
+    // Функция для управления таймером Yono
+    window.toggleWorkTimerYono = () => {
+        // Только Yono может управлять своим таймером
+        if(window.currentUserEmail !== 'glebushkameet@gmail.com') {
+            alert('Только Yono может управлять своим таймером');
+            return;
+        }
+        
+        workTimeIsRunningYono = !workTimeIsRunningYono;
+        const btn = document.getElementById('pausePlayBtnYono');
+        
+        if(workTimeIsRunningYono) {
+            // Play - меняем на паузу
+            btn.style.background = 'rgba(34, 197, 94, 0.2)';
+            btn.style.borderColor = 'rgba(34, 197, 94, 0.4)';
+            btn.innerHTML = '<i data-lucide="pause" style="width: 20px; height: 20px; color: #666;"></i>';
+            
+            // Сохраняем время запуска в Firebase
+            workTimeStartYono = Date.now();
+            set(ref(db, 'worktime/yono'), {
+                totalSeconds: workTimeSecondsYono,
+                isRunning: true,
+                startTime: workTimeStartYono,
+                updatedAt: Date.now()
+            });
+            
+            // Локальный таймер для обновления UI каждую секунду
+            if(displayUpdateTimerYono) clearInterval(displayUpdateTimerYono);
+            displayUpdateTimerYono = setInterval(() => {
+                if(workTimeStartYono) {
+                    const elapsed = Math.floor((Date.now() - workTimeStartYono) / 1000);
+                    workTimeSecondsYono = parseInt(localStorage.getItem('yonoBaseSeconds') || '0') + elapsed;
+                    updateWorkTimeDisplay('yono');
+                    
+                    // Сохраняем в Firebase каждые 30 секунд
+                    if(workTimeSecondsYono % 30 === 0) {
+                        set(ref(db, 'worktime/yono'), {
+                            totalSeconds: workTimeSecondsYono,
+                            isRunning: true,
+                            startTime: workTimeStartYono,
+                            updatedAt: Date.now()
+                        });
+                    }
+                }
+            }, 1000);
+        } else {
+            // Pause - меняем на плей
+            btn.style.background = '#2d3b4f';
+            btn.style.borderColor = '#3f4f63';
+            btn.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #9ca3af;"></i>';
+            
+            if(displayUpdateTimerYono) clearInterval(displayUpdateTimerYono);
+            
+            // Сохраняем финальное время
+            localStorage.setItem('yonoBaseSeconds', workTimeSecondsYono.toString());
+            set(ref(db, 'worktime/yono'), {
+                totalSeconds: workTimeSecondsYono,
+                isRunning: false,
+                startTime: null,
+                updatedAt: Date.now()
+            });
+            
+            workTimeStartYono = null;
+        }
+        
+        lucide.createIcons();
+    };
+    
+    const setupWorkTimeListeners = () => {
+        // Проверяем и очищаем таймеры если был переход в новый день
+        checkAndResetDailyTimers();
+        
+        // Инициализируем кнопки при загрузке слушателей
+        initializeButtonStates();
+        // Слушаем время работы Turbik
+        if(workTimeListenerTurbik) workTimeListenerTurbik();
+        workTimeListenerTurbik = onValue(ref(db, 'worktime/turbik'), (snapshot) => {
+            const data = snapshot.val();
+            if(data) {
+                workTimeSecondsTurbik = data.totalSeconds || 0;
+                localStorage.setItem('turbikBaseSeconds', workTimeSecondsTurbik.toString());
+                
+                const isRunning = data.isRunning || false;
+                
+                // Если таймер запущен в Firebase, но у нас он не запущен локально, восстановим его
+                if(isRunning && !workTimeIsRunningTurbik && data.startTime) {
+                    workTimeIsRunningTurbik = true;
+                    workTimeStartTurbik = data.startTime;
+                    const btn = document.getElementById('pausePlayBtnTurbik');
+                    if(btn) {
+                        btn.style.background = 'rgba(34, 197, 94, 0.2)';
+                        btn.style.borderColor = 'rgba(34, 197, 94, 0.4)';
+                        btn.innerHTML = '<i data-lucide="pause" style="width: 20px; height: 20px; color: #666;"></i>';
+                        lucide.createIcons();
+                    }
+                    
+                    // Запустим локальный UI таймер
+                    if(displayUpdateTimerTurbik) clearInterval(displayUpdateTimerTurbik);
+                    displayUpdateTimerTurbik = setInterval(() => {
+                        if(workTimeStartTurbik) {
+                            const elapsed = Math.floor((Date.now() - workTimeStartTurbik) / 1000);
+                            workTimeSecondsTurbik = parseInt(localStorage.getItem('turbikBaseSeconds') || '0') + elapsed;
+                            updateWorkTimeDisplay('turbik');
+                        }
+                    }, 1000);
+                } else if(!isRunning && workTimeIsRunningTurbik) {
+                    // Таймер был остановлен снаружи
+                    workTimeIsRunningTurbik = false;
+                    if(displayUpdateTimerTurbik) clearInterval(displayUpdateTimerTurbik);
+                    const btn = document.getElementById('pausePlayBtnTurbik');
+                    if(btn) {
+                        btn.style.background = '#2d3b4f';
+                        btn.style.borderColor = '#3f4f63';
+                        btn.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #9ca3af;"></i>';
+                        lucide.createIcons();
+                    }
+                    workTimeStartTurbik = null;
+                } else if(!isRunning) {
+                    updateWorkTimeDisplay('turbik');
+                    const btn = document.getElementById('pausePlayBtnTurbik');
+                    if(btn) {
+                        btn.style.background = '#2d3b4f';
+                        btn.style.borderColor = '#3f4f63';
+                        btn.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #9ca3af;"></i>';
+                        lucide.createIcons();
+                    }
+                }
+            }
+        });
+        
+        // Слушаем время работы Yono
+        if(workTimeListenerYono) workTimeListenerYono();
+        workTimeListenerYono = onValue(ref(db, 'worktime/yono'), (snapshot) => {
+            const data = snapshot.val();
+            if(data) {
+                workTimeSecondsYono = data.totalSeconds || 0;
+                localStorage.setItem('yonoBaseSeconds', workTimeSecondsYono.toString());
+                
+                const isRunning = data.isRunning || false;
+                
+                // Если таймер запущен в Firebase, но у нас он не запущен локально, восстановим его
+                if(isRunning && !workTimeIsRunningYono && data.startTime) {
+                    workTimeIsRunningYono = true;
+                    workTimeStartYono = data.startTime;
+                    const btn = document.getElementById('pausePlayBtnYono');
+                    if(btn) {
+                        btn.style.background = 'rgba(34, 197, 94, 0.2)';
+                        btn.style.borderColor = 'rgba(34, 197, 94, 0.4)';
+                        btn.innerHTML = '<i data-lucide="pause" style="width: 20px; height: 20px; color: #666;"></i>';
+                        lucide.createIcons();
+                    }
+                    
+                    // Запустим локальный UI таймер
+                    if(displayUpdateTimerYono) clearInterval(displayUpdateTimerYono);
+                    displayUpdateTimerYono = setInterval(() => {
+                        if(workTimeStartYono) {
+                            const elapsed = Math.floor((Date.now() - workTimeStartYono) / 1000);
+                            workTimeSecondsYono = parseInt(localStorage.getItem('yonoBaseSeconds') || '0') + elapsed;
+                            updateWorkTimeDisplay('yono');
+                        }
+                    }, 1000);
+                } else if(!isRunning && workTimeIsRunningYono) {
+                    // Таймер был остановлен снаружи
+                    workTimeIsRunningYono = false;
+                    if(displayUpdateTimerYono) clearInterval(displayUpdateTimerYono);
+                    const btn = document.getElementById('pausePlayBtnYono');
+                    if(btn) {
+                        btn.style.background = '#2d3b4f';
+                        btn.style.borderColor = '#3f4f63';
+                        btn.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #9ca3af;"></i>';
+                        lucide.createIcons();
+                    }
+                    workTimeStartYono = null;
+                } else if(!isRunning) {
+                    updateWorkTimeDisplay('yono');
+                    const btn = document.getElementById('pausePlayBtnYono');
+                    if(btn) {
+                        btn.style.background = '#2d3b4f';
+                        btn.style.borderColor = '#3f4f63';
+                        btn.innerHTML = '<i data-lucide="play" style="width: 20px; height: 20px; color: #9ca3af;"></i>';
+                        lucide.createIcons();
+                    }
+                }
+            }
+        });
+    };
+    
     // Инициализируем слушатели при загрузке
     if(document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
+            checkAndResetDailyTimers();
             setupCompareSyncListeners();
+            setupWorkTimeListeners();
             setupStatsListeners();
             setupScriptsListener();
             setupTaskListener();
             setupNotesListener();
             setupBackupsListener();
+            
+            // Проверяем смену дня каждый час
+            setInterval(checkAndResetDailyTimers, 3600000);
         });
     } else {
+        checkAndResetDailyTimers();
         setupCompareSyncListeners();
+        setupWorkTimeListeners();
         setupStatsListeners();
         setupScriptsListener();
         setupTaskListener();
         setupNotesListener();
         setupBackupsListener();
+        
+        // Проверяем смену дня каждый час
+        setInterval(checkAndResetDailyTimers, 3600000);
     }
     
     // Отобразить курсор пользователя
@@ -2586,7 +3123,7 @@
 
 <!-- ВЕРСИЯ ПРИЛОЖЕНИЯ -->
 <div style="position: fixed; bottom: 0; right: 0; padding: 12px 16px; font-size: 10px; color: #666; background: rgba(0,0,0,0.3); border-radius: 8px 0 0 0; font-family: monospace; z-index: 100;">
-    version dev: 19
+    version dev: 1.5
 </div>
 
 </body>
