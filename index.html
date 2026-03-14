@@ -664,68 +664,7 @@
             font-weight: 700;
             text-transform: uppercase;
         }
-
-        .milky-badge {
-            background: #131c2e;
-            border: 1px solid #2f4a70;
-            color: #e5e7eb;
-            border-radius: 10px;
-            padding: 8px 10px;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            min-width: 150px;
-        }
-
-        .milky-badge i {
-            width: 12px;
-            height: 12px;
-            color: #7dd3fc;
-        }
-
-        .milky-progress-track {
-            background: #1a263d;
-            border-radius: 14px;
-            overflow: hidden;
-            height: 18px;
-            position: relative;
-        }
-
-        .milky-progress-fill {
-            height: 100%;
-            border-radius: 14px;
-            background: linear-gradient(90deg, #22c55e, #3b82f6, #a855f7);
-            transition: width 0.45s ease;
-        }
-
-        .milky-marker {
-            position: absolute;
-            top: -28px;
-            transform: translateX(-50%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 2px;
-            pointer-events: none;
-        }
-
-        .milky-marker-icon {
-            width: 20px; height: 20px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(31, 41, 55, .95);
-            border: 1px solid #475569;
-        }
-
-        .milky-marker-text {
-            font-size: 10px;
-            color: #9ca3af;
-            white-space: nowrap;
-        }
-
+    
     </style>
 </head>
 <body>
@@ -763,7 +702,7 @@
     <button class="nav-btn" onclick="switchTab('tab-backups', this); playClickSound();"><i data-lucide="save"></i> Бэкапы</button>
     <button class="nav-btn" onclick="switchTab('tab-compare', this); playClickSound();"><i data-lucide="git-compare"></i> Сравнение</button>
     <button class="nav-btn" onclick="switchTab('tab-success', this); playClickSound();"><i data-lucide="trending-up"></i> Успехи</button>
-    <button class="nav-btn" onclick="switchTab('tab-milky', this); playClickSound();"><i data-lucide="star"></i> Млечный путь</button>
+    <div style="width: 1px; background: #222; margin: 5px 10px;"></div>
     <button class="nav-btn" id="login-btn-nav" onclick="toggleAuth(); playClickSound();"><i data-lucide="log-in"></i> Войти</button>
 </nav>
 
@@ -817,7 +756,7 @@
         <!-- HEADER -->
         <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border);">
             <div style="background: var(--accent); width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px var(--accent-glow);">
-                <i data-lucide="git-branch" style="color: white; width: 22px; height: 22px;"></i>
+                <i data-lucide="git-diff" style="color: white; width: 22px; height: 22px;"></i>
             </div>
             <div>
                 <h2 style="margin: 0; font-size: 20px; font-weight: 800;">Умное Сравнение <span style="font-size: 12px; color: #555; font-weight: 400; margin-left: 5px;">v1.5</span></h2>
@@ -919,30 +858,6 @@
             <canvas id="successChart" style="max-height: 400px;"></canvas>
         </div>
     </div>
-
-    <div id="tab-milky" class="content">
-        <div class="card" style="margin-bottom: 16px; padding: 16px; background:#0b1220; border:1px solid #30415b; box-shadow: 0 5px 20px rgba(25, 46, 79, 0.45);">
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-                <div>
-                    <h2 style="margin:0; color:#f8fafc;">Млечный путь</h2>
-                    <div id="milkyUserTitle" style="color:#9ca3af; font-size:13px; margin-top: 4px;">Привет!</div>
-                </div>
-                <div style="display: flex; gap:8px;">
-                    <button class="icon-btn" style="padding:8px 12px; background:#1f2b43;" onclick="switchMilkySubTab('progress'); playClickSound();" id="milky-tab-progress">Прогресс</button>
-                    <button class="icon-btn" style="padding:8px 12px; background:#1f2b43;" onclick="switchMilkySubTab('inventory'); playClickSound();" id="milky-tab-inventory">Инвентарь</button>
-                    <button class="icon-btn" style="padding:8px 12px; background:#1f2b43;" onclick="switchMilkySubTab('rewards'); playClickSound();" id="milky-tab-rewards">Награды</button>
-                </div>
-            </div>
-            <div id="milkyUserBalance" style="display:grid; grid-template-columns: repeat(4, max-content); gap: 8px; margin-top: 10px;">
-                <div class="milky-badge" id="balanceElixirs"><i data-lucide="droplet"></i> Элексиры: 0</div>
-                <div class="milky-badge" id="balanceRobux"><i data-lucide="dollar-sign"></i> Робуксы: 0</div>
-                <div class="milky-badge" id="balanceCoupons"><i data-lucide="ticket"></i> Купоны: 0</div>
-                <div class="milky-badge" id="balanceSkins"><i data-lucide="award"></i> Скины: 0</div>
-            </div>
-        </div>
-
-        <div id="milkyContent"> </div>
-    </div>
 </div>
 
 <div class="overlay" id="overlay" onclick="closeAdmin()"></div>
@@ -999,8 +914,6 @@
                 <input type="number" id="taskMinutesInput" class="search-bar" placeholder="Минуты" min="0" max="59" style="margin-bottom:0">
             </div>
         </div>
-        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Элексиров за задачу</label>
-        <input type="number" id="taskElixirs" class="search-bar" placeholder="0" min="0" style="margin-bottom:15px">
         
         <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Назначить</label>
         <select id="taskAssignTo" class="search-bar" style="margin-bottom:20px; background:#111;">
@@ -1057,8 +970,6 @@
             <option value="both">Обоим</option>
         </select>
         
-        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Элексиров за задачу</label>
-        <input type="number" id="editTaskElixirs" class="search-bar" placeholder="0" min="0" style="margin-bottom:15px">
         <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Добавить времени</label>
         <div style="display:flex; gap:10px; margin-bottom:20px;">
             <div style="flex:1;">
@@ -1294,8 +1205,6 @@
         setupTaskListener();
         setupNotesListener();
         setupBackupsListener();
-        ensureUserProfiles();
-        updateUserBalancesDisplay();
         refreshIcons();
     });
 
@@ -1690,6 +1599,7 @@
                     <div class="task-actions">
                         <button class="icon-btn" onclick="viewScript(event, '${s.id}')"><i data-lucide="eye"></i></button>
                         <button class="icon-btn" onclick="copyScriptCode(event, '${s.id}')" title="Копировать весь скрипт"><i data-lucide="copy"></i></button>
+                        <button class="icon-btn" onclick="useScriptTemplate(event, '${s.id}')" title="Использовать как шаблон"><i data-lucide="hexagon"></i></button>
                         <button class="icon-btn" onclick="editScript('${s.id}'); playClickSound();"><i data-lucide="edit-2"></i></button>
                         <button class="icon-btn ${s.pinned ? 'btn-yellow' : ''}" onclick="togglePinScript('${s.id}'); playClickSound();" title="Закрепить"><i data-lucide="pin"></i></button>
                         <button class="icon-btn btn-red" onclick="askDelete(event, 'scripts/${s.id}')"><i data-lucide="trash-2"></i></button>
@@ -1837,7 +1747,6 @@
         const hours = parseInt(document.getElementById('taskHoursInput').value) || 0;
         const minutes = parseInt(document.getElementById('taskMinutesInput').value) || 0;
         const assignTo = document.getElementById('taskAssignTo').value;
-        let elixirs = parseInt(document.getElementById('taskElixirs').value) || 0;
         
         if(!title && !text) {
             alert('Укажите заголовок или описание задачи');
@@ -1848,32 +1757,23 @@
         const totalMinutes = hours * 60 + minutes;
         const endTime = totalMinutes > 0 ? Date.now() + (totalMinutes * 60000) : null;
         const deadlineDate = endTime ? new Date(endTime).toLocaleString() : 'без срока';
-
-        if(elixirs <= 0) {
-            // простая авто-оценка
-            const base = Math.max(10, text.length * 0.25 + (type === 'Сложное' ? 60 : type === 'Среднее' ? 35 : 15));
-            elixirs = Math.min(1000, Math.round(base));
-        }
         
         push(ref(db, 'tasks'), {
             title: title || '',
             text,
             type,
-            elixirs,
             endTime,
             status: 'В очереди',
             createdAt: Date.now(),
-            assignedTo: assignTo,
-            createdBy: window.currentUserRole || 'Guest'
+            assignedTo: assignTo
         });
-        sendNotify("Новая задача!", `Выполнить до: ${deadlineDate} (${elixirs} элексиров)`);
+        sendNotify("Новая задача!", `Выполнить до: ${deadlineDate}`);
         
         // Отправляем уведомление в реальное время для всех через broadcast
         set(ref(db, `notifications/${Date.now()}`), { 
             type: 'newTask', 
             text, 
             deadline: deadlineDate,
-            elixirs,
             timestamp: Date.now()
         });
         
@@ -1971,16 +1871,12 @@
                     assignedDisplay = `<div style="font-size:11px; padding:6px 10px; border-radius:8px; background:${assignBg}; margin-bottom:10px; color:${assignColor}; font-weight:600; border-left: 3px solid ${assignColor}; display:inline-flex; align-items:center; gap:4px;">${assignIcon} ${assignText}</div>`;
                 }
 
-                const createdDateStr = t.createdAt ? new Date(t.createdAt).toLocaleString('ru-RU') : 'неизвестно';
-                const createdByStr = t.createdBy || 'неизвестно';
                 div.innerHTML = `
                     <span class="task-status-label">Статус: ${t.status}</span>
                     <span class="task-type">${t.type}</span>
-                    <div style="font-size:11px; color:#888; margin:6px 0 10px 0;">Добавил: ${createdByStr} • ${createdDateStr}</div>
                     ${assignedDisplay}
                     ${t.title ? `<div style="font-size: 14px; font-weight: 800; color: #fff; margin-bottom:6px;">${t.title}</div>` : ''}
                     <div style="font-weight:600; margin-bottom:10px;">${t.text}</div>
-                    <div style="font-size:11px; color:#9ca3af; margin-bottom:10px;">Элексиры: ${t.elixirs || 0} | Выполнено: ${t.completedAt ? new Date(t.completedAt).toLocaleString('ru-RU') : '—'}</div>
                     <div class="timer ${t.status === 'Выполнено' ? 'paused' : ''}" id="timer-${t.id}" style="${t.status === 'Выполнено' ? 'text-decoration: line-through; opacity: 0.6;' : ''}">00:00</div>
                     <div class="task-actions">
                         ${canChangeStatus ? `<button class="icon-btn btn-green" title="Готово" onclick="handleTaskBtn('${t.id}', 'done'); playClickSound();"><i data-lucide="check"></i></button>` : ''}
@@ -2027,7 +1923,6 @@
                 document.getElementById('editTaskText').value = t.text;
                 document.getElementById('editTaskType').value = t.type;
                 document.getElementById('editTaskAssignTo').value = t.assignedTo || 'both';
-                document.getElementById('editTaskElixirs').value = t.elixirs || 0;
                 document.getElementById('editTaskHoursInput').value = '';
                 document.getElementById('editTaskMinutesInput').value = '';
                 document.getElementById('editTaskModal').style.display = 'flex';
@@ -2047,14 +1942,13 @@
         const text = document.getElementById('editTaskText').value;
         const type = document.getElementById('editTaskType').value;
         const assignedTo = document.getElementById('editTaskAssignTo').value;
-        const elixirs = parseInt(document.getElementById('editTaskElixirs').value) || 0;
         const addHours = parseInt(document.getElementById('editTaskHoursInput').value) || 0;
         const addMinutes = parseInt(document.getElementById('editTaskMinutesInput').value) || 0;
         
         onValue(ref(db, `tasks/${id}`), (s) => {
             const t = s.val();
             if(t) {
-                const updates = { title, text, type, assignedTo, elixirs };
+                const updates = { title, text, type, assignedTo };
                 if(addHours > 0 || addMinutes > 0) {
                     const addTotalMinutes = addHours * 60 + addMinutes;
                     updates.endTime = t.endTime + (addTotalMinutes * 60000);
@@ -2128,284 +2022,25 @@
         }
     }
 
-    const getUserKeyByRole = (role) => {
-        if(!role) return null;
-        const r = role.toLowerCase();
-        return r === 'turbik' || r === 'yono' ? r : null;
-    };
-
-    const adjustUserProfile = (userKey, updates) => {
-        if(!userKey) return;
-        onValue(ref(db, `users/${userKey}`), snap => {
-            const profile = snap.val() || {};
-            set(ref(db, `users/${userKey}`), {
-                elixirs: Number(profile.elixirs || 0) + Number(updates.elixirs || 0),
-                robux: Number(profile.robux || 0) + Number(updates.robux || 0),
-                milkyPoints: Number(profile.milkyPoints || 0) + Number(updates.milkyPoints || 0),
-                coupons: Number(profile.coupons || 0) + Number(updates.coupons || 0),
-                skins: Number(profile.skins || 0) + Number(updates.skins || 0),
-                inventory: profile.inventory || {},
-                claimedMilestones: profile.claimedMilestones || {},
-            });
-        }, {onlyOnce: true});
-    };
-
-    const checkAndAwardMilkyMilestones = (userKey) => {
-        onValue(ref(db, `users/${userKey}`), snap => {
-            const profile = snap.val() || {};
-            const total = Number(profile.milkyPoints || 0);
-            const claimed = profile.claimedMilestones || {};
-            const milestones = [
-                { points: 100, reward: { robux: 5, coupons: 1, skins: 0 } },
-                { points: 250, reward: { robux: 12, coupons: 2, skins: 0 } },
-                { points: 500, reward: { robux: 25, coupons: 5, skins: 1 } },
-                { points: 1000, reward: { robux: 60, coupons: 8, skins: 2 } }
-            ];
-            milestones.forEach(ms => {
-                if(total >= ms.points && !claimed[ms.points]) {
-                    claimed[ms.points] = true;
-                    update(ref(db, `users/${userKey}`), {
-                        claimedMilestones: claimed,
-                        robux: Number(profile.robux || 0) + ms.reward.robux,
-                        coupons: Number(profile.coupons || 0) + ms.reward.coupons,
-                        skins: Number(profile.skins || 0) + ms.reward.skins
-                    });
-                    sendNotify('Млечный путь', `Пользователь ${userKey} получил награду за ${ms.points} очков!`);
-                }
-            });
-        }, {onlyOnce: true});
-    };
-
-    const distributeTaskReward = (task, completedByRole) => {
-        const total = Number(task.elixirs || 0);
-        if(total <= 0) return;
-
-        let turbikReward = 0;
-        let yonoReward = 0;
-
-        if(task.assignedTo === 'turbik') {
-            turbikReward = Math.round(total * 0.8);
-            yonoReward = Math.round(total * 0.2);
-        } else if(task.assignedTo === 'yono') {
-            yonoReward = Math.round(total * 0.8);
-            turbikReward = Math.round(total * 0.2);
-        } else {
-            if(completedByRole === 'Turbik') {
-                turbikReward = Math.round(total * 0.7);
-                yonoReward = total - turbikReward;
-            } else if(completedByRole === 'Yono') {
-                yonoReward = Math.round(total * 0.7);
-                turbikReward = total - yonoReward;
-            } else {
-                turbikReward = Math.floor(total/2);
-                yonoReward = total - turbikReward;
-            }
-        }
-
-        if(turbikReward > 0) {
-            adjustUserProfile('turbik', { elixirs: turbikReward, milkyPoints: turbikReward });
-            checkAndAwardMilkyMilestones('turbik');
-        }
-        if(yonoReward > 0) {
-            adjustUserProfile('yono', { elixirs: yonoReward, milkyPoints: yonoReward });
-            checkAndAwardMilkyMilestones('yono');
-        }
-
-        sendNotify('Вознаграждение', `Turbik: ${turbikReward} элексиров, Yono: ${yonoReward} элексиров`);
-    };
-
     window.handleTaskBtn = (id, action) => {
+        // Both Yono and Turbik can change task status via buttons
         onValue(ref(db, `tasks/${id}`), s => {
             const data = s.val();
             if(!data) return;
-
             if(action === 'done') {
-                const assignedTo = data.assignedTo || 'both';
-                if(assignedTo === 'turbik' && window.currentUserRole !== 'Turbik') {
-                    alert('Только Turbik может отмечать эту задачу как выполненную');
-                    return;
-                }
-                if(assignedTo === 'yono' && window.currentUserRole !== 'Yono') {
-                    alert('Только Yono может отмечать эту задачу как выполненную');
-                    return;
-                }
-
                 const newStatus = data.status === 'Выполнено' ? 'В очереди' : 'Выполнено';
                 const updates = { status: newStatus };
-
                 if(newStatus === 'Выполнено') {
                     updates.completedAt = Date.now();
                     updates.completedBy = window.currentUserEmail; // Записываем кто отметил как выполнено
                 }
-
-                update(ref(db, `tasks/${id}`), updates).then(() => {
-                    if(newStatus === 'Выполнено') {
-                        distributeTaskReward(data, window.currentUserRole);
-                    }
-                });
+                update(ref(db, `tasks/${id}`), updates);
             } else if(action === 'doing') {
                 update(ref(db, `tasks/${id}`), { status: 'Выполняется' });
             } else if(action === 'later') {
                 remove(ref(db, `tasks/${id}`));
                 push(ref(db, 'tasks'), { ...data, status: 'В очереди' });
             }
-        }, {onlyOnce: true});
-    };
-
-    const ensureUserProfiles = () => {
-        ['turbik', 'yono'].forEach(userKey => {
-            onValue(ref(db, `users/${userKey}`), snap => {
-                if(!snap.exists()) {
-                    set(ref(db, `users/${userKey}`), {
-                        elixirs: 0,
-                        robux: 0,
-                        milkyPoints: 0,
-                        coupons: 0,
-                        skins: 0,
-                        inventory: {},
-                        claimedMilestones: {}
-                    });
-                }
-            }, {onlyOnce: true});
-        });
-    };
-
-    const updateUserBalancesDisplay = () => {
-        onValue(ref(db, 'users'), snap => {
-            const users = snap.val() || {};
-            const turbik = users.turbik || {};
-            const yono = users.yono || {};
-            document.getElementById('balanceElixirs').innerText = `Элексиры: ${turbik.elixirs || 0}/${yono.elixirs || 0}`;
-            document.getElementById('balanceRobux').innerText = `Робуксы: ${turbik.robux || 0}/${yono.robux || 0}`;
-            document.getElementById('balanceCoupons').innerText = `Купоны: ${turbik.coupons || 0}/${yono.coupons || 0}`;
-            document.getElementById('balanceSkins').innerText = `Скины: ${turbik.skins || 0}/${yono.skins || 0}`;
-            updateMilkyTab();
-        });
-    };
-
-    let currentMilkySubTab = 'progress';
-
-    const switchMilkySubTab = (tab) => {
-        currentMilkySubTab = tab;
-        ['progress', 'inventory', 'rewards'].forEach(t => {
-            const btn = document.getElementById(`milky-tab-${t}`);
-            if(!btn) return;
-            btn.style.background = t === tab ? '#2e4a76' : '#1f2b43';
-            btn.style.color = t === tab ? '#fff' : '#9ca3af';
-        });
-        updateMilkyTab();
-    };
-
-    const renderMilkyContent = (profile, points, milestones, rewards) => {
-        const container = document.getElementById('milkyContent');
-        if(!container) return;
-
-        const progressHtml = `
-            <div class="milky-progress-track">
-                <div class="milky-progress-fill" style="width:${(points/1000)*100}%"></div>
-                ${milestones.map(ms => {
-                    const left = Math.min(100, Math.max(0, (ms.points / 1000) * 100));
-                    const pass = points >= ms.points;
-                    return `<div class="milky-marker" style="left:${left}%;">
-                        <span class="milky-marker-icon" style="border-color:${pass?'#22c55e':'#475569'}; background:${pass?'rgba(34,213,103,0.25)':'rgba(18,28,44,0.93)'};"><i data-lucide="${ms.icon}" style="color:${pass ? '#22c55e' : '#8a9cb8'}; width:12px; height:12px;"></i></span>
-                        <span class="milky-marker-text">${ms.points}</span>
-                    </div>`;
-                }).join('')}
-            </div>
-            <div style="margin-top:10px; font-size:14px; color:#cbd5e1; font-weight:600;">Прогресс: ${points} / 1000</div>
-        `;
-
-        const inventoryHtml = profile ? `
-            <div style="display:grid;grid-template-columns:repeat(2,minmax(120px,1fr));gap:10px;">
-                <div class="milky-badge"><i data-lucide="droplet"></i> ${profile.elixirs || 0} элексиров</div>
-                <div class="milky-badge"><i data-lucide="dollar-sign"></i> ${profile.robux || 0} робуксов</div>
-                <div class="milky-badge"><i data-lucide="ticket"></i> ${profile.coupons || 0} купонов</div>
-                <div class="milky-badge"><i data-lucide="award"></i> ${profile.skins || 0} скинов</div>
-            </div>
-            <div style="margin-top:14px; background:#11203a; border:1px solid #243955; border-radius:12px; padding:12px;">
-                <div style="font-weight:700; color:#e2e8f0; margin-bottom:6px;">Дополнительно</div>
-                <div style="font-size:12px; color:#94a3b8;">Здесь можно будет развивать инвентарь редких сундуков, карты, пассивные ускорители и темы.</div>
-            </div>
-        ` : '<div style="color:#94a3b8; padding:14px;">Войдите под Turbik или Yono, чтобы видеть свой инвентарь.</div>';
-
-        const rewardsHtml = `
-            <div style="display: grid; gap: 10px;">
-                ${rewards.map(r => `<div style="border:1px solid #1f2d4b; background:#101f38; border-radius:8px; padding:12px;"><div style="display:flex; justify-content:space-between; align-items:center;"><strong style="color:#a5f3fc;">${r.level} очков</strong><span style="color:${points>=r.level?'#22c55e':'#64748b'};">${points>=r.level?'Доступно':'Закрыто'}</span></div><div style="color:#cbd5e1;margin-top:6px;">${r.desc}</div></div>`).join('')}
-            </div>
-        `;
-
-        if(currentMilkySubTab === 'progress') container.innerHTML = progressHtml;
-        if(currentMilkySubTab === 'inventory') container.innerHTML = inventoryHtml;
-        if(currentMilkySubTab === 'rewards') container.innerHTML = rewardsHtml;
-
-        refreshIcons();
-    };
-
-    const updateMilkyTab = () => {
-        onValue(ref(db, 'users'), snap => {
-            const users = snap.val() || {};
-            const currentRoleLower = window.currentUserRole ? window.currentUserRole.toLowerCase() : null;
-            const currentKey = currentRoleLower === 'turbik' || currentRoleLower === 'yono' ? currentRoleLower : null;
-            const profile = currentKey ? users[currentKey] || {} : null;
-
-            const title = document.getElementById('milkyUserTitle');
-            if(title) {
-                title.innerHTML = currentKey ? `@${currentKey} — ${profile.milkyPoints || 0} / 1000` : 'Гость';
-            }
-
-            const bal = document.getElementById('milkyUserBalance');
-            if(bal) {
-                bal.style.display = currentKey ? 'grid' : 'none';
-            }
-
-            if(currentKey && profile) {
-                document.getElementById('balanceElixirs').innerText = `Элексиры: ${profile.elixirs || 0}`;
-                document.getElementById('balanceRobux').innerText = `Робуксы: ${profile.robux || 0}`;
-                document.getElementById('balanceCoupons').innerText = `Купоны: ${profile.coupons || 0}`;
-                document.getElementById('balanceSkins').innerText = `Скины: ${profile.skins || 0}`;
-            }
-
-            const points = Math.min(1000, Math.max(0, profile ? Number(profile.milkyPoints || 0) : 0));
-            const milestones = [
-                { points: 100, icon: 'sparkles', label: 'Базовый' },
-                { points: 250, icon: 'zap', label: 'Продвинутый' },
-                { points: 500, icon: 'award', label: 'Премиум' },
-                { points: 750, icon: 'crown', label: 'Элит' },
-                { points: 1000, icon: 'star', label: 'Легенда' }
-            ];
-            const rewards = [
-                { level: 100, desc: '5 робуксов +1 купон' },
-                { level: 250, desc: '12 робуксов +2 купона' },
-                { level: 500, desc: '25 робуксов +5 купонов +1 скин' },
-                { level: 750, desc: '40 робуксов +6 купонов +1 скин' },
-                { level: 1000, desc: '60 робуксов +8 купонов +2 скина' }
-            ];
-
-            renderMilkyContent(profile, points, milestones, rewards);
-            refreshIcons();
-        });
-    };
-
-    window.giftToUser = () => {
-        const sender = getUserKeyByRole(window.currentUserRole);
-        if(!sender) { alert('Только Turbik и Yono могут дарить.'); return; }
-
-        const recipientRole = document.getElementById('giftRecipient').value;
-        const type = document.getElementById('giftType').value;
-        const amount = parseInt(document.getElementById('giftAmount').value) || 0;
-        const recipient = getUserKeyByRole(recipientRole);
-
-        if(!recipient || sender === recipient) { alert('Выберите другого получателя.'); return; }
-        if(amount <= 0) { alert('Введите верное количество.'); return; }
-
-        onValue(ref(db, `users/${sender}`), snap => {
-            const senderProfile = snap.val() || {};
-            const senderValue = Number(senderProfile[type] || 0);
-            if(senderValue < amount) { alert('Недостаточно ресурсов.'); return; }
-
-            adjustUserProfile(sender, { [type]: -amount });
-            adjustUserProfile(recipient, { [type]: amount });
-            sendNotify('Подарок отправлен', `${window.currentUserRole} подарил ${amount} ${type} ${recipientRole}`);
         }, {onlyOnce: true});
     };
 
@@ -3107,11 +2742,9 @@
     
     const updateWorkTimeDisplay = (user) => {
         if(user === 'turbik') {
-            const el = document.getElementById('workTimeTurbikDisplay');
-            if(el) el.textContent = formatTime(workTimeSecondsTurbik);
+            document.getElementById('workTimeTurbikDisplay').textContent = formatTime(workTimeSecondsTurbik);
         } else if(user === 'yono') {
-            const el = document.getElementById('workTimeYonoDisplay');
-            if(el) el.textContent = formatTime(workTimeSecondsYono);
+            document.getElementById('workTimeYonoDisplay').textContent = formatTime(workTimeSecondsYono);
         }
     };
     
