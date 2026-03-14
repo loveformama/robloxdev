@@ -664,7 +664,18 @@
             font-weight: 700;
             text-transform: uppercase;
         }
-    
+
+        .milky-marker {
+            position: absolute;
+            top: -22px;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            pointer-events: none;
+        }
+
     </style>
 </head>
 <body>
@@ -703,17 +714,6 @@
     <button class="nav-btn" onclick="switchTab('tab-compare', this); playClickSound();"><i data-lucide="git-compare"></i> Сравнение</button>
     <button class="nav-btn" onclick="switchTab('tab-success', this); playClickSound();"><i data-lucide="trending-up"></i> Успехи</button>
     <button class="nav-btn" onclick="switchTab('tab-milky', this); playClickSound();"><i data-lucide="star"></i> Млечный путь</button>
-    <div style="width: 1px; background: #222; margin: 5px 10px;"></div>
-    <div id="userBalance" style="margin-left: 16px; color: #ccc; font-size: 13px; display: flex; align-items: center; gap: 10px;">
-        <i data-lucide="droplet" style="width: 16px; height: 16px; color:#60a5fa"></i>
-        <span id="balanceElixirs">Элексиры: 0</span>
-        <i data-lucide="dollar-sign" style="width: 16px; height: 16px; color:#f59e0b"></i>
-        <span id="balanceRobux">Робуксы: 0</span>
-        <i data-lucide="ticket" style="width: 16px; height: 16px; color:#8b5cf6"></i>
-        <span id="balanceCoupons">Купоны: 0</span>
-        <i data-lucide="award" style="width: 16px; height: 16px; color:#22c55e"></i>
-        <span id="balanceSkins">Скины: 0</span>
-    </div>
     <button class="nav-btn" id="login-btn-nav" onclick="toggleAuth(); playClickSound();"><i data-lucide="log-in"></i> Войти</button>
 </nav>
 
@@ -871,6 +871,19 @@
     </div>
 
     <div id="tab-milky" class="content">
+        <div class="card" style="margin-bottom: 16px; padding: 16px; background:#101827; border:1px solid #2e3a53;">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                <h3 style="margin:0; color:#f8fafc;">Личный Милky-путь</h3>
+                <span id="milkyUserTitle" style="color:#9ca3af; font-size:13px">Привет!</span>
+            </div>
+            <div id="milkyUserBalance" style="display:grid; grid-template-columns: repeat(4, max-content); gap: 8px; margin-top: 10px;">
+                <div style="background:#1e293b; border-radius:8px; padding:6px 10px; display:flex; gap:6px; align-items:center;"><i data-lucide="droplet" style="width:14px;height:14px;color:#60a5fa"></i><span id="balanceElixirs">Элексиры: 0</span></div>
+                <div style="background:#1e293b; border-radius:8px; padding:6px 10px; display:flex; gap:6px; align-items:center;"><i data-lucide="dollar-sign" style="width:14px;height:14px;color:#f59e0b"></i><span id="balanceRobux">Робуксы: 0</span></div>
+                <div style="background:#1e293b; border-radius:8px; padding:6px 10px; display:flex; gap:6px; align-items:center;"><i data-lucide="ticket" style="width:14px;height:14px;color:#8b5cf6"></i><span id="balanceCoupons">Купоны: 0</span></div>
+                <div style="background:#1e293b; border-radius:8px; padding:6px 10px; display:flex; gap:6px; align-items:center;"><i data-lucide="award" style="width:14px;height:14px;color:#22c55e"></i><span id="balanceSkins">Скины: 0</span></div>
+            </div>
+        </div>
+
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; margin-bottom: 20px;">
             <div class="card" style="padding: 18px;">
                 <h3 style="margin: 0 0 10px 0; color: #c4b5fd;">Млечный путь</h3>
@@ -2247,38 +2260,75 @@
     const updateMilkyTab = () => {
         onValue(ref(db, 'users'), snap => {
             const users = snap.val() || {};
-            const tur = users.turbik || {};
-            const yo = users.yono || {};
+            const currentRoleLower = window.currentUserRole ? window.currentUserRole.toLowerCase() : null;
+            const currentKey = currentRoleLower === 'turbik' || currentRoleLower === 'yono' ? currentRoleLower : null;
+            const profile = currentKey ? users[currentKey] || {} : null;
+
+            const title = document.getElementById('milkyUserTitle');
+            if(title) {
+                title.innerHTML = currentKey ? `@${currentKey} — ${profile.milkyPoints || 0} / 1000` : 'Гость';
+            }
+
+            const bal = document.getElementById('milkyUserBalance');
+            if(bal) {
+                bal.style.display = currentKey ? 'grid' : 'none';
+            }
+
+            if(currentKey && profile) {
+                document.getElementById('balanceElixirs').innerText = `Элексиры: ${profile.elixirs || 0}`;
+                document.getElementById('balanceRobux').innerText = `Робуксы: ${profile.robux || 0}`;
+                document.getElementById('balanceCoupons').innerText = `Купоны: ${profile.coupons || 0}`;
+                document.getElementById('balanceSkins').innerText = `Скины: ${profile.skins || 0}`;
+            }
 
             const lane = document.getElementById('milkyProgressContainer');
             if(!lane) return;
 
-            const pointLabel = (profile) => `${profile.milkyPoints || 0} / 1000`;
+            const points = Math.min(1000, Math.max(0, profile ? Number(profile.milkyPoints || 0) : 0));
+            const fill = (points / 1000) * 100;
+            const milestones = [
+                { points: 100, icon: 'sparkles', label: 'Базовый' },
+                { points: 250, icon: 'zap', label: 'Продвинутый' },
+                { points: 500, icon: 'award', label: 'Премиум' },
+                { points: 1000, icon: 'star', label: 'Легенда' }
+            ];
+
+            const milestoneMarkers = milestones.map(ms => {
+                const left = Math.min(100, Math.max(0, (ms.points / 1000) * 100));
+                const completed = points >= ms.points;
+                return `<div class="milky-marker" style="left:${left}%;"><i data-lucide="${ms.icon}" style="width: 16px; height: 16px; color:${completed ? '#34d399' : '#767f8f'}"></i><span style="color:${completed ? '#a3e635' : '#64748b'}; font-size:11px;">${ms.label}</span></div>`;
+            }).join('');
+
             lane.innerHTML = `
-                <div style="margin-bottom: 10px;"><strong>Turbik:</strong> ${pointLabel(tur)}</div>
-                <progress value="${tur.milkyPoints || 0}" max="1000" style="width:100%;"></progress>
-                <div style="margin:14px 0 10px 0;"><strong>Yono:</strong> ${pointLabel(yo)}</div>
-                <progress value="${yo.milkyPoints || 0}" max="1000" style="width:100%;"></progress>
+                <div style="position:relative; height: 80px; margin-top:10px;">
+                    <div style="background:#1e293b; height:20px; border-radius:12px; overflow:hidden; position:relative;"><div style="width:${fill}%; height:100%; background:linear-gradient(90deg,#22d3ee,#60a5fa); transition: width 0.4s ease;"></div></div>
+                    ${milestoneMarkers}
+                </div>
+                <div style="text-align:right; margin-top:6px; font-size:12px; color:#9ca3af;">${points} / 1000</div>
             `;
 
             const inv = document.getElementById('milkyInventory');
             if(inv) {
-                inv.innerHTML = `
-                    <div><strong>Turbik</strong> - El: ${tur.elixirs||0}, Rb: ${tur.robux||0}, C: ${tur.coupons||0}, Sk: ${tur.skins||0}</div>
-                    <div><strong>Yono</strong> - El: ${yo.elixirs||0}, Rb: ${yo.robux||0}, C: ${yo.coupons||0}, Sk: ${yo.skins||0}</div>
-                `;
+                inv.innerHTML = currentKey ? `
+                    <div style="font-size:12px; color:#d1d5db;">Элексиры: ${profile.elixirs || 0}</div>
+                    <div style="font-size:12px; color:#d1d5db;">Робуксы: ${profile.robux || 0}</div>
+                    <div style="font-size:12px; color:#d1d5db;">Купоны: ${profile.coupons || 0}</div>
+                    <div style="font-size:12px; color:#d1d5db;">Скины: ${profile.skins || 0}</div>
+                ` : '<div style="color:#88939e; font-size:13px;">Войдите под Turbik или Yono, чтобы видеть свой путь.</div>';
             }
 
             const rewards = [
-                { level: 100, desc: 'Базовый пакет: +5 робуксов, +1 купон' },
-                { level: 250, desc: 'Продвинутый пакет: +12 робуксов, +2 купона' },
-                { level: 500, desc: 'Премиум пакет: +25 робуксов, +5 купонов, +1 скин' },
-                { level: 1000, desc: 'Легендарный пакет: +60 робуксов, +8 купонов, +2 скина' }
+                { level: 100, desc: '5 робуксов +1 купон' },
+                { level: 250, desc: '12 робуксов +2 купона' },
+                { level: 500, desc: '25 робуксов +5 купонов +1 скин' },
+                { level: 1000, desc: '60 робуксов +8 купонов +2 скина' }
             ];
             const rewardsList = document.getElementById('milkyRewardsList');
             if(rewardsList) {
-                rewardsList.innerHTML = rewards.map(r => `<div style="background:#0f172a; padding:10px; border-radius:8px;">${r.level} ⭐ - ${r.desc}</div>`).join('');
+                rewardsList.innerHTML = rewards.map(r => `<div style="background:#0f172a; border: 1px solid #1e293b; border-radius:8px; padding:10px;"><strong>${r.level}:</strong> ${r.desc}</div>`).join('');
             }
+
+            refreshIcons();
         });
     };
 
@@ -3435,7 +3485,7 @@
 
 <!-- ВЕРСИЯ ПРИЛОЖЕНИЯ -->
 <div style="position: fixed; bottom: 0; right: 0; padding: 12px 16px; font-size: 10px; color: #666; background: rgba(0,0,0,0.3); border-radius: 8px 0 0 0; font-family: monospace; z-index: 100;">
-    version dev: 1.5
+    version dev: 1.8
 </div>
 
 </body>
