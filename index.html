@@ -702,7 +702,18 @@
     <button class="nav-btn" onclick="switchTab('tab-backups', this); playClickSound();"><i data-lucide="save"></i> Бэкапы</button>
     <button class="nav-btn" onclick="switchTab('tab-compare', this); playClickSound();"><i data-lucide="git-compare"></i> Сравнение</button>
     <button class="nav-btn" onclick="switchTab('tab-success', this); playClickSound();"><i data-lucide="trending-up"></i> Успехи</button>
+    <button class="nav-btn" onclick="switchTab('tab-milky', this); playClickSound();"><i data-lucide="star"></i> Млечный путь</button>
     <div style="width: 1px; background: #222; margin: 5px 10px;"></div>
+    <div id="userBalance" style="margin-left: 16px; color: #ccc; font-size: 13px; display: flex; align-items: center; gap: 10px;">
+        <i data-lucide="droplet" style="width: 16px; height: 16px; color:#60a5fa"></i>
+        <span id="balanceElixirs">Элексиры: 0</span>
+        <i data-lucide="coin" style="width: 16px; height: 16px; color:#f59e0b"></i>
+        <span id="balanceRobux">Робуксы: 0</span>
+        <i data-lucide="ticket" style="width: 16px; height: 16px; color:#8b5cf6"></i>
+        <span id="balanceCoupons">Купоны: 0</span>
+        <i data-lucide="award" style="width: 16px; height: 16px; color:#22c55e"></i>
+        <span id="balanceSkins">Скины: 0</span>
+    </div>
     <button class="nav-btn" id="login-btn-nav" onclick="toggleAuth(); playClickSound();"><i data-lucide="log-in"></i> Войти</button>
 </nav>
 
@@ -858,6 +869,41 @@
             <canvas id="successChart" style="max-height: 400px;"></canvas>
         </div>
     </div>
+
+    <div id="tab-milky" class="content" style="display:none;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; margin-bottom: 20px;">
+            <div class="card" style="padding: 18px;">
+                <h3 style="margin: 0 0 10px 0; color: #c4b5fd;">Млечный путь</h3>
+                <p style="font-size: 13px; color: #bbb; margin-bottom: 10px;">Переходите по ступеням и получайте награды за прогресс.</p>
+                <div id="milkyProgressContainer"></div>
+            </div>
+            <div class="card" style="padding: 18px;">
+                <h3 style="margin: 0 0 10px 0; color: #a5f3fc;">Инвентарь</h3>
+                <div id="milkyInventory" style="font-size: 13px; color:#ddd; line-height: 1.5;"></div>
+            </div>
+            <div class="card" style="padding: 18px;">
+                <h3 style="margin: 0 0 10px 0; color: #fcd34d;">Подарить другому</h3>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <select id="giftRecipient" class="search-bar">
+                        <option value="turbik">Turbik</option>
+                        <option value="yono">Yono</option>
+                    </select>
+                    <select id="giftType" class="search-bar">
+                        <option value="elixirs">Элексиры</option>
+                        <option value="robux">Робуксы</option>
+                        <option value="coupons">Купоны</option>
+                        <option value="skins">Скины</option>
+                    </select>
+                    <input type="number" id="giftAmount" class="search-bar" placeholder="Кол-во" min="1" value="1" />
+                    <button class="icon-btn" style="width:100%;" onclick="giftToUser(); playClickSound();">Отправить подарок</button>
+                </div>
+            </div>
+        </div>
+        <div class="card" style="padding: 18px;">
+            <h3 style="margin: 0 0 10px 0; color: #fca5a5;">Награды Млечного пути</h3>
+            <div id="milkyRewardsList" style="display:grid; gap:10px;"></div>
+        </div>
+    </div>
 </div>
 
 <div class="overlay" id="overlay" onclick="closeAdmin()"></div>
@@ -914,6 +960,8 @@
                 <input type="number" id="taskMinutesInput" class="search-bar" placeholder="Минуты" min="0" max="59" style="margin-bottom:0">
             </div>
         </div>
+        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Элексиров за задачу</label>
+        <input type="number" id="taskElixirs" class="search-bar" placeholder="0" min="0" style="margin-bottom:15px">
         
         <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Назначить</label>
         <select id="taskAssignTo" class="search-bar" style="margin-bottom:20px; background:#111;">
@@ -970,6 +1018,8 @@
             <option value="both">Обоим</option>
         </select>
         
+        <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Элексиров за задачу</label>
+        <input type="number" id="editTaskElixirs" class="search-bar" placeholder="0" min="0" style="margin-bottom:15px">
         <label style="font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:5px;">Добавить времени</label>
         <div style="display:flex; gap:10px; margin-bottom:20px;">
             <div style="flex:1;">
@@ -1205,6 +1255,8 @@
         setupTaskListener();
         setupNotesListener();
         setupBackupsListener();
+        ensureUserProfiles();
+        updateUserBalancesDisplay();
         refreshIcons();
     });
 
@@ -1599,7 +1651,6 @@
                     <div class="task-actions">
                         <button class="icon-btn" onclick="viewScript(event, '${s.id}')"><i data-lucide="eye"></i></button>
                         <button class="icon-btn" onclick="copyScriptCode(event, '${s.id}')" title="Копировать весь скрипт"><i data-lucide="copy"></i></button>
-                        <button class="icon-btn" onclick="useScriptTemplate(event, '${s.id}')" title="Использовать как шаблон"><i data-lucide="hexagon"></i></button>
                         <button class="icon-btn" onclick="editScript('${s.id}'); playClickSound();"><i data-lucide="edit-2"></i></button>
                         <button class="icon-btn ${s.pinned ? 'btn-yellow' : ''}" onclick="togglePinScript('${s.id}'); playClickSound();" title="Закрепить"><i data-lucide="pin"></i></button>
                         <button class="icon-btn btn-red" onclick="askDelete(event, 'scripts/${s.id}')"><i data-lucide="trash-2"></i></button>
@@ -1747,6 +1798,7 @@
         const hours = parseInt(document.getElementById('taskHoursInput').value) || 0;
         const minutes = parseInt(document.getElementById('taskMinutesInput').value) || 0;
         const assignTo = document.getElementById('taskAssignTo').value;
+        let elixirs = parseInt(document.getElementById('taskElixirs').value) || 0;
         
         if(!title && !text) {
             alert('Укажите заголовок или описание задачи');
@@ -1757,23 +1809,32 @@
         const totalMinutes = hours * 60 + minutes;
         const endTime = totalMinutes > 0 ? Date.now() + (totalMinutes * 60000) : null;
         const deadlineDate = endTime ? new Date(endTime).toLocaleString() : 'без срока';
+
+        if(elixirs <= 0) {
+            // простая авто-оценка
+            const base = Math.max(10, text.length * 0.25 + (type === 'Сложное' ? 60 : type === 'Среднее' ? 35 : 15));
+            elixirs = Math.min(1000, Math.round(base));
+        }
         
         push(ref(db, 'tasks'), {
             title: title || '',
             text,
             type,
+            elixirs,
             endTime,
             status: 'В очереди',
             createdAt: Date.now(),
-            assignedTo: assignTo
+            assignedTo: assignTo,
+            createdBy: window.currentUserRole || 'Guest'
         });
-        sendNotify("Новая задача!", `Выполнить до: ${deadlineDate}`);
+        sendNotify("Новая задача!", `Выполнить до: ${deadlineDate} (${elixirs} элексиров)`);
         
         // Отправляем уведомление в реальное время для всех через broadcast
         set(ref(db, `notifications/${Date.now()}`), { 
             type: 'newTask', 
             text, 
             deadline: deadlineDate,
+            elixirs,
             timestamp: Date.now()
         });
         
@@ -1871,12 +1932,16 @@
                     assignedDisplay = `<div style="font-size:11px; padding:6px 10px; border-radius:8px; background:${assignBg}; margin-bottom:10px; color:${assignColor}; font-weight:600; border-left: 3px solid ${assignColor}; display:inline-flex; align-items:center; gap:4px;">${assignIcon} ${assignText}</div>`;
                 }
 
+                const createdDateStr = t.createdAt ? new Date(t.createdAt).toLocaleString('ru-RU') : 'неизвестно';
+                const createdByStr = t.createdBy || 'неизвестно';
                 div.innerHTML = `
                     <span class="task-status-label">Статус: ${t.status}</span>
                     <span class="task-type">${t.type}</span>
+                    <div style="font-size:11px; color:#888; margin:6px 0 10px 0;">Добавил: ${createdByStr} • ${createdDateStr}</div>
                     ${assignedDisplay}
                     ${t.title ? `<div style="font-size: 14px; font-weight: 800; color: #fff; margin-bottom:6px;">${t.title}</div>` : ''}
                     <div style="font-weight:600; margin-bottom:10px;">${t.text}</div>
+                    <div style="font-size:11px; color:#9ca3af; margin-bottom:10px;">Элексиры: ${t.elixirs || 0} | Выполнено: ${t.completedAt ? new Date(t.completedAt).toLocaleString('ru-RU') : '—'}</div>
                     <div class="timer ${t.status === 'Выполнено' ? 'paused' : ''}" id="timer-${t.id}" style="${t.status === 'Выполнено' ? 'text-decoration: line-through; opacity: 0.6;' : ''}">00:00</div>
                     <div class="task-actions">
                         ${canChangeStatus ? `<button class="icon-btn btn-green" title="Готово" onclick="handleTaskBtn('${t.id}', 'done'); playClickSound();"><i data-lucide="check"></i></button>` : ''}
@@ -1923,6 +1988,7 @@
                 document.getElementById('editTaskText').value = t.text;
                 document.getElementById('editTaskType').value = t.type;
                 document.getElementById('editTaskAssignTo').value = t.assignedTo || 'both';
+                document.getElementById('editTaskElixirs').value = t.elixirs || 0;
                 document.getElementById('editTaskHoursInput').value = '';
                 document.getElementById('editTaskMinutesInput').value = '';
                 document.getElementById('editTaskModal').style.display = 'flex';
@@ -1942,13 +2008,14 @@
         const text = document.getElementById('editTaskText').value;
         const type = document.getElementById('editTaskType').value;
         const assignedTo = document.getElementById('editTaskAssignTo').value;
+        const elixirs = parseInt(document.getElementById('editTaskElixirs').value) || 0;
         const addHours = parseInt(document.getElementById('editTaskHoursInput').value) || 0;
         const addMinutes = parseInt(document.getElementById('editTaskMinutesInput').value) || 0;
         
         onValue(ref(db, `tasks/${id}`), (s) => {
             const t = s.val();
             if(t) {
-                const updates = { title, text, type, assignedTo };
+                const updates = { title, text, type, assignedTo, elixirs };
                 if(addHours > 0 || addMinutes > 0) {
                     const addTotalMinutes = addHours * 60 + addMinutes;
                     updates.endTime = t.endTime + (addTotalMinutes * 60000);
@@ -2022,25 +2089,219 @@
         }
     }
 
+    const getUserKeyByRole = (role) => {
+        if(!role) return null;
+        const r = role.toLowerCase();
+        return r === 'turbik' || r === 'yono' ? r : null;
+    };
+
+    const adjustUserProfile = (userKey, updates) => {
+        if(!userKey) return;
+        onValue(ref(db, `users/${userKey}`), snap => {
+            const profile = snap.val() || {};
+            set(ref(db, `users/${userKey}`), {
+                elixirs: Number(profile.elixirs || 0) + Number(updates.elixirs || 0),
+                robux: Number(profile.robux || 0) + Number(updates.robux || 0),
+                milkyPoints: Number(profile.milkyPoints || 0) + Number(updates.milkyPoints || 0),
+                coupons: Number(profile.coupons || 0) + Number(updates.coupons || 0),
+                skins: Number(profile.skins || 0) + Number(updates.skins || 0),
+                inventory: profile.inventory || {},
+                claimedMilestones: profile.claimedMilestones || {},
+            });
+        }, {onlyOnce: true});
+    };
+
+    const checkAndAwardMilkyMilestones = (userKey) => {
+        onValue(ref(db, `users/${userKey}`), snap => {
+            const profile = snap.val() || {};
+            const total = Number(profile.milkyPoints || 0);
+            const claimed = profile.claimedMilestones || {};
+            const milestones = [
+                { points: 100, reward: { robux: 5, coupons: 1, skins: 0 } },
+                { points: 250, reward: { robux: 12, coupons: 2, skins: 0 } },
+                { points: 500, reward: { robux: 25, coupons: 5, skins: 1 } },
+                { points: 1000, reward: { robux: 60, coupons: 8, skins: 2 } }
+            ];
+            milestones.forEach(ms => {
+                if(total >= ms.points && !claimed[ms.points]) {
+                    claimed[ms.points] = true;
+                    update(ref(db, `users/${userKey}`), {
+                        claimedMilestones: claimed,
+                        robux: Number(profile.robux || 0) + ms.reward.robux,
+                        coupons: Number(profile.coupons || 0) + ms.reward.coupons,
+                        skins: Number(profile.skins || 0) + ms.reward.skins
+                    });
+                    sendNotify('Млечный путь', `Пользователь ${userKey} получил награду за ${ms.points} очков!`);
+                }
+            });
+        }, {onlyOnce: true});
+    };
+
+    const distributeTaskReward = (task, completedByRole) => {
+        const total = Number(task.elixirs || 0);
+        if(total <= 0) return;
+
+        let turbikReward = 0;
+        let yonoReward = 0;
+
+        if(task.assignedTo === 'turbik') {
+            turbikReward = Math.round(total * 0.8);
+            yonoReward = Math.round(total * 0.2);
+        } else if(task.assignedTo === 'yono') {
+            yonoReward = Math.round(total * 0.8);
+            turbikReward = Math.round(total * 0.2);
+        } else {
+            if(completedByRole === 'Turbik') {
+                turbikReward = Math.round(total * 0.7);
+                yonoReward = total - turbikReward;
+            } else if(completedByRole === 'Yono') {
+                yonoReward = Math.round(total * 0.7);
+                turbikReward = total - yonoReward;
+            } else {
+                turbikReward = Math.floor(total/2);
+                yonoReward = total - turbikReward;
+            }
+        }
+
+        if(turbikReward > 0) {
+            adjustUserProfile('turbik', { elixirs: turbikReward, milkyPoints: turbikReward });
+            checkAndAwardMilkyMilestones('turbik');
+        }
+        if(yonoReward > 0) {
+            adjustUserProfile('yono', { elixirs: yonoReward, milkyPoints: yonoReward });
+            checkAndAwardMilkyMilestones('yono');
+        }
+
+        sendNotify('Вознаграждение', `Turbik: ${turbikReward} элексиров, Yono: ${yonoReward} элексиров`);
+    };
+
     window.handleTaskBtn = (id, action) => {
-        // Both Yono and Turbik can change task status via buttons
         onValue(ref(db, `tasks/${id}`), s => {
             const data = s.val();
             if(!data) return;
+
             if(action === 'done') {
+                const assignedTo = data.assignedTo || 'both';
+                if(assignedTo === 'turbik' && window.currentUserRole !== 'Turbik') {
+                    alert('Только Turbik может отмечать эту задачу как выполненную');
+                    return;
+                }
+                if(assignedTo === 'yono' && window.currentUserRole !== 'Yono') {
+                    alert('Только Yono может отмечать эту задачу как выполненную');
+                    return;
+                }
+
                 const newStatus = data.status === 'Выполнено' ? 'В очереди' : 'Выполнено';
                 const updates = { status: newStatus };
+
                 if(newStatus === 'Выполнено') {
                     updates.completedAt = Date.now();
                     updates.completedBy = window.currentUserEmail; // Записываем кто отметил как выполнено
                 }
-                update(ref(db, `tasks/${id}`), updates);
+
+                update(ref(db, `tasks/${id}`), updates).then(() => {
+                    if(newStatus === 'Выполнено') {
+                        distributeTaskReward(data, window.currentUserRole);
+                    }
+                });
             } else if(action === 'doing') {
                 update(ref(db, `tasks/${id}`), { status: 'Выполняется' });
             } else if(action === 'later') {
                 remove(ref(db, `tasks/${id}`));
                 push(ref(db, 'tasks'), { ...data, status: 'В очереди' });
             }
+        }, {onlyOnce: true});
+    };
+
+    const ensureUserProfiles = () => {
+        ['turbik', 'yono'].forEach(userKey => {
+            onValue(ref(db, `users/${userKey}`), snap => {
+                if(!snap.exists()) {
+                    set(ref(db, `users/${userKey}`), {
+                        elixirs: 0,
+                        robux: 0,
+                        milkyPoints: 0,
+                        coupons: 0,
+                        skins: 0,
+                        inventory: {},
+                        claimedMilestones: {}
+                    });
+                }
+            }, {onlyOnce: true});
+        });
+    };
+
+    const updateUserBalancesDisplay = () => {
+        onValue(ref(db, 'users'), snap => {
+            const users = snap.val() || {};
+            const turbik = users.turbik || {};
+            const yono = users.yono || {};
+            document.getElementById('balanceElixirs').innerText = `Элексиры: ${turbik.elixirs || 0}/${yono.elixirs || 0}`;
+            document.getElementById('balanceRobux').innerText = `Робуксы: ${turbik.robux || 0}/${yono.robux || 0}`;
+            document.getElementById('balanceCoupons').innerText = `Купоны: ${turbik.coupons || 0}/${yono.coupons || 0}`;
+            document.getElementById('balanceSkins').innerText = `Скины: ${turbik.skins || 0}/${yono.skins || 0}`;
+            updateMilkyTab();
+        });
+    };
+
+    const updateMilkyTab = () => {
+        onValue(ref(db, 'users'), snap => {
+            const users = snap.val() || {};
+            const tur = users.turbik || {};
+            const yo = users.yono || {};
+
+            const lane = document.getElementById('milkyProgressContainer');
+            if(!lane) return;
+
+            const pointLabel = (profile) => `${profile.milkyPoints || 0} / 1000`;
+            lane.innerHTML = `
+                <div style="margin-bottom: 10px;"><strong>Turbik:</strong> ${pointLabel(tur)}</div>
+                <progress value="${tur.milkyPoints || 0}" max="1000" style="width:100%;"></progress>
+                <div style="margin:14px 0 10px 0;"><strong>Yono:</strong> ${pointLabel(yo)}</div>
+                <progress value="${yo.milkyPoints || 0}" max="1000" style="width:100%;"></progress>
+            `;
+
+            const inv = document.getElementById('milkyInventory');
+            if(inv) {
+                inv.innerHTML = `
+                    <div><strong>Turbik</strong> - El: ${tur.elixirs||0}, Rb: ${tur.robux||0}, C: ${tur.coupons||0}, Sk: ${tur.skins||0}</div>
+                    <div><strong>Yono</strong> - El: ${yo.elixirs||0}, Rb: ${yo.robux||0}, C: ${yo.coupons||0}, Sk: ${yo.skins||0}</div>
+                `;
+            }
+
+            const rewards = [
+                { level: 100, desc: 'Базовый пакет: +5 робуксов, +1 купон' },
+                { level: 250, desc: 'Продвинутый пакет: +12 робуксов, +2 купона' },
+                { level: 500, desc: 'Премиум пакет: +25 робуксов, +5 купонов, +1 скин' },
+                { level: 1000, desc: 'Легендарный пакет: +60 робуксов, +8 купонов, +2 скина' }
+            ];
+            const rewardsList = document.getElementById('milkyRewardsList');
+            if(rewardsList) {
+                rewardsList.innerHTML = rewards.map(r => `<div style="background:#0f172a; padding:10px; border-radius:8px;">${r.level} ⭐ - ${r.desc}</div>`).join('');
+            }
+        });
+    };
+
+    window.giftToUser = () => {
+        const sender = getUserKeyByRole(window.currentUserRole);
+        if(!sender) { alert('Только Turbik и Yono могут дарить.'); return; }
+
+        const recipientRole = document.getElementById('giftRecipient').value;
+        const type = document.getElementById('giftType').value;
+        const amount = parseInt(document.getElementById('giftAmount').value) || 0;
+        const recipient = getUserKeyByRole(recipientRole);
+
+        if(!recipient || sender === recipient) { alert('Выберите другого получателя.'); return; }
+        if(amount <= 0) { alert('Введите верное количество.'); return; }
+
+        onValue(ref(db, `users/${sender}`), snap => {
+            const senderProfile = snap.val() || {};
+            const senderValue = Number(senderProfile[type] || 0);
+            if(senderValue < amount) { alert('Недостаточно ресурсов.'); return; }
+
+            adjustUserProfile(sender, { [type]: -amount });
+            adjustUserProfile(recipient, { [type]: amount });
+            sendNotify('Подарок отправлен', `${window.currentUserRole} подарил ${amount} ${type} ${recipientRole}`);
         }, {onlyOnce: true});
     };
 
@@ -3172,7 +3433,7 @@
 
 <!-- ВЕРСИЯ ПРИЛОЖЕНИЯ -->
 <div style="position: fixed; bottom: 0; right: 0; padding: 12px 16px; font-size: 10px; color: #666; background: rgba(0,0,0,0.3); border-radius: 8px 0 0 0; font-family: monospace; z-index: 100;">
-    version dev: 1.0
+    version dev: 100121
 </div>
 
 </body>
