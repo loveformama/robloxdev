@@ -400,6 +400,115 @@
             color: white;
         }
         
+        /* БАГИ */
+        .bug-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+            transition: 0.3s;
+            display: flex;
+            flex-direction: column;
+            min-height: 180px;
+        }
+        
+        .bug-card:hover {
+            border-color: #444;
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.15);
+        }
+        
+        .bug-card.not-fixed { border-left: 4px solid #ef4444; }
+        .bug-card.fixing { border-left: 4px solid #f59e0b; }
+        .bug-card.fixed { border-left: 4px solid #10b981; }
+        
+        .bug-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+        
+        .bug-title {
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--accent);
+            word-break: break-word;
+            flex: 1;
+        }
+        
+        .bug-status-badge {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: bold;
+            display: inline-block;
+            margin-left: 8px;
+        }
+        
+        .bug-status-badge.not-fixed {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        
+        .bug-status-badge.fixing {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+        
+        .bug-status-badge.fixed {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+        
+        .bug-description {
+            flex: 1;
+            font-size: 14px;
+            color: #ccc;
+            line-height: 1.5;
+            word-break: break-word;
+            margin-bottom: 12px;
+            white-space: pre-wrap;
+        }
+        
+        .bug-footer {
+            display: flex;
+            gap: 8px;
+            border-top: 1px solid #222;
+            padding-top: 12px;
+        }
+        
+        .bug-btn {
+            flex: 1;
+            padding: 8px;
+            border-radius: 8px;
+            border: none;
+            background: #1a1a1a;
+            color: #ccc;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 12px;
+        }
+        
+        .bug-btn:hover {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .bug-btn.status-btn {
+            background: #1a1a1a;
+        }
+        
+        .bug-btn.status-btn:hover {
+            background: var(--success);
+        }
+        
         /* СРАВНЕНИЕ */
         .compare-container {
             display: grid;
@@ -704,6 +813,7 @@
     <button class="nav-btn" onclick="switchTab('tab-backups', this); playClickSound();"><i data-lucide="save"></i> Бэкапы</button>
     <button class="nav-btn" onclick="switchTab('tab-compare', this); playClickSound();"><i data-lucide="git-compare"></i> Сравнение</button>
     <button class="nav-btn" onclick="switchTab('tab-success', this); playClickSound();"><i data-lucide="trending-up"></i> Успехи</button>
+    <button class="nav-btn" onclick="switchTab('tab-bugs', this); playClickSound();"><i data-lucide="bug"></i> Баги</button>
     <div style="width: 1px; background: #222; margin: 5px 10px;"></div>
     <button class="nav-btn" id="login-btn-nav" onclick="toggleAuth(); playClickSound();"><i data-lucide="log-in"></i> Войти</button>
 </nav>
@@ -859,6 +969,15 @@
         <div class="card" style="padding: 20px;">
             <canvas id="successChart" style="max-height: 400px;"></canvas>
         </div>
+    </div>
+
+    <div id="tab-bugs" class="content">
+        <div style="display: flex; gap: 12px; margin-bottom: 30px;">
+            <button class="icon-btn" style="width: 140px; height: 50px; border-radius: 12px; gap: 8px;" onclick="showAddBugModal(); playClickSound();">
+                <i data-lucide="plus"></i> Баг
+            </button>
+        </div>
+        <div id="bugsList" class="script-grid"></div>
     </div>
 </div>
 
@@ -1024,6 +1143,24 @@
         <div style="display: flex; gap: 10px;">
             <button onclick="saveNote(); playClickSound();" class="icon-btn" style="flex:1; height:50px; background:var(--accent); color:white;">Сохранить</button>
             <button onclick="closeNoteModal(); playClickSound();" class="icon-btn" style="flex:1; height:50px;">Отмена</button>
+        </div>
+    </div>
+</div>
+
+<div id="addBugModal" class="overlay">
+    <div class="modal-content" style="width:500px; padding:30px; margin-top:100px;">
+        <h3 style="margin-top:0" id="bugModalTitle">Новый баг</h3>
+        <input type="hidden" id="bugModalId">
+        <input type="text" id="bugName" class="search-bar" placeholder="Название бага..." style="margin-bottom:10px">
+        <textarea id="bugDescription" class="search-bar" rows="4" placeholder="Описание бага..." style="margin-bottom:20px"></textarea>
+        <select id="bugStatus" class="search-bar" style="margin-bottom:20px; background:#111;">
+            <option value="не пофикшено">Не пофикшено</option>
+            <option value="фиксится">Фиксится</option>
+            <option value="пофикшено">Пофикшено</option>
+        </select>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="saveBug(); playClickSound();" class="icon-btn" style="flex:1; height:50px; background:var(--accent); color:white;">Сохранить</button>
+            <button onclick="closeBugModal(); playClickSound();" class="icon-btn" style="flex:1; height:50px;">Отмена</button>
         </div>
     </div>
 </div>
